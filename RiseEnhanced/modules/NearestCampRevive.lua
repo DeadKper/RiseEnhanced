@@ -1,37 +1,36 @@
 -- nearest_camp_revive.lua : written by archwizard1204
 -- Only on NexusMods, my profile page: https://www.nexusmods.com/users/154089548?tab=user+files
 local module = {
-	folder = "Nearest Camp Revive",
-    managers = {
-        "QuestMapManager",
-        "PlayerManager",
-        "StagePointManager",
-    },
-    default = {
-		enable = true
-	},
+	name = "Nearest Camp Revive",
 }
 
-local config
-local settings
+local info
+local modUtils
 
 local skipCreateNeko
 local skipWarpNeko
 local reviveCamp
 local nekoTaku
+
+local settings
 local nekoTakuList
 
 local function getCurrentMapNo()
-    return config.QuestMapManager:get_CurrentMapNo()
+    local QuestMapManager = sdk.get_managed_singleton("snow.QuestMapManager")
+
+    return QuestMapManager:get_CurrentMapNo()
 end
 
 local function getCurrentPosition()
-    local masterPlayer = config.PlayerManager:call("findMasterPlayer")
+    local masterPlayer = sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
+
     return masterPlayer:call("get_GameObject"):call("get_Transform"):call("get_Position")
 end
 
 local function getCampList()
-    return config.StagePointManager:get_field("_TentPositionList")
+    local StagePointManager = sdk.get_managed_singleton("snow.stage.StagePointManager")
+
+    return StagePointManager:get_field("_TentPositionList")
 end
 
 local function calculateDistance(point1, point2)
@@ -39,7 +38,9 @@ local function calculateDistance(point1, point2)
 end
 
 local function getFastTravelPt(index)
-    return config.StagePointManager:get_field("_FastTravelPointList"):get_field("mItems"):get_element(index):get_field(
+    local StagePointManager = sdk.get_managed_singleton("snow.stage.StagePointManager")
+
+    return StagePointManager:get_field("_FastTravelPointList"):get_field("mItems"):get_element(index):get_field(
         "_PointArray"):get_element(0)
 end
 
@@ -88,7 +89,7 @@ local function initData(args)
     if not settings.data.enable then
         return sdk.PreHookResult.CALL_ORIGINAL
     end
-    
+
     local camps = getCampList()
     local mapNo = getCurrentMapNo()
     skipCreateNeko = false
@@ -123,11 +124,15 @@ local function redirectWarpNeko(args)
 end
 
 function module.init()
-	config = require("RiseEnhanced.utils.config")
-    settings = config.makeSettings(module)
+	info = require "RiseEnhanced.misc.info"
+	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	skipCreateNeko = false
 	skipWarpNeko = false
+
+	settings = modUtils.getConfigHandler({
+		enable = true
+	}, info.modName .. "/" .. module.name)
 
 	nekoTakuList = {
 		[1] = {
@@ -162,8 +167,8 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(config.lang.revive.name) then
-		settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+	if imgui.tree_node(module.name) then
+		settings.imgui("enable", imgui.checkbox, "Enabled")
 		imgui.tree_pop()
 	end
 end

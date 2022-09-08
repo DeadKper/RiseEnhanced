@@ -1,4 +1,4 @@
-local config = require("RiseEnhanced.utils.config")
+local info = require("RiseEnhanced.misc.info")
 local modUtils = require("RiseEnhanced.utils.mod_utils")
 local modules = {
 	cohoot = require("RiseEnhanced.modules.CohootNest"),
@@ -7,29 +7,18 @@ local modules = {
 	dangoTicket = require("RiseEnhanced.modules.DangoTicket"),
 	revive = require("RiseEnhanced.modules.NearestCampRevive"),
 	restock = require("RiseEnhanced.modules.Restock"),
-	birds = require("RiseEnhanced.modules.SpiritBirds"),
-	skips = require("RiseEnhanced.modules.Skips"),
-	buddyRecon = require("RiseEnhanced.modules.ReusableBuddyRecon"),
-	anomalyChecker = require("RiseEnhanced.modules.AnomalyChecker"),
+	birds = require("RiseEnhanced.modules.SpiritBirds")
 }
 
 local settings = modUtils.getConfigHandler({
     isMenuOpen = false,
-}, config.folder)
+}, info.modName)
 
 local menu = {
 	name = "Menu",
 	wasOpen = false,
 	window = nil,
 }
-
-local function loadModules()
-	if config.initiated then
-		for _, current_module in pairs(modules) do
-			current_module.init()
-		end
-	end
-end
 
 function menu.init()
 	menu.window = {
@@ -41,8 +30,9 @@ function menu.init()
 
 	menu.wasOpen = settings.data.isMenuOpen
 
-	config.init()
-	loadModules()
+	for _, current_module in pairs(modules) do
+		current_module.init()
+	end
 end
 
 function menu.draw()
@@ -50,7 +40,7 @@ function menu.draw()
 	imgui.set_next_window_size(menu.window.size, 1 << 3);
 
 	settings.data.isMenuOpen = imgui.begin_window(
-		config.lang.modName .. " " .. config.version, settings.data.isMenuOpen,
+		info.modName .. " " .. info.version, settings.data.isMenuOpen,
 		menu.window.flags);
 
 	if not settings.data.isMenuOpen then
@@ -58,16 +48,11 @@ function menu.draw()
 		return;
 	end
 
-	config.draw()
-
-	modules.anomalyChecker.draw()
 	modules.cohoot.draw()
 	modules.dango.draw()
 	modules.npc.draw()
 	modules.restock.draw()
 	modules.revive.draw()
-	modules.buddyRecon.draw()
-	modules.skips.draw()
 	modules.birds.draw()
 	modules.dangoTicket.draw()
 
@@ -77,28 +62,15 @@ end
 menu.init()
 
 re.on_draw_ui(function()
-	if not config.initiated then
-		if imgui.tree_node(config.lang.modName) then
-			config.draw()
-
-			if config.settings.data.enable and not config.initiated then
-				imgui.new_line()
-				if imgui.button(string.format(config.lang.forceLoad, config.lang.modName)) then
-					config.fullInit()
-					loadModules()
-				end
-			end
-			imgui.tree_pop()
-		end
-		return
-	end
-	if imgui.button("[ " .. config.lang.modName .. " ]") then
+	if imgui.button("[ " .. info.modName .. " ]") then
 		settings.update(not settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen
 	end
-end)
+end);
 
 re.on_frame(function()
+	info.time = info.time + 1
+
 	if settings.data.isMenuOpen ~= menu.wasOpen then
 		settings.update(settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen
@@ -108,7 +80,7 @@ re.on_frame(function()
 		return
 	end
 
-	if config.initiated and settings.data.isMenuOpen then
-		pcall(menu.draw)
+	if settings.data.isMenuOpen then
+		pcall(menu.draw);
 	end
-end)
+end);

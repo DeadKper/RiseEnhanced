@@ -188,20 +188,11 @@ local function getConfigHandler(defaultSettings, modName, fileName)
         fileName = fileName .. ".json"
     end
 
-    local configFile
-    if not modName or modName == "" then
-        configFile = fileName
-    else
-        configFile = modName .. "/" .. fileName
-    end
+    local configFile = modName .. "/" .. fileName
 
     settings.data = loadConfig(defaultSettings, configFile)
 
     settings.isSavingAvailable = jsonUtils ~= nil
-
-    function settings.wipe()
-        saveConfig({}, {}, configFile)
-    end
 
     function settings.saveConfig(newConfig)
         saveConfig(settings.data, newConfig, configFile)
