@@ -9,7 +9,7 @@ Current modules:
 - Auto NPC Talk (no bullshit mod)
 - Auto Restock (without spamming restock for every loadout change)
 - Nearest Camp Revive
-- Spirit Birds QoL (start with custom spiritbirds)
+- Spirit Birds QoL (start with custom ammount spiritbirds or prism spiritbird)
 - VIP Dango Ticket
 
 All of this mods can be obtain on modnexus by the original developers, but the custom code on auto dango, auto restock and the spiribird qol cannot sadly, if you only care about the modifications, it's not that hard to just copy/paste them on the original mod since the logic is quite simple
