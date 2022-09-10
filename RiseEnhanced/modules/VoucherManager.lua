@@ -2,7 +2,7 @@ local module = {
 	name = "Voucher Manager",
 }
 
-local info
+local config
 local modUtils
 local settings
 
@@ -25,12 +25,12 @@ sdk.hook(sdk.find_type_definition("snow.gui.fsm.title.GuiTitleMenuFsmManager"):g
     on_pre_title_hook, on_post_title_hook)
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 	settings = modUtils.getConfigHandler({
 		enable = true,
 		desiredVoucherUseCount = 1,
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.name)
 end
 
 function module.draw()

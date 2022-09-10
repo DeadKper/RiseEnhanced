@@ -1,8 +1,8 @@
 local module = {
-	name = "Auto Restock",
+	folder = "Auto Restock",
 }
 
-local info
+local config
 local modUtils
 local settings
 local restockTimeTreshold
@@ -127,132 +127,85 @@ local lastHitLoadout = -1 -- Cached loadout, avoid unnecessary search
 
 ---------------  Localization  ----------------
 
-local LocalizedStrings = {
-    ["en-US"] = {
-        WeaponNames = {
-            [0] = "Great Sword",
-            [1] = "Swtich Axe",
-            [2] = "Long Sword",
-            [3] = "Light Bowgun",
-            [4] = "Heavy Bowgun",
-            [5] = "Hammer",
-            [6] = "Gunlance",
-            [7] = "Lance",
-            [8] = "Sword & Shield",
-            [9] = "Dual Blades",
-            [10] = "Hunting Horn",
-            [11] = "Charge Blade",
-            [12] = "Insect Glaive",
-            [13] = "Bow",
-        },
-        UseDefaultItemSet = "Use Default Setting",
-        WeaponTypeNotSetUseDefault = "%s not set, use default setting %s",
-        UseWeaponTypeItemSet = "Use %s setting: %s",
+    -- ["zh-CN"] = { Will be useful later for translations
+    --     WeaponNames = {
+    --         [0] = "大剑",
+    --         [1] = "斩斧",
+    --         [2] = "太刀",
+    --         [3] = "轻弩",
+    --         [4] = "重弩",
+    --         [5] = "大锤",
+    --         [6] = "铳枪",
+    --         [7] = "长枪",
+    --         [8] = "片手",
+    --         [9] = "双刀",
+    --         [10] = "笛子",
+    --         [11] = "盾斧",
+    --         [12] = "操虫棍",
+    --         [13] = "弓",
+    --     },
+    --     UseDefaultItemSet = "使用默认设置",
+    --     WeaponTypeNotSetUseDefault = "%s无设定，使用默认设置：%s",
+    --     UseWeaponTypeItemSet = "使用%s设置：%s",
 
-        FromLoadout = "Restock for equipment loadout [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>]",
-        MismatchLoadout = "Current equipment doesn't match any equipment loadout.\n",
-        FromWeaponType = "Restock for weapon type [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>].",
-        MismatchWeaponType = "Current equipment doesn't match any equipment loadout, and weapon type [<COL YEL>%s</COL>] has no settings.\n",
-        FromDefault = "Restock from default item loadout [<COL YEL>%s</COL>].",
-        OutOfStock = "Restock [<COL YEL>%s</COL>] cancelled due to <COL RED>out of stock</COL>.",
+    --     FromLoadout = "已从个人组合[<COL YEL>%s</COL>]指定的[<COL YEL>%s</COL>]补充道具。",
+    --     MismatchLoadout = "当前装备不匹配个人组合。\n",
+    --     FromWeaponType = "已从武器类型[<COL YEL>%s</COL>]指定的[<COL YEL>%s</COL>]补充道具。",
+    --     MismatchWeaponType = "当前装备不匹配个人组合，且武器类型[<COL YEL>%s</COL>]没有指定设置。\n",
+    --     FromDefault = "已从默认设置[<COL YEL>%s</COL>]补充道具。",
+    --     OutOfStock = "因<COL RED>库存不足</COL>,从[<COL YEL>%s</COL>]补充道具取消。",
 
-        PaletteNilError = "<COL RED>ERROR</COL>: Radial set is nil.",
-        PaletteApplied = "Radial set [<COL YEL>%s</COL>] applied.",
-        PaletteListEmpty = "Radial set list is empty, skipped.",
-    },
-    ["zh-CN"] = {
-        WeaponNames = {
-            [0] = "大剑",
-            [1] = "斩斧",
-            [2] = "太刀",
-            [3] = "轻弩",
-            [4] = "重弩",
-            [5] = "大锤",
-            [6] = "铳枪",
-            [7] = "长枪",
-            [8] = "片手",
-            [9] = "双刀",
-            [10] = "笛子",
-            [11] = "盾斧",
-            [12] = "操虫棍",
-            [13] = "弓",
-        },
-        UseDefaultItemSet = "使用默认设置",
-        WeaponTypeNotSetUseDefault = "%s无设定，使用默认设置：%s",
-        UseWeaponTypeItemSet = "使用%s设置：%s",
-
-        FromLoadout = "已从个人组合[<COL YEL>%s</COL>]指定的[<COL YEL>%s</COL>]补充道具。",
-        MismatchLoadout = "当前装备不匹配个人组合。\n",
-        FromWeaponType = "已从武器类型[<COL YEL>%s</COL>]指定的[<COL YEL>%s</COL>]补充道具。",
-        MismatchWeaponType = "当前装备不匹配个人组合，且武器类型[<COL YEL>%s</COL>]没有指定设置。\n",
-        FromDefault = "已从默认设置[<COL YEL>%s</COL>]补充道具。",
-        OutOfStock = "因<COL RED>库存不足</COL>,从[<COL YEL>%s</COL>]补充道具取消。",
-
-        PaletteNilError = "<COL RED>发生了错误</COL>：轮盘组合为空。",
-        PaletteApplied = "使用了轮盘组合[<COL YEL>%s</COL>]。",
-        PaletteListEmpty = "没有轮盘组合，不应用。",
-    }
-}
-
-local function Localized()
-    return LocalizedStrings[settings.data.language]
-end
-
-local function GetWeaponName(weaponType)
-    if weaponType == nil then return "<ERROR>:GetWeaponName failed" end
-    return Localized().WeaponNames[weaponType]
-end
+    --     PaletteNilError = "<COL RED>发生了错误</COL>：轮盘组合为空。",
+    --     PaletteApplied = "使用了轮盘组合[<COL YEL>%s</COL>]。",
+    --     PaletteListEmpty = "没有轮盘组合，不应用。",
+    -- }
 
 local function UseDefaultItemSet()
-    return Localized().UseDefaultItemSet
+    return config.lang.restock.useDefaultItemSet
 end
 
 local function WeaponTypeNotSetUseDefault(weaponName, itemName)
-    return string.format(Localized().WeaponTypeNotSetUseDefault, weaponName, itemName)
+    return string.format(config.lang.restock.weaponTypeNotSetUseDefault, weaponName, itemName)
 end
 
 local function UseWeaponTypeItemSet(weaponName, itemName)
-    return string.format(Localized().UseWeaponTypeItemSet, weaponName, itemName)
+    return string.format(config.lang.restock.useWeaponTypeItemSet, weaponName, itemName)
 end
 
 local function FromLoadout(equipName, itemName)
-    return string.format(Localized().FromLoadout, equipName, itemName)
+    return string.format(config.lang.restock.fromLoadout, equipName, itemName)
 end
 
 local function FromWeaponType(equipName, itemName, mismatch)
     local msg = ""
     if mismatch then
-        msg = Localized().MismatchLoadout
+        msg = config.lang.restock.mismatchLoadout
     end
-    return msg .. string.format(Localized().FromWeaponType, equipName, itemName)
+    return msg .. string.format(config.lang.restock.fromWeaponType, equipName, itemName)
 end
 
 local function FromDefault(itemName, mismatch)
     local msg = ""
     if mismatch then
-        msg = string.format(Localized().MismatchWeaponType, GetWeaponName(GetCurrentWeaponType()))
+        msg = string.format(config.lang.restock.mismatchWeaponType, config.getWeaponName())
     end
-    return msg .. string.format(Localized().FromDefault, itemName)
+    return msg .. string.format(config.lang.restock.fromDefault, itemName)
 end
 
 local function OutOfStock(itemName)
-    return string.format(Localized().FromDefault, itemName)
+    return string.format(config.lang.restock.fromDefault, itemName)
 end
 
 local function PaletteNilError()
-    return Localized().PaletteNilError
+    return config.lang.restock.paletteNilError
 end
 
 local function PaletteApplied(paletteName)
-    return string.format(Localized().PaletteApplied, paletteName)
+    return string.format(config.lang.restock.paletteApplied, paletteName)
 end
 
 local function PaletteListEmpty()
-    return Localized().PaletteListEmpty
-end
-
-local function EquipmentChanged()
-    return "Equipment changed since last apply equipment loadout."
+    return config.lang.restock.paletteListEmpty
 end
 
 ---------------      CORE      ----------------
@@ -280,10 +233,10 @@ local function GetLoadoutItemLoadoutIndex(loadoutIndex)
 
         local got = settings.data.weaponConfig[weaponType+1]
         if (got == nil) or (got == -1) then
-            return WeaponTypeNotSetUseDefault(GetWeaponName(weaponType), GetItemLoadoutName(settings.data.default))
+            return WeaponTypeNotSetUseDefault(config.getWeaponName(weaponType), GetItemLoadoutName(settings.data.default))
         end
 
-        return UseWeaponTypeItemSet(GetWeaponName(weaponType), GetItemLoadoutName(got))
+        return UseWeaponTypeItemSet(config.getWeaponName(weaponType), GetItemLoadoutName(got))
     end
     return GetItemLoadoutName(got)
 end
@@ -351,7 +304,7 @@ local function AutoChooseItemLoadout(loadoutIndex)
     end
     local got = settings.data.weaponConfig[weaponType+1]
     if (got ~= nil) and (got ~= -1) then
-        return got, "WeaponType", GetWeaponName(weaponType), loadoutMismatch
+        return got, "WeaponType", config.getWeaponName(weaponType), loadoutMismatch
     end
 
     return settings.data.default, "Default", "", loadoutMismatch
@@ -369,7 +322,7 @@ local function Restock(loadoutIndex)
     local returnFlag = false
 
     returnFlag = timedRestock and
-        restockTimeTreshold > info.time - restockTime and
+        restockTimeTreshold > config.time - restockTime and
         lastRestock == itemLoadoutName
 
     returnFlag = returnFlag or (
@@ -377,7 +330,7 @@ local function Restock(loadoutIndex)
         lastRestock == itemLoadoutName
     )
 
-    restockTime = info.time
+    restockTime = config.time
     lastRestock = itemLoadoutName
 
     if returnFlag then return end
@@ -424,7 +377,7 @@ local function resetRestock(retval)
 end
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
     restockTimeTreshold = 60 * 30
     restockTime = 0
@@ -452,7 +405,7 @@ function module.init()
 		language = "en-US",
 		weaponConfig = weaponDefault,
 		loadoutConfig = loadoutDefault,
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
 	-- On apply equipment loadout
 	sdk.hook(
@@ -477,7 +430,7 @@ function module.init()
         -- If Auto spawn is enabled and quest status says it's active
         if getQuestStatus() == 2 and settings.data.enable and not timedRestock then
             timedRestock = true
-            restockTime = info.time
+            restockTime = config.time
         elseif getQuestStatus() ~= 2 and timedRestock then
             timedRestock = false
         end
@@ -508,28 +461,23 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
+	if imgui.tree_node(config.lang.restock.name) then
 		if ChatManager ~= nil and DataManager ~= nil and EquipDataManager ~= nil then
-			settings.imgui("enable", imgui.checkbox, "Enabled")
-			settings.imgui("notification", imgui.checkbox, "Enable Notification")
+			settings.imgui("enable", imgui.checkbox, config.lang.enable)
+			settings.imgui("notification", imgui.checkbox, config.lang.notification)
 
-			local change
-			local langIdx = FindIndex(Languages, settings.data.language)
-            change, langIdx = imgui.combo("Language", langIdx, Languages)
-			settings.handleChange(change, Languages[langIdx], "language")
-
-			settings.imgui("default", imgui.slider_int, "Default Item Set", 0, 39,
+			settings.imgui("default", imgui.slider_int, config.lang.useDefault, 0, 39,
 			GetItemLoadoutName(settings.data.default))
 
-            if imgui.tree_node("Weapon Type") then
+            if imgui.tree_node(config.lang.weaponType) then
                 for i = 1, 14, 1 do
                     local weaponType = i - 1
-					settings.imguit("weaponConfig", i, imgui.slider_int, GetWeaponName(weaponType), -1, 39, GetWeaponTypeItemLoadoutName(weaponType))
+					settings.imguit("weaponConfig", i, imgui.slider_int, config.getWeaponName(weaponType), -1, 39, GetWeaponTypeItemLoadoutName(weaponType))
                 end
                 imgui.tree_pop()
             end
 
-            if imgui.tree_node("Equipment Loadout") then
+            if imgui.tree_node(config.lang.restock.equipmentLoadout) then
                 for i = 1, 112, 1 do
                     local loadoutIndex = i - 1
                     local name = GetEquipmentLoadoutName(loadoutIndex)
@@ -537,14 +485,14 @@ function module.draw()
                     if name and isUsing then
                         local same = EquipmentLoadoutIsEquipped(loadoutIndex)
                         local msg = ""
-                        if same then msg = " (Current)" end
+                        if same then msg = config.lang.restock.currentSet end
 						settings.imguit("loadoutConfig", i, imgui.slider_int, name .. msg, -1, 39, GetLoadoutItemLoadoutIndex(loadoutIndex))
                     end
                 end
                 imgui.tree_pop();
             end
         else
-            imgui.text("Loading...")
+            imgui.text(config.lang.loading)
         end
 		imgui.tree_pop()
 	end

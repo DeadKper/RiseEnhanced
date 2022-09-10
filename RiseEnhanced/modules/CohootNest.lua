@@ -1,8 +1,8 @@
 local module = {
-	name = "Auto Cohoot Nest",
+	folder = "Auto Cohoot Nest",
 }
 
-local info
+local config
 local modUtils
 local settings
 
@@ -45,13 +45,13 @@ local function autoPickNest(retval)
 end
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	settings = modUtils.getConfigHandler({
 		enable = true;
 		maxStock = 5;
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
 	sdk.hook(sdk.find_type_definition("snow.VillageMapManager"):get_method("getCurrentMapNo"),
 	nil,
@@ -59,9 +59,9 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-		settings.imgui("enable", imgui.checkbox, "Enabled")
-		settings.imgui("maxStock", imgui.slider_int, "Maximum stock", 1, 5)
+	if imgui.tree_node(config.lang.cohoot.name) then
+		settings.imgui("enable", imgui.checkbox, config.lang.enable)
+		settings.imgui("maxStock", imgui.slider_int, config.lang.cohoot.maxStock, 1, 5)
 
 		imgui.tree_pop()
 	end

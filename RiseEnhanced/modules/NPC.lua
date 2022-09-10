@@ -1,8 +1,8 @@
 local module = {
-	name = "Auto NPC Talk",
+	folder = "Auto NPC Talk",
 }
 
-local info
+local config
 local modUtils
 local settings
 local npcList
@@ -39,7 +39,7 @@ local function talkHandler(retval)
 end
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	npcList = {
@@ -62,7 +62,7 @@ function module.init()
 
 	settings = modUtils.getConfigHandler({
 		enable = true,
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
 	sdk.hook(sdk.find_type_definition("snow.npc.NpcTalkMessageCtrl"):get_method("start"), getTalkTarget, nil)
 
@@ -70,8 +70,8 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-		settings.imgui("enable", imgui.checkbox, "Enabled")
+	if imgui.tree_node(config.lang.npc.name) then
+		settings.imgui("enable", imgui.checkbox, config.lang.enable)
 		imgui.tree_pop()
 	end
 end

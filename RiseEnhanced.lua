@@ -1,4 +1,4 @@
-local info = require("RiseEnhanced.misc.info")
+local config = require("RiseEnhanced.misc.config")
 local modUtils = require("RiseEnhanced.utils.mod_utils")
 local modules = {
 	cohoot = require("RiseEnhanced.modules.CohootNest"),
@@ -7,12 +7,14 @@ local modules = {
 	dangoTicket = require("RiseEnhanced.modules.DangoTicket"),
 	revive = require("RiseEnhanced.modules.NearestCampRevive"),
 	restock = require("RiseEnhanced.modules.Restock"),
-	birds = require("RiseEnhanced.modules.SpiritBirds")
+	birds = require("RiseEnhanced.modules.SpiritBirds"),
+	skips = require("RiseEnhanced.modules.Skips"),
+	buddyRecon = require("RiseEnhanced.modules.ReusableBuddyRecon")
 }
 
 local settings = modUtils.getConfigHandler({
     isMenuOpen = false,
-}, info.modName)
+}, config.folder)
 
 local menu = {
 	name = "Menu",
@@ -30,6 +32,7 @@ function menu.init()
 
 	menu.wasOpen = settings.data.isMenuOpen
 
+	config.init()
 	for _, current_module in pairs(modules) do
 		current_module.init()
 	end
@@ -40,7 +43,7 @@ function menu.draw()
 	imgui.set_next_window_size(menu.window.size, 1 << 3);
 
 	settings.data.isMenuOpen = imgui.begin_window(
-		info.modName .. " " .. info.version, settings.data.isMenuOpen,
+		config.lang.modName .. " " .. config.version, settings.data.isMenuOpen,
 		menu.window.flags);
 
 	if not settings.data.isMenuOpen then
@@ -48,11 +51,15 @@ function menu.draw()
 		return;
 	end
 
+	config.draw()
+
 	modules.cohoot.draw()
 	modules.dango.draw()
 	modules.npc.draw()
 	modules.restock.draw()
 	modules.revive.draw()
+	modules.buddyRecon.draw()
+	modules.skips.draw()
 	modules.birds.draw()
 	modules.dangoTicket.draw()
 
@@ -62,14 +69,14 @@ end
 menu.init()
 
 re.on_draw_ui(function()
-	if imgui.button("[ " .. info.modName .. " ]") then
+	if imgui.button("[ " .. config.lang.modName .. " ]") then
 		settings.update(not settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen
 	end
 end);
 
 re.on_frame(function()
-	info.time = info.time + 1
+	config.time = config.time + 1
 
 	if settings.data.isMenuOpen ~= menu.wasOpen then
 		settings.update(settings.data.isMenuOpen, "isMenuOpen")

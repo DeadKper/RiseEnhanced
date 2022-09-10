@@ -1,10 +1,10 @@
 -- nearest_camp_revive.lua : written by archwizard1204
 -- Only on NexusMods, my profile page: https://www.nexusmods.com/users/154089548?tab=user+files
 local module = {
-	name = "Nearest Camp Revive",
+	folder = "Nearest Camp Revive",
 }
 
-local info
+local config
 local modUtils
 
 local skipCreateNeko
@@ -124,7 +124,7 @@ local function redirectWarpNeko(args)
 end
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	skipCreateNeko = false
@@ -132,7 +132,7 @@ function module.init()
 
 	settings = modUtils.getConfigHandler({
 		enable = true
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
 	nekoTakuList = {
 		[1] = {
@@ -167,8 +167,8 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-		settings.imgui("enable", imgui.checkbox, "Enabled")
+	if imgui.tree_node(config.lang.revive.name) then
+		settings.imgui("enable", imgui.checkbox, config.lang.enable)
 		imgui.tree_pop()
 	end
 end

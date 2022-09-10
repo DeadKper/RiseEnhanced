@@ -1,38 +1,23 @@
-log.info("[VIP Dango Ticket] started loading")
-
 local module = {
-	name = "VIP Dango Ticket",
+	folder = "VIP Dango Ticket",
 }
 
-local info
+local config
 local modUtils
 local settings
 
-local VIPDT_debugLogs
-
-local function VIPDT_logDebug(argStr)
-	local debugString = "[VIP Dango Ticket] "..argStr;
-	if VIPDT_debugLogs then
-		log.info(debugString);
-	end
-end
-
-local DangoListType
 local SavedDangoChance
 local SavedDango
 local DangoTicketState
 
 function module.init()
 	VIPDT_debugLogs = false
-	DangoListType = sdk.find_type_definition("System.Collections.Generic.List`1<snow.data.DangoData>")
 	SavedDangoChance = 100
 	SavedDango = nil
 	DangoTicketState = false
 
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
-
-	local temp = {4, 3, 1}
 
 	settings = modUtils.getConfigHandler({
 		enable = true,
@@ -40,7 +25,7 @@ function module.init()
 		ticketByDefault = true,
 		showAllDango = false,
 		skewerLevels = {4, 3, 1}
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
 	sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillActiveRate"),
 		--force 100% activation
@@ -127,7 +112,7 @@ function module.init()
 	);
 
 	sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("order"),
-		function(args)
+		function()
 
 		end,
 		function(retval)
@@ -142,18 +127,18 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-		settings.imgui("enable", imgui.checkbox, "Enable VIP Ticket (100% chance on dangos with ticket)")
-		settings.imgui("infiniteDangoTickets", imgui.checkbox, "Infinite Tickets")
-		settings.imgui("ticketByDefault", imgui.checkbox, "Use Dango Ticket by default")
-		settings.imgui("showAllDango", imgui.checkbox, "Show all available Dango (including daily)")
-		imgui.text("Note: To toggle OFF requires game restart after.")
+	if imgui.tree_node(config.lang.dangoTicket.name) then
+		settings.imgui("enable", imgui.checkbox, config.lang.dangoTicket.enableVip)
+		settings.imgui("infiniteDangoTickets", imgui.checkbox, config.lang.dangoTicket.infiniteTickets)
+		settings.imgui("ticketByDefault", imgui.checkbox, config.lang.dangoTicket.ticketByDefault)
+		settings.imgui("showAllDango", imgui.checkbox, config.lang.dangoTicket.showAllDango)
+		imgui.text(config.lang.restartNote)
 		imgui.new_line()
-		if imgui.tree_node("Configure Hopping Skewer Dango Levels") then
-			settings.imguit("skewerLevels", 1, imgui.slider_int, "Top Dango", 1, 4)
-			settings.imguit("skewerLevels", 2, imgui.slider_int, "Mid Dango", 1, 4)
-			settings.imguit("skewerLevels", 3, imgui.slider_int, "Bot Dango", 1, 4)
-			if imgui.button("Reset to Defaults") then
+		if imgui.tree_node(config.lang.dangoTicket.hoppingSkewers) then
+			settings.imguit("skewerLevels", 1, imgui.slider_int, config.lang.dangoTicket.top, 1, 4)
+			settings.imguit("skewerLevels", 2, imgui.slider_int, config.lang.dangoTicket.mid, 1, 4)
+			settings.imguit("skewerLevels", 3, imgui.slider_int, config.lang.dangoTicket.bot, 1, 4)
+			if imgui.button(config.lang.reset) then
 				settings.update({4, 3, 1}, "skewerLevels")
 			end
 			imgui.tree_pop()
@@ -161,7 +146,5 @@ function module.draw()
 		imgui.tree_pop()
 	end
 end
-
-log.info("[VIP Dango Ticket] finished loading")
 
 return module

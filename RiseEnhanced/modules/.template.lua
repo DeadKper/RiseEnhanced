@@ -1,22 +1,22 @@
 local module = {
-	name = "Template",
+	folder = "Template",
 }
 
-local info
+local config
 local modUtils
 local settings
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 	settings = modUtils.getConfigHandler({
 		enable = true,
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-		settings.imgui("enable", imgui.checkbox, "Enabled")
+	if imgui.tree_node(config.lang.template.name) then
+		settings.imgui("enable", imgui.checkbox, config.lang.enable)
 		imgui.tree_pop()
 	end
 end

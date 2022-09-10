@@ -1,8 +1,8 @@
 local module = {
-	name = "Auto Dango",
+	folder = "Auto Dango",
 }
 
-local info
+local config
 local modUtils
 local settings
 
@@ -13,7 +13,7 @@ local DataShortcut
 local isOrdering
 
 local function GetCurrentSet()
-    local loadout = settings.data.weapons[info.getCurrentWeaponType() + 1]
+    local loadout = settings.data.weapons[config.getWeaponType() + 1]
     if not settings.data.dangoPerWeapon or loadout == 0 then
         loadout = settings.data.currentSet
     end
@@ -22,7 +22,7 @@ end
 
 local function getSetName(Kitchen, i)
     if settings.data.weapons[i] == 0 then
-        return "Use Default Setting"
+        return config.lang.useDefault
     end
     return Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName")
 end
@@ -49,14 +49,14 @@ local function OrderFood(order)
     log.debug(order:call("get__DangoId"):call("get_Item", 0))
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        gm.ChatManager.d:call("reqAddChatInfomation", "<COL RED>Cannot order from an empty set</COL>", settings.data.sounds and 2412657311 or 0)
+        gm.ChatManager.d:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
         return
     end
 
     log.debug(order:call("get__DangoId"):call("get_Item", 0))
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        gm.ChatManager.d:call("reqAddChatInfomation", "<COL RED>Cannot order from an empty set</COL>", settings.data.sounds and 2412657311 or 0)
+        gm.ChatManager.d:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
         return
     end
 
@@ -86,7 +86,8 @@ local function OrderFood(order)
 
     local OrderName = order:call("get_OrderName")
 
-    local Message = "<COL YEL>Automatically ate " .. OrderName .. (settings.data.useVoucher and (VoucherCount > 0 and (" with a voucher (" .. VoucherCount .. " remaining)") or ", but you are out of vouchers") or "") .. ".\nSkills activated:</COL>"
+    local Message = string.format(config.lang.dango.eatMessage, OrderName) .. (settings.data.useVoucher and (VoucherCount > 0 and (string.format(config.lang.dango.voucherRemaining, VoucherCount)) or config.lang.dango.outOufVouchers) or "") .. config.lang.dango.skills
+
     local PlayerSkillData = Player:get_field("_refPlayerSkillList")
     PlayerSkillData = PlayerSkillData:call("get_KitchenSkillData")
     for i,v in pairs(PlayerSkillData:get_elements()) do
@@ -94,7 +95,7 @@ local function OrderFood(order)
             Message = Message .. "\n" .. DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
         end
     end
-    Message = Message .. (settings.data.useHoppingSkewers and "\n<COL YEL>(Hopping skewer was used)</COL>" or "")
+    Message = Message .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
 
     if settings.data.notification then
         gm.ChatManager.d:call("reqAddChatInfomation", Message, settings.data.sounds and 2289944406 or 0)
@@ -104,7 +105,7 @@ local function OrderFood(order)
 end
 
 function module.init()
-	info = require "RiseEnhanced.misc.info"
+	config = require "RiseEnhanced.misc.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	allManagersRetrieved = false
@@ -139,7 +140,7 @@ function module.init()
 		currentSet = 1,
         dangoPerWeapon = false,
         weapons = {},
-	}, info.modName .. "/" .. module.name)
+	}, config.folder .. "/" .. module.folder)
 
     for i = 1, 14, 1 do
 		if settings.data.weapons[i] == nil then
@@ -181,50 +182,49 @@ function module.init()
 end
 
 function module.draw()
-    if imgui.tree_node(module.name) then
+    if imgui.tree_node(config.lang.dango.name) then
         if not allManagersRetrieved then
-            imgui.text("Loading...")
+            imgui.text(config.lang.loading)
             return
         end
 
         local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
         if not Kitchen then
-            imgui.text("Loading...")
+            imgui.text(config.lang.loading)
             return
         end
 
         Kitchen = Kitchen:call("get_MealFunc")
         if not Kitchen then
-            imgui.text("Loading...")
+            imgui.text(config.lang.loading)
             return
         end
 
-        settings.imgui("enable", imgui.checkbox, "Automatically eat")
+        settings.imgui("enable", imgui.checkbox, config.lang.enable)
         imgui.new_line()
 
-        settings.imgui("currentSet", imgui.slider_int, "Current dango set", 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
+        settings.imgui("currentSet", imgui.slider_int, config.lang.dango.currentSet, 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
 
-        settings.imgui("dangoPerWeapon", imgui.checkbox, "Use different dango set per weapon")
-        if settings.data.dangoPerWeapon and imgui.tree_node("Weapon Types") then
+        settings.imgui("dangoPerWeapon", imgui.checkbox, config.lang.dango.dangoPerWeapon)
+        if settings.data.dangoPerWeapon and imgui.tree_node(config.lang.weaponType) then
             for i = 1, 14, 1 do
-                settings.imguit("weapons", i, imgui.slider_int, info.getCurrentWeaponName(i - 1), 0, 32, getSetName(Kitchen, i))
+                settings.imguit("weapons", i, imgui.slider_int, config.getWeaponName(i - 1), 0, 32, getSetName(Kitchen, i))
             end
             imgui.tree_pop();
         end
 
         imgui.new_line()
-        settings.imgui("points", imgui.checkbox, "Pay with Kamura Points", settings.data.points)
-        settings.imgui("useHoppingSkewers", imgui.checkbox, "Use hopping skewers", settings.data.useHoppingSkewers)
-        settings.imgui("points", imgui.checkbox, "Pay with Kamura Points", settings.data.points)
-        settings.imgui("useVoucher", imgui.checkbox, "Use voucher on eating", settings.data.useVoucher)
+        settings.imgui("points", imgui.checkbox, config.lang.dango.points, settings.data.points)
+        settings.imgui("useHoppingSkewers", imgui.checkbox, config.lang.dango.useHoppingSkewers, settings.data.useHoppingSkewers)
+        settings.imgui("useVoucher", imgui.checkbox, config.lang.dango.useVoucher, settings.data.useVoucher)
         imgui.new_line()
-        settings.imgui("notification", imgui.checkbox, "Enable eating notification", settings.data.notification)
-        settings.imgui("sounds", imgui.checkbox, "Enable notification sounds", settings.data.sounds)
+        settings.imgui("notification", imgui.checkbox, config.lang.notification, settings.data.notification)
+        settings.imgui("sounds", imgui.checkbox, config.lang.sounds, settings.data.sounds)
         imgui.new_line()
 
-        local manualText = "Manually trigger eating"
+        local manualText = config.lang.dango.manualEat
         if Kitchen._AvailableWaitTimer > 0 then
-            manualText = "* Manually trigger eating (you have already eaten)"
+            manualText = config.lang.dango.manualEatAgain
         end
 
         if imgui.button(manualText) then

@@ -1,8 +1,8 @@
 local module = {
-	name = "Spirit Birds",
+	folder = "Spirit Birds",
 }
 
-local info
+local config
 local modUtils
 local settings
 local spawned
@@ -73,13 +73,14 @@ local function spawnBird(type)
 end
 
 function module.init()
-    info = require "RiseEnhanced.misc.info"
+    config = require "RiseEnhanced.misc.config"
     modUtils = require "RiseEnhanced.utils.mod_utils"
     settings = modUtils.getConfigHandler({
         enable = true,
         spawnPrism = false,
         spiritBirds = { 5, 3, 0, 0 }
-    }, info.modName .. "/" .. module.name)
+    }, config.folder .. "/" .. module.folder)
+
     SPIRIT_BIRDS = {
         atk = 11,
         def = 12,
@@ -88,6 +89,7 @@ function module.init()
         all = 15,
         gold = 31
     }
+
     spawned = false
     spawnedBirds = {}
     next_stamina_max = 0.0
@@ -140,26 +142,26 @@ function module.init()
 end
 
 function module.draw()
-    if imgui.tree_node(module.name) then
-        settings.imgui("enable", imgui.checkbox, "Auto-Spawn Spirit Birds")
-        settings.imguit("spiritBirds", 1, imgui.slider_int, "Health", 0, 10)
-        settings.imguit("spiritBirds", 2, imgui.slider_int, "Stamina", 0, 10)
-        settings.imguit("spiritBirds", 3, imgui.slider_int, "Attack", 0, 10)
-        settings.imguit("spiritBirds", 4, imgui.slider_int, "Defense", 0, 10)
-        settings.imgui("spawnPrism", imgui.checkbox, "Spawn Prism Spirit Bird instead")
-        if imgui.button("Reset to Defaults") then
+    if imgui.tree_node(config.lang.birds.name) then
+        settings.imgui("enable", imgui.checkbox, config.lang.birds.autoSpawn)
+        settings.imguit("spiritBirds", 1, imgui.slider_int, config.lang.birds.health, 0, 10)
+        settings.imguit("spiritBirds", 2, imgui.slider_int, config.lang.birds.stamina, 0, 10)
+        settings.imguit("spiritBirds", 3, imgui.slider_int, config.lang.birds.attack, 0, 10)
+        settings.imguit("spiritBirds", 4, imgui.slider_int, config.lang.birds.defense, 0, 10)
+        settings.imgui("spawnPrism", imgui.checkbox, config.lang.birds.spawnPrism)
+        if imgui.button(config.lang.reset) then
             settings.update({5, 3, 0, 0}, "spiritBirds")
             settings.update(false, "spawnPrism")
         end
         if imgui.tree_node("Manual spawn") then
-            if imgui.button("   « Health »    ") then spawnBird("hp") end
+            if imgui.button(config.lang.birds.healthButton) then spawnBird("hp") end
             imgui.same_line()
-            if imgui.button("   « Stamina »   ") then spawnBird("spd") end
-            if imgui.button("   « Attack »    ") then spawnBird("atk") end
+            if imgui.button(config.lang.birds.staminaButton) then spawnBird("spd") end
+            if imgui.button(config.lang.birds.attackButton) then spawnBird("atk") end
             imgui.same_line()
-            if imgui.button("   « Defense »   ") then spawnBird("def") end
-            if imgui.button("                 « Rainbow »                  ") then spawnBird("all") end
-            if imgui.button("                  « Golden »                    ") then spawnBird("gold") end
+            if imgui.button(config.lang.birds.defenseButton) then spawnBird("def") end
+            if imgui.button(config.lang.birds.rainbowButton) then spawnBird("all") end
+            if imgui.button(config.lang.birds.goldenButton) then spawnBird("gold") end
             imgui.tree_pop()
         end
         
