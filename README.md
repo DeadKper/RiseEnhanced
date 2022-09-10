@@ -9,6 +9,8 @@ Current modules:
 - Auto NPC Talk (no bullshit mod)
 - Auto Restock (without spamming restock for every loadout change)
 - Nearest Camp Revive
+- Reusable Buddy Recon
+- Skip Intro Logos and Online Warning
 - Spirit Birds QoL (start with custom ammount spiritbirds or prism spiritbird)
 - VIP Dango Ticket
 
