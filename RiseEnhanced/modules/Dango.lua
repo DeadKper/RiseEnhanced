@@ -13,11 +13,18 @@ local DataShortcut
 local isOrdering
 
 local function GetCurrentSet()
-    if settings.data.dangoPerWeapon then
-        return settings.data.weapons[info.getCurrentWeaponType() + 1]
-    else
-        return settings.data.currentSet
+    local loadout = settings.data.weapons[info.getCurrentWeaponType() + 1]
+    if not settings.data.dangoPerWeapon or loadout == 0 then
+        loadout = settings.data.currentSet
     end
+    return loadout
+end
+
+local function getSetName(Kitchen, i)
+    if settings.data.weapons[i] == 0 then
+        return "Use Default Setting"
+    end
+    return Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName")
 end
 
 local function CreateOrder(setID)
@@ -136,7 +143,7 @@ function module.init()
 
     for i = 1, 14, 1 do
 		if settings.data.weapons[i] == nil then
-			settings.data.weapons[i] = 1
+			settings.data.weapons[i] = 0
 		end
 	end
 
@@ -200,7 +207,7 @@ function module.draw()
         settings.imgui("dangoPerWeapon", imgui.checkbox, "Use different dango set per weapon")
         if settings.data.dangoPerWeapon and imgui.tree_node("Weapon Types") then
             for i = 1, 14, 1 do
-                settings.imguit("weapons", i, imgui.slider_int, info.getCurrentWeaponName(i - 1), 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName"))
+                settings.imguit("weapons", i, imgui.slider_int, info.getCurrentWeaponName(i - 1), 0, 32, getSetName(Kitchen, i))
             end
             imgui.tree_pop();
         end
