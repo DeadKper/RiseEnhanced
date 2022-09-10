@@ -12,6 +12,14 @@ local gm
 local DataShortcut
 local isOrdering
 
+local function GetCurrentSet()
+    if settings.data.dangoPerWeapon then
+        return settings.data.weapons[info.getCurrentWeaponType() + 1]
+    else
+        return settings.data.currentSet
+    end
+end
+
 local function CreateOrder(setID)
     local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
     if not Kitchen then return end
@@ -107,7 +115,7 @@ function module.init()
 	gm.QuestManager = {}
 	gm.QuestManager.n = "snow.QuestManager"
 
-	for i,v in pairs(gm) do
+	for _,v in pairs(gm) do
 		v.d = sdk.get_managed_singleton(v.n)
 	end
 
@@ -122,12 +130,20 @@ function module.init()
 		points = false,
 		notification = true,
 		currentSet = 1,
+        dangoPerWeapon = false,
+        weapons = {},
 	}, info.modName .. "/" .. module.name)
+
+    for i = 1, 14, 1 do
+		if settings.data.weapons[i] == nil then
+			settings.data.weapons[i] = 1
+		end
+	end
 
 	sdk.hook(
 		sdk.find_type_definition("snow.QuestManager"):get_method("questActivate(snow.LobbyManager.QuestIdentifier)"),
 		function(args)
-			OrderFood(CreateOrder(settings.data.currentSet))
+			OrderFood(CreateOrder(GetCurrentSet()))
 		end
 	)
 
@@ -158,40 +174,55 @@ function module.init()
 end
 
 function module.draw()
-	if imgui.tree_node(module.name) then
-        if allManagersRetrieved then
-            local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
-            if Kitchen then
-                Kitchen = Kitchen:call("get_MealFunc")
-                if Kitchen then
-                    settings.imgui("enable", imgui.checkbox, "Automatically eat")
-                    imgui.new_line()
-                    settings.imgui("currentSet", imgui.slider_int, "Current dango set", 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
-                    settings.imgui("useHoppingSkewers", imgui.checkbox, "Use hopping skewers", settings.data.useHoppingSkewers)
-                    settings.imgui("points", imgui.checkbox, "Pay with Kamura Points", settings.data.points)
-                    settings.imgui("useVoucher", imgui.checkbox, "Use voucher on eating", settings.data.useVoucher)
-                    imgui.new_line()
-                    settings.imgui("notification", imgui.checkbox, "Enable eating notification", settings.data.notification)
-                    settings.imgui("sounds", imgui.checkbox, "Enable notification sounds", settings.data.sounds)
-                    imgui.new_line()
-
-                    local manualText = "Manually trigger eating"
-                    if Kitchen._AvailableWaitTimer > 0 then
-                        manualText = "* Manually trigger eating (you have already eaten)"
-                    end
-
-                    if imgui.button(manualText) then
-                        Kitchen:set_field("_AvailableWaitTimer", 0)
-                        OrderFood(CreateOrder(settings.data.currentSet))
-                    end
-                else
-                    imgui.text("Loading...")
-                end
-            else
-                imgui.text("Loading...")
-            end
-        else
+    if imgui.tree_node(module.name) then
+        if not allManagersRetrieved then
             imgui.text("Loading...")
+            return
+        end
+
+        local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
+        if not Kitchen then
+            imgui.text("Loading...")
+            return
+        end
+
+        Kitchen = Kitchen:call("get_MealFunc")
+        if not Kitchen then
+            imgui.text("Loading...")
+            return
+        end
+
+        settings.imgui("enable", imgui.checkbox, "Automatically eat")
+        imgui.new_line()
+
+        settings.imgui("currentSet", imgui.slider_int, "Current dango set", 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
+
+        settings.imgui("dangoPerWeapon", imgui.checkbox, "Use different dango set per weapon")
+        if settings.data.dangoPerWeapon and imgui.tree_node("Weapon Types") then
+            for i = 1, 14, 1 do
+                settings.imguit("weapons", i, imgui.slider_int, info.getCurrentWeaponName(i - 1), 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName"))
+            end
+            imgui.tree_pop();
+        end
+
+        imgui.new_line()
+        settings.imgui("points", imgui.checkbox, "Pay with Kamura Points", settings.data.points)
+        settings.imgui("useHoppingSkewers", imgui.checkbox, "Use hopping skewers", settings.data.useHoppingSkewers)
+        settings.imgui("points", imgui.checkbox, "Pay with Kamura Points", settings.data.points)
+        settings.imgui("useVoucher", imgui.checkbox, "Use voucher on eating", settings.data.useVoucher)
+        imgui.new_line()
+        settings.imgui("notification", imgui.checkbox, "Enable eating notification", settings.data.notification)
+        settings.imgui("sounds", imgui.checkbox, "Enable notification sounds", settings.data.sounds)
+        imgui.new_line()
+
+        local manualText = "Manually trigger eating"
+        if Kitchen._AvailableWaitTimer > 0 then
+            manualText = "* Manually trigger eating (you have already eaten)"
+        end
+
+        if imgui.button(manualText) then
+            Kitchen:set_field("_AvailableWaitTimer", 0)
+            OrderFood(CreateOrder(GetCurrentSet()))
         end
         imgui.tree_pop();
     end
