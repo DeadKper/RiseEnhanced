@@ -37,13 +37,6 @@ local function getEnvCreatureManager()
     return envCreature
 end
 
--- Get Quest State [ 0 = Lobby, 1 = Ready/Loading, 2 = Quest, 3 = End, 5 = Abandoned, 7 = Returned ]
-local function getQuestStatus()
-    local questManager = sdk.get_managed_singleton("snow.QuestManager")
-    if not questManager then return end
-    return questManager:get_field("_QuestStatus")
-end
-
 -- Function to get length of table
 local function getLength(obj)
     local count = 0
@@ -97,7 +90,7 @@ function module.init()
     -- Watch for Auto-Spawn of Prism and clear spawned birds after quest ends
     re.on_pre_application_entry("UpdateBehavior", function()
         -- If Auto spawn is enabled and quest status says it's active
-        if getQuestStatus() == 2 and settings.data.enable and not spawned then
+        if config.getQuestStatus() == 2 and settings.data.enable and not spawned then
             if not spawned then
                 if settings.data.spawnPrism then
                     spawnBird("all")
@@ -112,7 +105,7 @@ function module.init()
             end
 
             -- If the quest status is not active, clear the spawned birds, and set spawned to false
-        elseif getQuestStatus() ~= 2 and getLength(spawnedBirds) > 0 then
+        elseif config.getQuestStatus() ~= 2 and getLength(spawnedBirds) > 0 then
             spawned = false
             for _, bird in pairs(spawnedBirds) do bird:call("destroy", bird) end
             spawnedBirds = {}

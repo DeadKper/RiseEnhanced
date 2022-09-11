@@ -1,18 +1,21 @@
 local modUtils
 local PlayerManager
 local languageTable
+local questManager
+
+local currentQuestStatus
+local currentQuestTime
+
 local languages = {
 	["en_US"] = require("RiseEnhanced.languages.en_US"),
 }
 
 local config = {
 	folder = "Rise Enhanced",
-	version = "2.0.1",
-	time = 0,
+	version = "2.1.0",
 }
 
 function config.getWeaponType()
-    if PlayerManager == nil then PlayerManager = sdk.get_managed_singleton("snow.player.PlayerManager") end
     if PlayerManager == nil then return end
     local MasterPlayer = PlayerManager:call("findMasterPlayer")
     if MasterPlayer == nil then return end
@@ -38,6 +41,35 @@ local function findIndex(table, value)
     return nil;
 end
 
+function config.time()
+	return os.clock()
+end
+
+local questStatusName = {
+	[0] = "lobby",
+	[1] = "loading",
+	[2] = "quest",
+	[3] = "end",
+	[5] = "abandoned",
+	[7] = "returned",
+}
+
+function config.getQuestStatus()
+    return currentQuestStatus
+end
+
+function config.getQuestStatusName()
+    return questStatusName[currentQuestStatus]
+end
+
+function config.getQuestTime()
+	return config.time() - currentQuestTime
+end
+
+function config.getQuestInitialTime()
+	return currentQuestTime
+end
+
 function config.init()
 	modUtils = require("RiseEnhanced.utils.mod_utils")
 
@@ -54,6 +86,15 @@ function config.init()
 
 	config.lang = languages[config.settings.data.language]
 	PlayerManager = sdk.get_managed_singleton("snow.player.PlayerManager")
+	questManager = sdk.get_managed_singleton("snow.QuestManager")
+
+	re.on_pre_application_entry("UpdateBehavior", function()
+		local status = questManager:get_field("_QuestStatus")
+		if currentQuestStatus ~= status then
+			currentQuestTime = config.time()
+			currentQuestStatus = status
+		end
+    end)
 end
 
 function config.draw()
@@ -67,6 +108,8 @@ function config.draw()
 			config.settings.update(languageTable[index], "language")
 			config.lang = languages[config.settings.data.language]
 		end
+
+		-- imgui.text(config.time())
 		imgui.tree_pop()
 	end
 end

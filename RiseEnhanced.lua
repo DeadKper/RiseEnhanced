@@ -9,7 +9,8 @@ local modules = {
 	restock = require("RiseEnhanced.modules.Restock"),
 	birds = require("RiseEnhanced.modules.SpiritBirds"),
 	skips = require("RiseEnhanced.modules.Skips"),
-	buddyRecon = require("RiseEnhanced.modules.ReusableBuddyRecon")
+	buddyRecon = require("RiseEnhanced.modules.ReusableBuddyRecon"),
+	anomalyChecker = require("RiseEnhanced.modules.AnomalyChecker"),
 }
 
 local settings = modUtils.getConfigHandler({
@@ -53,6 +54,7 @@ function menu.draw()
 
 	config.draw()
 
+	modules.anomalyChecker.draw()
 	modules.cohoot.draw()
 	modules.dango.draw()
 	modules.npc.draw()
@@ -76,8 +78,6 @@ re.on_draw_ui(function()
 end);
 
 re.on_frame(function()
-	config.time = config.time + 1
-
 	if settings.data.isMenuOpen ~= menu.wasOpen then
 		settings.update(settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen

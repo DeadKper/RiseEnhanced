@@ -116,4 +116,9 @@ return {
 		mid = "Mid Dango",
 		bot = "Bot Dango",
 	},
+	anomalyChecker = {
+		name = "Anomaly Investigation Legality Checker",
+		onlineOnly = "Only Check Online Quests",
+		warning = "<COL RED>You are playing an illegal quest!\nPlease quit this anomaly investigation.</COL>",
+	}
 }

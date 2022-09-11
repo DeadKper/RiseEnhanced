@@ -209,13 +209,6 @@ local function PaletteListEmpty()
 end
 
 ---------------      CORE      ----------------
--- Get Quest State [ 0 = Lobby, 1 = Ready/Loading, 2 = Quest, 3 = End, 5 = Abandoned, 7 = Returned ]
-local function getQuestStatus()
-    local questManager = sdk.get_managed_singleton("snow.QuestManager")
-    if not questManager then return end
-    return questManager:get_field("_QuestStatus")
-end
-
 -- weaponType starts from 0
 local function GetWeaponTypeItemLoadoutName(weaponType)
     local got = settings.data.weaponConfig[weaponType + 1]
@@ -322,7 +315,7 @@ local function Restock(loadoutIndex)
     local returnFlag = false
 
     returnFlag = timedRestock and
-        restockTimeTreshold > config.time - restockTime and
+        restockTimeTreshold > config.time() - restockTime and
         lastRestock == itemLoadoutName
 
     returnFlag = returnFlag or (
@@ -330,7 +323,7 @@ local function Restock(loadoutIndex)
         lastRestock == itemLoadoutName
     )
 
-    restockTime = config.time
+    restockTime = config.time()
     lastRestock = itemLoadoutName
 
     if returnFlag then return end
@@ -379,7 +372,7 @@ end
 function module.init()
 	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
-    restockTimeTreshold = 60 * 30
+    restockTimeTreshold = 30
     restockTime = 0
 
 	local weaponDefault = {}
@@ -428,10 +421,10 @@ function module.init()
     -- Only rembember last restock for 30 seconds while inside a quest
     re.on_pre_application_entry("UpdateBehavior", function()
         -- If Auto spawn is enabled and quest status says it's active
-        if getQuestStatus() == 2 and settings.data.enable and not timedRestock then
+        if config.getQuestStatus() == 2 and settings.data.enable and not timedRestock then
             timedRestock = true
-            restockTime = config.time
-        elseif getQuestStatus() ~= 2 and timedRestock then
+            restockTime = config.getQuestInitialTime()
+        elseif config.getQuestStatus() ~= 2 and timedRestock then
             timedRestock = false
         end
     end)
