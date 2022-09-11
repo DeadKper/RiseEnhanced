@@ -259,6 +259,9 @@ end
 
 local function Restock(loadoutIndex)
     if not config.isEnabled(settings.data.enable, module.managers) then return end
+    if config.getQuestStatus() ~= 0 and config.getQuestStatus() ~= 2 then
+        return
+    end
 
     local itemLoadoutIndex, matchedType, matchedName, loadoutMismatch = AutoChooseItemLoadout(loadoutIndex)
     local loadout = GetItemLoadout(itemLoadoutIndex)

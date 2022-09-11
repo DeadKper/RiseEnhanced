@@ -43,6 +43,9 @@ local function CreateOrder(setID)
 end
 
 local function OrderFood(order, tries)
+    if config.getQuestStatus() ~= 0 and config.getQuestStatus() ~= 2 then
+        return
+    end
     if tries ~= nil and tries >= 5 then
         config.ChatManager:call("reqAddChatInfomation", settings.lang.dangoTicket.eatingFailed, settings.data.sounds and 2289944406 or 0)
         return
