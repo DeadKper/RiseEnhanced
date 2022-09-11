@@ -1,6 +1,7 @@
 local modUtils
 local PlayerManager
 local languageTable
+local languageIndex
 local questManager
 
 local currentQuestStatus
@@ -31,7 +32,7 @@ function config.getWeaponName(typeNumber)
 	return config.lang.weaponNames[typeNumber]
 end
 
-local function findIndex(table, value)
+function config.findIndex(table, value)
     for i = 1, #table do
         if table[i] == value then
             return i;
@@ -75,7 +76,7 @@ function config.init()
 
 	languageTable = {}
 	local index = 1
-	for key,_ in pairs(languages) do
+	for key, _ in pairs(languages) do
 		languageTable[index] = key
 		index = index + 1
 	end
@@ -83,6 +84,8 @@ function config.init()
 	config.settings = modUtils.getConfigHandler({
 		language = "en_US",
 	}, config.folder)
+
+	languageIndex = config.findIndex(languageTable, config.settings.data.language)
 
 	config.lang = languages[config.settings.data.language]
 	PlayerManager = sdk.get_managed_singleton("snow.player.PlayerManager")
@@ -98,14 +101,12 @@ function config.init()
 end
 
 function config.draw()
-	local change, index
+	local change
 	if imgui.tree_node(config.lang.config.name) then
-
-		index = findIndex(languageTable, config.settings.data.language)
-		change, index = imgui.combo(config.lang.language, index, languageTable)
+		change, languageIndex = imgui.combo(config.lang.language, languageIndex, languageTable)
 
 		if change then
-			config.settings.update(languageTable[index], "language")
+			config.settings.update(languageTable[languageIndex], "language")
 			config.lang = languages[config.settings.data.language]
 		end
 
