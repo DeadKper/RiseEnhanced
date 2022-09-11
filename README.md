@@ -4,6 +4,7 @@ This mod is more of a compilation of other mods than a mod of it's own, I did ma
 
 Current modules:
 
+- Anomaly Investigation Legality Checker
 - Auto Cohoot Nest
 - Auto Dango + Eat again button
 - Auto NPC Talk (no bullshit mod)
