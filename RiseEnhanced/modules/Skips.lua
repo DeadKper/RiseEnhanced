@@ -10,9 +10,8 @@ local FINISHED
 local LOADING_STATES
 
 local function isLoading()
-	local GuiGameStartFsmManager = sdk.get_managed_singleton("snow.gui.fsm.title.GuiGameStartFsmManager")
-	if GuiGameStartFsmManager then
-		return LOADING_STATES[GuiGameStartFsmManager:get_field("<GameStartState>k__BackingField")] 
+	if config.GuiGameStartFsmManager then
+		return LOADING_STATES[config.GuiGameStartFsmManager:get_field("<GameStartState>k__BackingField")] 
 	end
 	return false
 end
@@ -39,24 +38,19 @@ end
 
 local function ClearFadeWithAction(args)
 	sdk.to_managed_object(args[3]):call("notifyActionEnd")
-	local FadeManager = sdk.get_managed_singleton("snow.SnowSingletonBehaviorRoot`1<snow.FadeManager>")
-	if FadeManager then 
-		FadeManager = FadeManager:get_field("_Instance") 
-		if FadeManager then
-			FadeManager:set_field("<FadeMode>k__BackingField", FINISHED)
-			FadeManager:set_field("fadeOutInFlag",false)
-		end
+	if not config.FadeManagerInstance then
+		return
 	end
+
+	config.FadeManagerInstance:set_field("<FadeMode>k__BackingField", FINISHED)
+	config.FadeManagerInstance:set_field("fadeOutInFlag",false)
 end
 local function ClearFade(args)
-	local FadeManager = sdk.get_managed_singleton("snow.SnowSingletonBehaviorRoot`1<snow.FadeManager>")
-	if FadeManager then 
-		FadeManager = FadeManager:get_field("_Instance") 
-		if FadeManager then
-			FadeManager:set_field("<FadeMode>k__BackingField", FINISHED)
-			FadeManager:set_field("fadeOutInFlag",false)
-		end
+	if not config.FadeManagerInstance then
+		return
 	end
+	config.FadeManagerInstance:set_field("<FadeMode>k__BackingField", FINISHED)
+	config.FadeManagerInstance:set_field("fadeOutInFlag",false)
 end
 
 function module.init()

@@ -75,7 +75,7 @@ re.on_draw_ui(function()
 		settings.update(not settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen
 	end
-end);
+end)
 
 re.on_frame(function()
 	if settings.data.isMenuOpen ~= menu.wasOpen then
@@ -88,6 +88,6 @@ re.on_frame(function()
 	end
 
 	if settings.data.isMenuOpen then
-		pcall(menu.draw);
+		pcall(menu.draw)
 	end
-end);
+end)

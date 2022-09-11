@@ -16,21 +16,16 @@ local settings
 local nekoTakuList
 
 local function getCurrentMapNo()
-    local QuestMapManager = sdk.get_managed_singleton("snow.QuestMapManager")
-
-    return QuestMapManager:get_CurrentMapNo()
+    return config.QuestMapManager:get_CurrentMapNo()
 end
 
 local function getCurrentPosition()
-    local masterPlayer = sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
-
+    local masterPlayer = config.PlayerManager:call("findMasterPlayer")
     return masterPlayer:call("get_GameObject"):call("get_Transform"):call("get_Position")
 end
 
 local function getCampList()
-    local StagePointManager = sdk.get_managed_singleton("snow.stage.StagePointManager")
-
-    return StagePointManager:get_field("_TentPositionList")
+    return config.StagePointManager:get_field("_TentPositionList")
 end
 
 local function calculateDistance(point1, point2)
@@ -38,9 +33,7 @@ local function calculateDistance(point1, point2)
 end
 
 local function getFastTravelPt(index)
-    local StagePointManager = sdk.get_managed_singleton("snow.stage.StagePointManager")
-
-    return StagePointManager:get_field("_FastTravelPointList"):get_field("mItems"):get_element(index):get_field(
+    return config.StagePointManager:get_field("_FastTravelPointList"):get_field("mItems"):get_element(index):get_field(
         "_PointArray"):get_element(0)
 end
 

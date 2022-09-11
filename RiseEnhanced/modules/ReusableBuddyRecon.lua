@@ -9,7 +9,6 @@ local settings
 -- infinite_buddy_recon.lua : written by arcwizard1204
 
 local travelCount
-local OtomoReconManager
 local multiplier
 
 local function on_pre_onCompleteReconOtomoAct(args)
@@ -22,7 +21,7 @@ end
 
 local function on_post_onCompleteReconOtomoAct(retval)
 	if settings.data.enable then
-		sdk.get_managed_singleton("snow.otomo.OtomoManager")._RefOtReconManager:removeReconOtomo()
+		config.OtomoManager._RefOtReconManager:removeReconOtomo()
 	end
     return retval
 end
@@ -38,30 +37,29 @@ local function on_pre_initRewardList(args)
 	if settings.data.enable then
 		local usedPoints = settings.data.cost * multiplier * travelCount
 		if travelCount > 0 then
-			OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", true)
+			config.OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", true)
 		end
-		OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", usedPoints)
+		config.OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", usedPoints)
 	end
 
 	return sdk.PreHookResult.CALL_ORIGINAL
 end
 
 local function on_pre_initQuestStart(args)
-	OtomoReconManager = sdk.get_managed_singleton("snow.data.OtomoReconManager")
 	if settings.data.enable then
 		if travelCount > 0 then
 			travelCount = 0
-			OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", false)
+			config.OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", false)
 		end
-		OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", settings.data.cost * multiplier)
+		config.OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", settings.data.cost * multiplier)
 	end
 
 	return sdk.PreHookResult.CALL_ORIGINAL
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
+	config = require("RiseEnhanced.utils.config")
+	modUtils = require("RiseEnhanced.utils.mod_utils")
 	multiplier = 10
 	settings = modUtils.getConfigHandler({
 		enable = true,
@@ -69,7 +67,7 @@ function module.init()
 	}, config.folder .. "/" .. module.folder)
 
 	travelCount = 0
-	OtomoReconManager = nil
+	config.OtomoReconManager = nil
 
 	sdk.hook(sdk.find_type_definition("snow.otomo.OtomoReconCharaManager"):get_method("onCompleteReconOtomoAct"), on_pre_onCompleteReconOtomoAct, on_post_onCompleteReconOtomoAct)
 

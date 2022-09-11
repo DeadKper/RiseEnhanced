@@ -10,19 +10,14 @@ local function autoPickNest(retval)
 	if not settings.data.enable then
 		return
 	end
-
-	local villageAreaManager = sdk.get_managed_singleton("snow.VillageAreaManager")
-
-	if not villageAreaManager then
+	if not config.VillageAreaManager then
 		return
 	end
 
-	local villageNum = villageAreaManager:call("get__CurrentAreaNo")
+	local villageNum = config.VillageAreaManager:call("get__CurrentAreaNo")
+	local progressOwlNestSaveData = config.ProgressOwlNestManager:call("get_SaveData")
 
-	local owlNestManagerSingleton = sdk.get_managed_singleton("snow.progress.ProgressOwlNestManager")
-	local progressOwlNestSaveData = owlNestManagerSingleton:call("get_SaveData")
-
-	if not owlNestManagerSingleton or not progressOwlNestSaveData then
+	if not config.ProgressOwlNestManager or not progressOwlNestSaveData then
 		return
 	end
 
@@ -30,17 +25,17 @@ local function autoPickNest(retval)
 	local elgadoCount = progressOwlNestSaveData:get_field("_StackCount2")
 
 	if kamuraCount >= settings.data.maxStock then
-		villageAreaManager:call("set__CurrentAreaNo", 2)
-		owlNestManagerSingleton:supply()
+		config.VillageAreaManager:call("set__CurrentAreaNo", 2)
+		config.ProgressOwlNestManager:supply()
 	end
 
 	if elgadoCount >= settings.data.maxStock then
-		villageAreaManager:call("set__CurrentAreaNo", 6)
-		owlNestManagerSingleton:supply()
+		config.VillageAreaManager:call("set__CurrentAreaNo", 6)
+		config.ProgressOwlNestManager:supply()
 	end
 
-	if villageNum ~= villageAreaManager:call("get__CurrentAreaNo") then
-		villageAreaManager:call("set__CurrentAreaNo", villageNum)
+	if villageNum ~= config.VillageAreaManager:call("get__CurrentAreaNo") then
+		config.VillageAreaManager:call("set__CurrentAreaNo", villageNum)
 	end
 end
 

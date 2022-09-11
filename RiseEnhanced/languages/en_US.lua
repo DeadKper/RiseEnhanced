@@ -112,6 +112,7 @@ return {
 		ticketByDefault = "Use Dango Ticket by default",
 		showAllDango = "Show all available Dango (including daily)",
 		hoppingSkewers = "Configure Hopping Skewer Dango Levels",
+		eatingFailed = "<COL RED>AutoDango was unable to eat!, please trigger eating manually.</COL>",
 		top = "Top Dango",
 		mid = "Mid Dango",
 		bot = "Bot Dango",

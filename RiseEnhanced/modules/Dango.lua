@@ -1,16 +1,22 @@
 local module = {
 	folder = "Auto Dango",
+    managers = {
+        "FacilityDataManager",
+        "ProgressManager",
+        "PlayerManager",
+        "ChatManager",
+        "ContentsIdDataManager",
+        "QuestManager",
+    }
 }
 
 local config
 local modUtils
 local settings
 
-local allManagersRetrieved
-local gm
-
 local DataShortcut
 local isOrdering
+local hasMaxedStats
 
 local function GetCurrentSet()
     local loadout = settings.data.weapons[config.getWeaponType() + 1]
@@ -28,7 +34,7 @@ local function getSetName(Kitchen, i)
 end
 
 local function CreateOrder(setID)
-    local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
+    local Kitchen = config.FacilityDataManager:call("get_Kitchen")
     if not Kitchen then return end
     Kitchen = Kitchen:call("get_MealFunc")
     if not Kitchen then return end
@@ -36,8 +42,12 @@ local function CreateOrder(setID)
     return Kitchen:call("getMySetList"):call("get_Item", setID - 1)
 end
 
-local function OrderFood(order)
-    local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
+local function OrderFood(order, tries)
+    if tries ~= nil and tries >= 5 then
+        config.ChatManager:call("reqAddChatInfomation", settings.lang.dangoTicket.eatingFailed, settings.data.sounds and 2289944406 or 0)
+        return
+    end
+    local Kitchen = config.FacilityDataManager:call("get_Kitchen")
     if not Kitchen then return end
     Kitchen = Kitchen:call("get_MealFunc")
     if not Kitchen then return end
@@ -49,20 +59,20 @@ local function OrderFood(order)
     log.debug(order:call("get__DangoId"):call("get_Item", 0))
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        gm.ChatManager.d:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
+        config.ChatManager:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
         return
     end
 
     log.debug(order:call("get__DangoId"):call("get_Item", 0))
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        gm.ChatManager.d:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
+        config.ChatManager:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
         return
     end
 
     local facilityLevel = Kitchen:call("get_FacilityLv")
 
-    local Vouchers = gm.ContentsIdDataManager.d:call("getItemData", 0x410007c)
+    local Vouchers = config.ContentsIdDataManager:call("getItemData", 0x410007c)
     local VoucherCount = Vouchers:call("getCountInBox")
 
     log.debug(VoucherCount)
@@ -79,10 +89,13 @@ local function OrderFood(order)
     Kitchen:call("order", order, settings.data.points and 1 or 0, facilityLevel)
     isOrdering = false
 
-    local Player = gm.PlayerManager.d:call("findMasterPlayer")
+    local Player = config.PlayerManager:call("findMasterPlayer")
     local PlayerData = Player:get_field("_refPlayerData")
-    PlayerData:set_field("_vitalMax", PlayerData:get_field("_vitalMax") + 50)
-    PlayerData:set_field("_staminaMax", PlayerData:get_field("_staminaMax") + 1500.0)
+    if not hasMaxedStats then
+        PlayerData:set_field("_vitalMax", PlayerData:get_field("_vitalMax") + 50)
+        PlayerData:set_field("_staminaMax", PlayerData:get_field("_staminaMax") + 1500.0)
+        hasMaxedStats = true
+    end
 
     local OrderName = order:call("get_OrderName")
 
@@ -90,42 +103,34 @@ local function OrderFood(order)
 
     local PlayerSkillData = Player:get_field("_refPlayerSkillList")
     PlayerSkillData = PlayerSkillData:call("get_KitchenSkillData")
+    local skill
+    local SkillsMessage = ""
     for i,v in pairs(PlayerSkillData:get_elements()) do
         if v:get_field("_SkillId") ~= 0 then
-            Message = Message .. "\n" .. DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
+            skill = DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. ""
+            if skill == nil or string.len(skill) < 2 then
+                config.addTimer(1, OrderFood, order, tries ~= nil and tries + 1 or 1)
+                return
+            end
+            SkillsMessage = SkillsMessage .. "\n" .. skill .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
         end
     end
-    Message = Message .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
+    Message = Message .. SkillsMessage .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
 
     if settings.data.notification then
-        gm.ChatManager.d:call("reqAddChatInfomation", Message, settings.data.sounds and 2289944406 or 0)
+        config.ChatManager:call("reqAddChatInfomation", Message, settings.data.sounds and 2289944406 or 0)
     end
 
     Kitchen:set_field("_AvailableWaitTimer", Kitchen:call("get_WaitTime"))
 end
 
+local function orderDango()
+    OrderFood(CreateOrder(GetCurrentSet()))
+end
+
 function module.init()
 	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
-
-	allManagersRetrieved = false
-	gm = {}
-	gm.FacilityDataManager = {}
-	gm.FacilityDataManager.n = "snow.data.FacilityDataManager"
-	gm.ProgressManager = {}
-	gm.ProgressManager.n = "snow.progress.ProgressManager"
-	gm.PlayerManager = {}
-	gm.PlayerManager.n = "snow.player.PlayerManager"
-	gm.ChatManager = {}
-	gm.ChatManager.n = "snow.gui.ChatManager"
-	gm.ContentsIdDataManager = {}
-	gm.ContentsIdDataManager.n = "snow.data.ContentsIdDataManager"
-	gm.QuestManager = {}
-	gm.QuestManager.n = "snow.QuestManager"
-
-	for _,v in pairs(gm) do
-		v.d = sdk.get_managed_singleton(v.n)
-	end
 
 	DataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
 	isOrdering = false
@@ -151,9 +156,30 @@ function module.init()
 	sdk.hook(
 		sdk.find_type_definition("snow.QuestManager"):get_method("questActivate(snow.LobbyManager.QuestIdentifier)"),
 		function(args)
-			OrderFood(CreateOrder(GetCurrentSet()))
+            if config.isEnabled(settings.data.enable, module.managers) then
+                orderDango()
+            end
 		end
 	)
+
+    re.on_pre_application_entry("UpdateBehavior", function()
+        if not config.isEnabled(settings.data.enable, module.managers) then
+            return
+        end
+
+        local Kitchen = config.FacilityDataManager:call("get_Kitchen")
+        if not Kitchen then return end
+        Kitchen = Kitchen:call("get_MealFunc")
+        if config.getQuestStatus() ~= 2 and Kitchen:get_field("_AvailableWaitTimer") == 0 and hasMaxedStats then
+            hasMaxedStats = false
+        end
+    end)
+
+    sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"), function(args)
+        if config.isEnabled(settings.data.enable, module.managers) then
+            config.addTimer(5, orderDango)
+        end
+    end)
 
 	sdk.hook(
 		sdk.find_type_definition("snow.facility.MealOrderData"):get_method("canOrder"),
@@ -168,35 +194,27 @@ function module.init()
 			log.debug(sdk.to_int64(ret))
 		return ret end
 	)
-
-	re.on_frame(function()
-		if allManagersRetrieved == false then
-			local success = true
-			for i,v in pairs(gm) do
-				v.d = sdk.get_managed_singleton(v.n)
-				if v.d == nil then success = false end
-			end
-			allManagersRetrieved = success
-		end
-	end)
 end
 
 function module.draw()
     if imgui.tree_node(config.lang.dango.name) then
-        if not allManagersRetrieved then
+        if not config.managersRetrieved(module.managers) then
             imgui.text(config.lang.loading)
+            imgui.tree_pop();
             return
         end
 
-        local Kitchen = gm.FacilityDataManager.d:call("get_Kitchen")
+        local Kitchen = config.FacilityDataManager:call("get_Kitchen")
         if not Kitchen then
             imgui.text(config.lang.loading)
+            imgui.tree_pop();
             return
         end
 
         Kitchen = Kitchen:call("get_MealFunc")
         if not Kitchen then
             imgui.text(config.lang.loading)
+            imgui.tree_pop();
             return
         end
 
@@ -228,8 +246,11 @@ function module.draw()
         end
 
         if imgui.button(manualText) then
-            Kitchen:set_field("_AvailableWaitTimer", 0)
-            OrderFood(CreateOrder(GetCurrentSet()))
+            if Kitchen:get_field("_AvailableWaitTimer") > 0 then
+                hasMaxedStats = true
+                Kitchen:set_field("_AvailableWaitTimer", 0)
+            end
+            orderDango()
         end
         imgui.tree_pop();
     end

@@ -33,8 +33,7 @@ function module.init()
 			if not settings.data.enable then
 				return
 			end
-			local FacilityManager = sdk.get_managed_singleton("snow.data.FacilityDataManager");
-			local KitchenMealFunc = FacilityManager:get_field("_Kitchen"):get_field("_MealFunc");
+			local KitchenMealFunc = config.FacilityDataManager:get_field("_Kitchen"):get_field("_MealFunc");
 
 			DangoTicketState = KitchenMealFunc:call("getMealTicketFlag");
 			if DangoTicketState then
@@ -79,8 +78,7 @@ function module.init()
 			if not settings.data.enable then
 				return
 			end
-			local FacilityManager = sdk.get_managed_singleton("snow.data.FacilityDataManager");
-			local KitchenMealFunc = FacilityManager:get_field("_Kitchen"):get_field("_MealFunc");
+			local KitchenMealFunc = config.FacilityDataManager:get_field("_Kitchen"):get_field("_MealFunc");
 			if settings.data.ticketByDefault then
 				KitchenMealFunc:call("setMealTicketFlag", true)
 			end
@@ -96,12 +94,10 @@ function module.init()
 				return retval
 			end
 			if settings.data.showAllDango then
-				local FacilityManager = sdk.get_managed_singleton("snow.data.FacilityDataManager")
-				local KitchenMealFunc = FacilityManager:get_field("_Kitchen"):get_field("_MealFunc")
+				local KitchenMealFunc = config.FacilityDataManager:get_field("_Kitchen"):get_field("_MealFunc")
 				local DangoData = KitchenMealFunc:get_field("<DangoDataList>k__BackingField"):call("ToArray")
-				local FlagManager = sdk.get_managed_singleton("snow.data.FlagDataManager");
 				for i, dango in ipairs(DangoData) do
-					local isDangoUnlock = FlagManager:call("isUnlocked(snow.data.DataDef.DangoId)", dango:get_field("_Param"):get_field("_Id"))
+					local isDangoUnlock = config.FlagManager:call("isUnlocked(snow.data.DataDef.DangoId)", dango:get_field("_Param"):get_field("_Id"))
 					if isDangoUnlock then
 						dango:get_field("_Param"):set_field("_DailyRate", 0)
 					end
@@ -117,8 +113,7 @@ function module.init()
 		end,
 		function(retval)
 			if settings.data.infiniteDangoTickets then
-				local DataManager = sdk.get_managed_singleton("snow.data.DataManager");
-				local ItemBox = DataManager:get_field("_PlItemBox")
+				local ItemBox = config.DataManager:get_field("_PlItemBox")
 				ItemBox:call("tryAddGameItem(snow.data.ContentsIdSystem.ItemId, System.Int32)", 68157564, 1)
 			end
 			return retval;

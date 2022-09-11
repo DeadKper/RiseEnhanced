@@ -1,5 +1,10 @@
 local module = {
 	folder = "Anomaly Checker",
+	managers = {
+		"ChatManager",
+		"QuestManager",
+		"StageManager"
+	}
 }
 
 local config
@@ -14,41 +19,23 @@ local TagetT
 local TimeT
 local MapT
 
-local SLinited
 local StageReady
-
-local SL
-
-local function SingletonsInited()
-	if SLinited then
-		return true
-	else
-		for i,v in pairs(SL) do
-			SL[i].d = sdk.get_managed_singleton(SL[i].n)
-			if not SL[i].d then 
-				return false
-			end
-		end
-		SLinited = true
-		return true
-	end
-end
 
 local function IsStageReady()
 	if StageReady then
 		return true
-	else
-		if SingletonsInited() and SL.StageManager.d:get_IsReadyInitialize() then
-			StageReady = true
-			return true
-		else
-			return false
-		end
 	end
+	if config.managersRetrieved(module.managers)
+			and config.StageManager:get_IsReadyInitialize() then
+		StageReady = true
+		return true
+	end
+
+	return false
 end
 
 function CheckQuest()
-	local QuestData = SL.QuestManager.d:getActiveRandomMysteryQuestData()
+	local QuestData = config.QuestManager:getActiveRandomMysteryQuestData()
 	if QuestData then
 		local QuestLevel = QuestData:get_field("_QuestLv") -- 任务等级
 		local TargetNum = QuestData:get_field("_HuntTargetNum") -- 目标个数
@@ -91,20 +78,13 @@ function module.init()
 	TimeT = {[25] = true,[30] = true,[35] = true,[50] = true}
 	MapT = {[1]= true,[2]= true,[3]= true,[4]= true,[5]= true,[12]= true,[13]= true}
 
-	SLinited = false
 	StageReady = false
 
-	SL = {
-		ChatManager =	{n = "snow.gui.ChatManager"},
-		QuestManager =	{n = "snow.QuestManager"},
-		StageManager =	{n = "snow.stage.StageManager"}
-	}
-
 	re.on_pre_application_entry("UpdateBehavior", function()
-        if IsStageReady() and config.getQuestStatusName() == "quest" and settings.data.enable and not Checked and (not settings.data.onlineOnly or SL.StageManager.d:get_IsQuestOnline()) then
+        if IsStageReady() and config.getQuestStatusName() == "quest" and settings.data.enable and not Checked and (not settings.data.onlineOnly or config.StageManager:get_IsQuestOnline()) then
             Checked = true
 			if CheckQuest() == false then
-				SL.ChatManager.d:call("reqAddChatInfomation", settings.lang.anomalyChecker.warning, 2289944406)
+				config.ChatManager:call("reqAddChatInfomation", settings.lang.anomalyChecker.warning, 2289944406)
 			end
         elseif config.getQuestStatusName() ~= "quest" and Checked then
             Checked = false
