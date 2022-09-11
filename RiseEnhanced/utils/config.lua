@@ -37,7 +37,7 @@ local languages = {
 
 local config = {
 	folder = "Rise Enhanced",
-	version = "2.1.0",
+	version = "3.0.0",
 }
 
 local timers
