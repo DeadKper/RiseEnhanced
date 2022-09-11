@@ -1,4 +1,4 @@
-local config = require("RiseEnhanced.misc.config")
+local config = require("RiseEnhanced.utils.config")
 local modUtils = require("RiseEnhanced.utils.mod_utils")
 local modules = {
 	cohoot = require("RiseEnhanced.modules.CohootNest"),

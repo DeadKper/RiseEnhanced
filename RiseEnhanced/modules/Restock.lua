@@ -377,7 +377,7 @@ local function resetRestock(retval)
 end
 
 function module.init()
-	config = require "RiseEnhanced.misc.config"
+	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
     restockTimeTreshold = 60 * 30
     restockTime = 0

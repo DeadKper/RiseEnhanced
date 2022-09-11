@@ -16,7 +16,7 @@ function module.init()
 	SavedDango = nil
 	DangoTicketState = false
 
-	config = require "RiseEnhanced.misc.config"
+	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	settings = modUtils.getConfigHandler({

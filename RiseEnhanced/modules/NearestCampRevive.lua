@@ -124,7 +124,7 @@ local function redirectWarpNeko(args)
 end
 
 function module.init()
-	config = require "RiseEnhanced.misc.config"
+	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 
 	skipCreateNeko = false

@@ -25,7 +25,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.fsm.title.GuiTitleMenuFsmManager"):g
     on_pre_title_hook, on_post_title_hook)
 
 function module.init()
-	config = require "RiseEnhanced.misc.config"
+	config = require "RiseEnhanced.utils.config"
 	modUtils = require "RiseEnhanced.utils.mod_utils"
 	settings = modUtils.getConfigHandler({
 		enable = true,
