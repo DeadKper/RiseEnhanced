@@ -42,7 +42,94 @@ local config = {
 	initiated = false,
 }
 
+local questStatusName = {
+	[0] = "lobby",
+	[1] = "loading",
+	[2] = "quest",
+	[3] = "end",
+	[5] = "abandoned",
+	[7] = "returned",
+}
+
 local timers
+
+local function updateCache(args)
+	config.getWeaponType()
+	if args == nil then
+		for i = 0, 111, 1 do
+			if config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", i):call("isSamePlEquipPack") then
+				config.updateEquipmentLoadoutCache(i)
+				break
+			end
+		end
+	else
+		config.updateEquipmentLoadoutCache(sdk.to_int64(args[3]))
+	end
+end
+
+local function retrieveManagers()
+	for key, value in pairs(singletonManagersNames) do
+		if config[key] == nil then
+			config[key] = sdk.get_managed_singleton(value)
+		end
+	end
+
+	if config.ShortcutManager == nil and config.SystemDataManager ~= nil then
+		config.ShortcutManager = config.SystemDataManager:call("getCustomShortcutSystem")
+	end
+
+	if config.FadeManagerInstance == nil and config.FadeManager ~= nil then
+		config.FadeManagerInstance = config.FadeManager:get_field("_Instance")
+	end
+end
+
+
+local function updateQuestStatus()
+	local status = config.QuestManager:get_field("_QuestStatus")
+	if currentQuestStatus ~= status then
+		currentQuestTime = config.time()
+		currentQuestStatus = status
+		config.getWeaponType()
+	end
+
+	if currentQuestStatus == 0 and cache.data.weaponType == nil then
+		config.addTimer(1, updateCache)
+		config.addTimer(5, updateCache) -- This fixes weaponType cache
+	end
+end
+
+local function checkTimers()
+	if timers.count == 0 then
+		return
+	end
+
+	local newTimers = {}
+	local count = 0
+	for i = 0, timers.count - 1 do
+		if timers[i].delay < config.time() then
+			timers[i].action(table.unpack(timers[i].args))
+		else
+			newTimers[count] = timers[i]
+			count = count + 1
+		end
+	end
+	timers = newTimers
+	timers.count = count
+end
+
+local function loadCache()
+	cache = modUtils.getConfigHandler({
+		weaponType = nil,
+		loadoutIndex = nil,
+		loadoutName = nil,
+		loadoutWeaponType = nil,
+	}, config.folder, config.cacheFile)
+end
+
+local function onFrame()
+	retrieveManagers()
+	checkTimers()
+end
 
 function config.getWeaponType()
     if config.PlayerManager == nil then return cache.data.weaponType end
@@ -77,15 +164,6 @@ function config.time()
 	return os.clock()
 end
 
-local questStatusName = {
-	[0] = "lobby",
-	[1] = "loading",
-	[2] = "quest",
-	[3] = "end",
-	[5] = "abandoned",
-	[7] = "returned",
-}
-
 function config.getQuestStatus()
     return currentQuestStatus
 end
@@ -114,32 +192,6 @@ function config.isEnabled(enabled, managers)
 	return enabled and config.managersRetrieved(managers)
 end
 
-local function retrieveManagers()
-	for key, value in pairs(singletonManagersNames) do
-		if config[key] == nil then
-			config[key] = sdk.get_managed_singleton(value)
-		end
-	end
-
-	if config.ShortcutManager == nil and config.SystemDataManager ~= nil then
-		config.ShortcutManager = config.SystemDataManager:call("getCustomShortcutSystem")
-	end
-
-	if config.FadeManagerInstance == nil and config.FadeManager ~= nil then
-		config.FadeManagerInstance = config.FadeManager:get_field("_Instance")
-	end
-end
-
-
-local function updateQuestStatus()
-	local status = config.QuestManager:get_field("_QuestStatus")
-	if currentQuestStatus ~= status then
-		currentQuestTime = config.time()
-		currentQuestStatus = status
-		config.getWeaponType()
-	end
-end
-
 function config.addTimer(delay, func, ...)
 	timers[timers.count] = {
 		delay = config.time() + delay,
@@ -149,45 +201,7 @@ function config.addTimer(delay, func, ...)
 	timers.count = timers.count + 1
 end
 
-local function checkTimers()
-	if timers.count == 0 then
-		return
-	end
-
-	local newTimers = {}
-	local count = 0
-	for i = 0, timers.count - 1 do
-		if timers[i].delay < config.time() then
-			timers[i].action(table.unpack(timers[i].args))
-		else
-			newTimers[count] = timers[i]
-			count = count + 1
-		end
-	end
-	timers = newTimers
-	timers.count = count
-end
-
-local function onFrame()
-	retrieveManagers()
-	checkTimers()
-end
-
-local function updateCache(args)
-	config.getWeaponType()
-	local index, loadoutIndex
-	if args == nil then
-		for i = 1, 112, 1 do
-			loadoutIndex = i - 1
-			if config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", loadoutIndex):call("isSamePlEquipPack") then
-				index = loadoutIndex
-				break
-			end
-		end
-	else
-		index = sdk.to_int64(args[3])
-	end
-
+function config.updateEquipmentLoadoutCache(index)
 	if index ~= nil and index ~= cache.data.loadoutIndex then
 		local loadout = config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", index)
 		cache.update(index, "loadoutIndex")
@@ -205,19 +219,12 @@ function config.fullInit()
 	re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
 	sdk.hook(
 		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), updateCache)
+	
+	updateCache()
 end
 
 function config.cache(index1, index2)
 	return index2 ~= nil and cache.data[index1][index2] or cache.data[index1]
-end
-
-local function loadCache()
-	cache = modUtils.getConfigHandler({
-		weaponType = nil,
-		loadoutIndex = nil,
-		loadoutName = nil,
-		loadoutWeaponType = nil,
-	}, config.folder, config.cacheFile)
 end
 
 function config.init()
@@ -236,8 +243,12 @@ function config.init()
 	}, config.folder)
 
 	loadCache()
-	if not config.settings.data.enable and cache.data.weaponType ~= nil then
-		cache.wipe()
+	if not config.settings.data.enable then
+		for _, v in pairs(cache.data) do
+			if v ~= nil then
+				cache.wipe()
+			end
+		end
 		loadCache()
 	end
 
@@ -251,7 +262,6 @@ function config.init()
 
 	if config.settings.data.enable then
 		config.fullInit()
-		updateCache()
 	end
 end
 

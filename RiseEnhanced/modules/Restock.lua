@@ -256,6 +256,7 @@ local function AutoChooseItemLoadout(loadoutIndex)
                     lastHitLoadout = i
                     local got = settings.data.loadoutConfig[i]
                     if (got ~= nil) and (got ~= -1) then
+                        config.updateEquipmentLoadoutCache(loadoutIndex)
                         return { got, "Loadout", GetEquipmentLoadoutName(loadoutIndex) }
                     end
                     break
