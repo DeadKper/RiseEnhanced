@@ -219,8 +219,6 @@ function config.fullInit()
 	re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
 	sdk.hook(
 		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), updateCache)
-	
-	updateCache()
 end
 
 function config.cache(index1, index2)
