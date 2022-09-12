@@ -111,12 +111,11 @@ local function OrderFood(order, tries)
     for i,v in pairs(PlayerSkillData:get_elements()) do
         if v:get_field("_SkillId") ~= 0 then
             skill = DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. ""
-            if skill == nil or string.len(skill) < 2 then
-                config.addTimer(1, OrderFood, order, tries ~= nil and tries + 1 or 1)
-                return
-            end
             SkillsMessage = SkillsMessage .. "\n" .. skill .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
         end
+    end
+    if SkillsMessage == nil or string.len(SkillsMessage) < 5 then
+        config.addTimer(0.5, OrderFood, order, tries ~= nil and tries)
     end
     Message = Message .. SkillsMessage .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
 

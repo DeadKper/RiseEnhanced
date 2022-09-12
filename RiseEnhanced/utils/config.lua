@@ -244,12 +244,15 @@ local function drawInner()
 		config.settings.update(languageTable[languageIndex], "language")
 		config.lang = languages[config.settings.data.language]
 	end
-	imgui.text(config.getWeaponType())
-	if cache.data.loadoutIndex ~= nil then
-		imgui.text(cache.data.loadoutIndex)
-		imgui.text(cache.data.loadoutName)
-		imgui.text(cache.data.loadoutWeaponType)
+
+	imgui.new_line()
+	if imgui.button("Reinitialize Singletons (to try to fix the mod if it broke)") then
+		for key, value in pairs(singletonManagersNames) do
+			config[key] = nil
+		end
+		retrieveManagers()
 	end
+	-- imgui.text(config.getWeaponType())
 end
 
 function config.draw()
