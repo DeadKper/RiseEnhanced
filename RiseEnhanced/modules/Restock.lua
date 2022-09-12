@@ -170,21 +170,6 @@ local function GetWeaponTypeItemLoadoutName(weaponType)
     return GetItemLoadoutName(got)
 end
 
-local function CheckForDefaults(loadoutIndex, loadoutMismatch)
-    local weaponType
-    if loadoutIndex then
-        weaponType = GetEquipmentLoadoutWeaponType(loadoutIndex)
-    else
-        weaponType = config.getWeaponType()
-    end
-    local got = settings.data.weaponConfig[weaponType+1]
-    if (got ~= nil) and (got ~= -1) then
-        return { got, "WeaponType", config.getWeaponName(weaponType), loadoutMismatch }
-    end
-
-    return { settings.data.default, "Default", "", loadoutMismatch }
-end
-
 -- loadoutIndex starts from 0
 local function GetLoadoutItemLoadoutIndex(loadoutIndex)
     local got = settings.data.loadoutConfig[loadoutIndex + 1]
@@ -199,6 +184,26 @@ local function GetLoadoutItemLoadoutIndex(loadoutIndex)
         return UseWeaponTypeItemSet(config.getWeaponName(weaponType), GetItemLoadoutName(got))
     end
     return GetItemLoadoutName(got)
+end
+
+local function GetFromCache(miss)
+    local loadoutIndex, itemLoadoutIndex
+    loadoutIndex = config.cache("loadoutIndex")
+    if loadoutIndex == nil then
+        return { settings.data.default, "Default", "", miss }
+    end
+
+    itemLoadoutIndex = settings.data.loadoutConfig[loadoutIndex + 1]
+    if itemLoadoutIndex ~= nil and itemLoadoutIndex ~= -1 then
+        return { itemLoadoutIndex, "Loadout", config.cache("loadoutName"), miss }
+    end
+    itemLoadoutIndex = settings.data.weaponConfig[config.cache("loadoutWeaponType") + 1]
+
+    if itemLoadoutIndex ~= nil and itemLoadoutIndex ~= -1 then
+        return { itemLoadoutIndex, "WeaponType", config.getWeaponName(config.cache("loadoutWeaponType")), miss }
+    end
+
+    return { settings.data.default, "Default", "", miss }
 end
 
 -- arg loadoutIndex is set when player applying equipment loadout
@@ -236,7 +241,13 @@ local function AutoChooseItemLoadout(loadoutIndex)
         end
 
         if not cacheHit then
-            SendMessage("searching Loadout")
+            local got, type, name, _ = table.unpack(GetFromCache())
+            if got ~= nil and got ~= -1 then
+                return { got, type, name }
+            end
+        end
+
+        if not cacheHit then
             local found = false
             for i = 1, 112, 1 do
                 loadoutIndex = i - 1
@@ -271,26 +282,6 @@ local function AutoChooseItemLoadout(loadoutIndex)
 end
 
 ------------------------
-
-local function GetFromCache()
-    local loadoutIndex, itemLoadoutIndex
-    loadoutIndex = config.cache("loadoutIndex")
-    if loadoutIndex == nil then
-        return { settings.data.default, "Default", "", true }
-    end
-
-    itemLoadoutIndex = settings.data.loadoutConfig[loadoutIndex + 1]
-    if itemLoadoutIndex ~= nil and itemLoadoutIndex ~= -1 then
-        return { itemLoadoutIndex, "Loadout", config.cache("loadoutName"), false }
-    end
-    itemLoadoutIndex = settings.data.weaponConfig[config.cache("loadoutWeaponType") + 1]
-
-    if itemLoadoutIndex ~= nil and itemLoadoutIndex ~= -1 then
-        return { itemLoadoutIndex, "WeaponType", config.cache("loadoutName"), false }
-    end
-
-    return { settings.data.default, "Default", "", true }
-end
 
 local function Restock(loadoutIndex)
     if not config.isEnabled(settings.data.enable, module.managers) then return end

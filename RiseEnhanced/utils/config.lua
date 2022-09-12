@@ -174,9 +174,21 @@ local function onFrame()
 end
 
 local function updateCache(args)
-	local index = sdk.to_int64(args[3])
 	config.getWeaponType()
-	if index ~= cache.data.loadoutIndex then
+	local index, loadoutIndex
+	if args == nil then
+		for i = 1, 112, 1 do
+			loadoutIndex = i - 1
+			if config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", loadoutIndex):call("isSamePlEquipPack") then
+				index = loadoutIndex
+				break
+			end
+		end
+	else
+		index = sdk.to_int64(args[3])
+	end
+
+	if index ~= nil and index ~= cache.data.loadoutIndex then
 		local loadout = config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", index)
 		cache.update(index, "loadoutIndex")
 		cache.update(loadout:call("get_Name"), "loadoutName")
@@ -199,6 +211,15 @@ function config.cache(index1, index2)
 	return index2 ~= nil and cache.data[index1][index2] or cache.data[index1]
 end
 
+local function loadCache()
+	cache = modUtils.getConfigHandler({
+		weaponType = nil,
+		loadoutIndex = nil,
+		loadoutName = nil,
+		loadoutWeaponType = nil,
+	}, config.folder, config.cacheFile)
+end
+
 function config.init()
 	modUtils = require("RiseEnhanced.utils.mod_utils")
 
@@ -214,12 +235,11 @@ function config.init()
 		language = "en_US",
 	}, config.folder)
 
-	cache = modUtils.getConfigHandler({
-		weaponType = nil,
-		loadoutIndex = nil,
-		loadoutName = nil,
-		loadoutWeaponType = nil,
-	}, config.folder, config.cacheFile)
+	loadCache()
+	if not config.settings.data.enable and cache.data.weaponType ~= nil then
+		cache.wipe()
+		loadCache()
+	end
 
 	languageIndex = config.findIndex(languageTable, config.settings.data.language)
 
@@ -231,6 +251,7 @@ function config.init()
 
 	if config.settings.data.enable then
 		config.fullInit()
+		updateCache()
 	end
 end
 
@@ -245,8 +266,11 @@ local function drawInner()
 		config.lang = languages[config.settings.data.language]
 	end
 
+	if not config.initiated then
+		return
+	end
 	imgui.new_line()
-	if imgui.button("Reinitialize Singletons (to try to fix the mod if it broke)") then
+	if imgui.button(config.lang.reinitSingletons) then
 		for key, value in pairs(singletonManagersNames) do
 			config[key] = nil
 		end

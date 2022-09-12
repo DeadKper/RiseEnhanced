@@ -194,6 +194,10 @@ local function getConfigHandler(defaultSettings, modName, fileName)
 
     settings.isSavingAvailable = jsonUtils ~= nil
 
+    function settings.wipe()
+        saveConfig({}, {}, configFile)
+    end
+
     function settings.saveConfig(newConfig)
         saveConfig(settings.data, newConfig, configFile)
     end

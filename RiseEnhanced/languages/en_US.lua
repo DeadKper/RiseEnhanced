@@ -11,6 +11,7 @@ return {
 	forceLoad = "Load \"%s\"",
 	restartNote = "Note: To toggle OFF requires game restart after.",
 	useDefault = "Use Default Setting",
+	reinitSingletons = "Reinitialize Singletons (to try to fix the mod if it broke)",
 	weaponNames = {
 		[0] = "Great Sword",
 		[1] = "Swtich Axe",
