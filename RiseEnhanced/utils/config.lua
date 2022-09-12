@@ -5,7 +5,7 @@ local languageIndex
 local currentQuestStatus
 local currentQuestTime
 
-local lastWeapon
+local cache
 -- get_managed_singleton
 local singletonManagersNames = {
 	ChatManager = "snow.gui.ChatManager",
@@ -37,6 +37,7 @@ local languages = {
 
 local config = {
 	folder = "Rise Enhanced",
+	cacheFile = "cache",
 	version = "3.0.0-Beta",
 	initiated = false,
 }
@@ -44,13 +45,13 @@ local config = {
 local timers
 
 function config.getWeaponType()
-    if config.PlayerManager == nil then return lastWeapon end
+    if config.PlayerManager == nil then return cache.data.weaponType end
     local MasterPlayer = config.PlayerManager:call("findMasterPlayer")
-    if MasterPlayer == nil then return lastWeapon end
+    if MasterPlayer == nil then return cache.data.weaponType end
 
     local weaponType = MasterPlayer:get_field("_playerWeaponType")
-	if lastWeapon ~= weaponType then
-		lastWeapon = weaponType
+	if cache.data.weaponType ~= weaponType then
+		cache.update(weaponType, "weaponType")
 	end
     return weaponType
 end
@@ -172,16 +173,30 @@ local function onFrame()
 	checkTimers()
 end
 
+local function updateCache(args)
+	local index = sdk.to_int64(args[3])
+	config.getWeaponType()
+	if index ~= cache.data.loadoutIndex then
+		local loadout = config.EquipDataManager:call("get_PlEquipMySetList"):call("get_Item", index)
+		cache.update(index, "loadoutIndex")
+		cache.update(loadout:call("get_Name"), "loadoutName")
+		cache.update(loadout:call("getWeaponData"):call("get_PlWeaponType"), "loadoutWeaponType")
+	end
+end
+
 function config.fullInit()
 	if config.initiated then return end
 
 	config.initiated = true
-	config.getWeaponType()
 	retrieveManagers()
 	re.on_frame(onFrame);
 	re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
 	sdk.hook(
-		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), config.getWeaponType)
+		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), updateCache)
+end
+
+function config.cache(index1, index2)
+	return index2 ~= nil and cache.data[index1][index2] or cache.data[index1]
 end
 
 function config.init()
@@ -198,6 +213,13 @@ function config.init()
 		enable = true,
 		language = "en_US",
 	}, config.folder)
+
+	cache = modUtils.getConfigHandler({
+		weaponType = nil,
+		loadoutIndex = nil,
+		loadoutName = nil,
+		loadoutWeaponType = nil,
+	}, config.folder, config.cacheFile)
 
 	languageIndex = config.findIndex(languageTable, config.settings.data.language)
 
@@ -222,7 +244,12 @@ local function drawInner()
 		config.settings.update(languageTable[languageIndex], "language")
 		config.lang = languages[config.settings.data.language]
 	end
-	-- imgui.text(config.time())
+	imgui.text(config.getWeaponType())
+	if cache.data.loadoutIndex ~= nil then
+		imgui.text(cache.data.loadoutIndex)
+		imgui.text(cache.data.loadoutName)
+		imgui.text(cache.data.loadoutWeaponType)
+	end
 end
 
 function config.draw()
