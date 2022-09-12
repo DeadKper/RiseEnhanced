@@ -23,6 +23,14 @@ local menu = {
 	window = nil,
 }
 
+local function loadModules()
+	if config.initiated then
+		for _, current_module in pairs(modules) do
+			current_module.init()
+		end
+	end
+end
+
 function menu.init()
 	menu.window = {
 		position = { 480, 100 },
@@ -34,9 +42,7 @@ function menu.init()
 	menu.wasOpen = settings.data.isMenuOpen
 
 	config.init()
-	for _, current_module in pairs(modules) do
-		current_module.init()
-	end
+	loadModules()
 end
 
 function menu.draw()
@@ -71,6 +77,21 @@ end
 menu.init()
 
 re.on_draw_ui(function()
+	if not config.initiated then
+		if imgui.tree_node(config.lang.modName) then
+			config.draw()
+
+			if config.settings.data.enable and not config.initiated then
+				imgui.new_line()
+				if imgui.button(string.format(config.lang.forceLoad, config.lang.modName)) then
+					config.fullInit()
+					loadModules()
+				end
+			end
+			imgui.tree_pop()
+		end
+		return
+	end
 	if imgui.button("[ " .. config.lang.modName .. " ]") then
 		settings.update(not settings.data.isMenuOpen, "isMenuOpen")
 		menu.wasOpen = settings.data.isMenuOpen
@@ -87,7 +108,7 @@ re.on_frame(function()
 		return
 	end
 
-	if settings.data.isMenuOpen then
+	if config.initiated and settings.data.isMenuOpen then
 		pcall(menu.draw)
 	end
 end)

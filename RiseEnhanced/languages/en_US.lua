@@ -7,6 +7,8 @@ return {
 	weaponType = "Weapon Type",
 	language = "Language",
 	reset = "Reset to Default",
+	resetScriptNote = "Note: To toggle ON/OFF requires a script reset after.",
+	forceLoad = "Load \"%s\"",
 	restartNote = "Note: To toggle OFF requires game restart after.",
 	useDefault = "Use Default Setting",
 	weaponNames = {

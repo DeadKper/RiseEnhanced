@@ -107,7 +107,7 @@ function module.draw()
 	if imgui.tree_node(config.lang.skips.name) then
 		settings.imgui("intro", imgui.checkbox, config.lang.skips.intro)
 		settings.imgui("online", imgui.checkbox, config.lang.skips.online)
-		imgui.text(config.lang.restartNote)
+		imgui.text(config.lang.resetScriptNote)
 		imgui.tree_pop()
 	end
 end

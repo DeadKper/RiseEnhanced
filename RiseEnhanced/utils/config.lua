@@ -38,14 +38,12 @@ local languages = {
 local config = {
 	folder = "Rise Enhanced",
 	version = "3.0.0-Beta",
+	initiated = false,
 }
 
 local timers
 
 function config.getWeaponType()
-	if currentQuestStatus == 2 and lastWeapon ~= nil then
-		return lastWeapon
-	end
     if config.PlayerManager == nil then return lastWeapon end
     local MasterPlayer = config.PlayerManager:call("findMasterPlayer")
     if MasterPlayer == nil then return lastWeapon end
@@ -151,6 +149,10 @@ function config.addTimer(delay, func, ...)
 end
 
 local function checkTimers()
+	if timers.count == 0 then
+		return
+	end
+
 	local newTimers = {}
 	local count = 0
 	for i = 0, timers.count - 1 do
@@ -170,6 +172,18 @@ local function onFrame()
 	checkTimers()
 end
 
+function config.fullInit()
+	if config.initiated then return end
+
+	config.initiated = true
+	config.getWeaponType()
+	retrieveManagers()
+	re.on_frame(onFrame);
+	re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
+	sdk.hook(
+		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), config.getWeaponType)
+end
+
 function config.init()
 	modUtils = require("RiseEnhanced.utils.mod_utils")
 
@@ -181,6 +195,7 @@ function config.init()
 	end
 
 	config.settings = modUtils.getConfigHandler({
+		enable = true,
 		language = "en_US",
 	}, config.folder)
 
@@ -192,25 +207,31 @@ function config.init()
 		count = 0
 	}
 
-	config.getWeaponType()
-	retrieveManagers()
-	re.on_frame(onFrame);
-	re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
-	sdk.hook(
-		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), config.getWeaponType)
+	if config.settings.data.enable then
+		config.fullInit()
+	end
+end
+
+local function drawInner()
+	local change
+	config.settings.imgui("enable", imgui.checkbox, config.lang.enable)
+	imgui.text(config.lang.resetScriptNote)
+	change, languageIndex = imgui.combo(config.lang.language, languageIndex, languageTable)
+
+	if change then
+		config.settings.update(languageTable[languageIndex], "language")
+		config.lang = languages[config.settings.data.language]
+	end
+	-- imgui.text(config.time())
 end
 
 function config.draw()
-	local change
+	if not config.initiated then
+		drawInner()
+		return
+	end
 	if imgui.tree_node(config.lang.config.name) then
-		change, languageIndex = imgui.combo(config.lang.language, languageIndex, languageTable)
-
-		if change then
-			config.settings.update(languageTable[languageIndex], "language")
-			config.lang = languages[config.settings.data.language]
-		end
-
-		-- imgui.text(config.time())
+		drawInner()
 		imgui.tree_pop()
 	end
 end
