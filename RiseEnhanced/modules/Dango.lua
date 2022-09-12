@@ -115,7 +115,7 @@ local function OrderFood(order, tries)
         end
     end
     if SkillsMessage == nil or string.len(SkillsMessage) < 5 then
-        config.addTimer(0.5, OrderFood, order, tries ~= nil and tries)
+        config.addTimer(0.5, OrderFood, CreateOrder(GetCurrentSet()), tries ~= nil and tries)
     end
     Message = Message .. SkillsMessage .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
 
