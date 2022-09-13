@@ -40,6 +40,7 @@ return {
 	},
 	dango = {
 		name = "Auto Dango",
+		eatAfterDying = "Automatically eat again after dying",
 		currentSet = "Current dango set",
 		dangoPerWeapon = "Use different dango set per weapon",
         useHoppingSkewers = "Use hopping skewers",
@@ -61,6 +62,7 @@ return {
 	restock = {
 		name = "Auto Restock",
 
+		restockAfterDying = "Auto-restock items after dying",
 		useDefaultItemSet = "Use Default Setting",
         weaponTypeNotSetUseDefault = "%s not set, use default setting %s",
         useWeaponTypeItemSet = "Use %s setting: %s",

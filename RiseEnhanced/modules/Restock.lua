@@ -382,6 +382,7 @@ function module.init()
 
 	settings = modUtils.getConfigHandler({
 		enable = true,
+        cartEnable = true,
 		notification = true,
 		default = 1,
 		language = "en-US",
@@ -421,7 +422,9 @@ function module.init()
     -- Reset lastRestock then dying
     sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"), function ()
         resetRestock()
-        config.addTimer(5, Restock)
+        if settings.data.cartEnable then
+            config.addTimer(5, Restock)
+        end
     end)
 
     -- Reset lastRestock when killing a monster
@@ -440,6 +443,7 @@ function module.draw()
         end
 
         settings.imgui("enable", imgui.checkbox, config.lang.enable)
+        settings.imgui("cartEnable", imgui.checkbox, config.lang.restock.restockAfterDying)
         settings.imgui("notification", imgui.checkbox, config.lang.notification)
 
         settings.imgui("default", imgui.slider_int, config.lang.useDefault, 0, 39,

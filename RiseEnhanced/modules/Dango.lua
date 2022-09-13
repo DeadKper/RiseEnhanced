@@ -130,6 +130,7 @@ function module.init()
 
 	settings = modUtils.getConfigHandler({
 		enable = true,
+        cartEnable = true,
 		sounds = true,
         useVoucher = false,
 		useHoppingSkewers = false,
@@ -169,7 +170,7 @@ function module.init()
     end)
 
     sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"), function(args)
-        if config.isEnabled(settings.data.enable, module.managers) then
+        if config.isEnabled(settings.data.enable, module.managers) and settings.data.cartEnable then
             config.addTimer(5, orderDango)
         end
     end)
@@ -212,6 +213,7 @@ function module.draw()
         end
 
         settings.imgui("enable", imgui.checkbox, config.lang.enable)
+        settings.imgui("cartEnable", imgui.checkbox, config.lang.dango.eatAfterDying)
         imgui.new_line()
 
         settings.imgui("currentSet", imgui.slider_int, config.lang.dango.currentSet, 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
