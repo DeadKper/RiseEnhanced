@@ -38,7 +38,7 @@ local languages = {
 local config = {
 	folder = "Rise Enhanced",
 	cacheFile = "cache",
-	version = "3.0.0-Beta",
+	version = "3.0.0",
 	initiated = false,
 }
 
