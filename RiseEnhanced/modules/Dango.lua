@@ -42,35 +42,25 @@ local function CreateOrder(setID)
     return Kitchen:call("getMySetList"):call("get_Item", setID - 1)
 end
 
-local function OrderFood(order, tries)
+local function OrderFood(order)
     if config.getQuestStatus() ~= 0 and config.getQuestStatus() ~= 2 then
-        return
+        return true
     end
-    if tries ~= nil and tries >= 5 then
-        config.ChatManager:call("reqAddChatInfomation", settings.lang.dangoTicket.eatingFailed, settings.data.sounds and 2289944406 or 0)
-        return
-    end
+
     local Kitchen = config.FacilityDataManager:call("get_Kitchen")
-    if not Kitchen then return end
+    if not Kitchen then return false end
     Kitchen = Kitchen:call("get_MealFunc")
-    if not Kitchen then return end
+    if not Kitchen then return false end
 
     Kitchen:call("resetDailyDango")
 
-    if Kitchen:get_field("_AvailableWaitTimer") > 0.0 then return end
+    if Kitchen:get_field("_AvailableWaitTimer") > 0.0 then return true end
 
     log.debug(order:call("get__DangoId"):call("get_Item", 0))
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
         config.ChatManager:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
-        return
-    end
-
-    log.debug(order:call("get__DangoId"):call("get_Item", 0))
-
-    if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        config.ChatManager:call("reqAddChatInfomation", config.lang.dango.emptySet, settings.data.sounds and 2412657311 or 0)
-        return
+        return false
     end
 
     local facilityLevel = Kitchen:call("get_FacilityLv")
@@ -106,16 +96,14 @@ local function OrderFood(order, tries)
 
     local PlayerSkillData = Player:get_field("_refPlayerSkillList")
     PlayerSkillData = PlayerSkillData:call("get_KitchenSkillData")
-    local skill
     local SkillsMessage = ""
-    for i,v in pairs(PlayerSkillData:get_elements()) do
+    for _, v in pairs(PlayerSkillData:get_elements()) do
         if v:get_field("_SkillId") ~= 0 then
-            skill = DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. ""
-            SkillsMessage = SkillsMessage .. "\n" .. skill .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
+            SkillsMessage = SkillsMessage .. "\n" .. DataShortcut:call("getName(snow.data.DataDef.PlKitchenSkillId)", v:get_field("_SkillId")) .. (settings.data.useHoppingSkewers and (" <COL YEL>(lv " .. v:get_field("_SkillLv") .. ")</COL>") or "")
         end
     end
-    if SkillsMessage == nil or string.len(SkillsMessage) < 5 then
-        config.addTimer(0.5, OrderFood, CreateOrder(GetCurrentSet()), tries ~= nil and tries)
+    if SkillsMessage == nil or SkillsMessage == "" or string.len(SkillsMessage) <= 5 then
+        return false
     end
     Message = Message .. SkillsMessage .. (settings.data.useHoppingSkewers and config.lang.dango.hoppingSkewers or "")
 
@@ -124,10 +112,13 @@ local function OrderFood(order, tries)
     end
 
     Kitchen:set_field("_AvailableWaitTimer", Kitchen:call("get_WaitTime"))
+    return true
 end
 
 local function orderDango()
-    OrderFood(CreateOrder(GetCurrentSet()))
+    if not OrderFood(CreateOrder(GetCurrentSet())) then
+        config.ChatManager:call("reqAddChatInfomation", config.lang.dangoTicket.eatingFailed, settings.data.sounds and 2289944406 or 0)
+    end
 end
 
 function module.init()
