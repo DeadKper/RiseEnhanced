@@ -43,6 +43,20 @@ local config = {
 	initiated = false,
 }
 
+local modules = {
+	settings = {
+		enable = true,
+		isMenuOpen = false,
+		language = "en_US",
+	},
+	cache = {
+		weaponType = nil,
+		loadoutIndex = nil,
+		loadoutName = nil,
+		loadoutWeaponType = nil,
+	},
+}
+
 local questStatusName = {
 	[0] = "lobby",
 	[1] = "loading",
@@ -121,15 +135,6 @@ local function checkTimers()
 	end
 	timers = newTimers
 	timers.count = count
-end
-
-local function loadCache()
-	cache = modUtils.getConfigHandler({
-		weaponType = nil,
-		loadoutIndex = nil,
-		loadoutName = nil,
-		loadoutWeaponType = nil,
-	}, config.folder, config.cacheFile)
 end
 
 local function onFrame()
@@ -292,6 +297,7 @@ function config.fullInit()
 	sdk.hook(
 		sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"), updateCache)
 	updateCache()
+	config.addTimer(3, updateCache) -- This fixes loadout... cache
 end
 
 function config.cache(index1, index2)
@@ -308,19 +314,12 @@ function config.init()
 		index = index + 1
 	end
 
-	config.settings = modUtils.getConfigHandler({
-		enable = true,
-		language = "en_US",
-	}, config.folder)
+	config.settings = config.makeSettings(modules.settings, nil, config.folder)
+	cache = config.makeSettings(modules.cache, config.cacheFile, config.folder)
 
-	loadCache()
 	if not config.settings.data.enable then
-		for _, v in pairs(cache.data) do
-			if v ~= nil then
-				cache.wipe()
-			end
-		end
-		loadCache()
+		cache.wipe()
+		cache.data = {}
 	end
 
 	languageIndex = config.findIndex(languageTable, config.settings.data.language)
