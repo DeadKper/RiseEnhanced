@@ -26,4 +26,4 @@ Credits (in order of modules) to:
 - WonderlandAlice for "Online Warning Begone" (<https://www.nexusmods.com/monsterhunterrise/mods/1289>)
 - Bimmr for "SpiritBirds" (<https://www.nexusmods.com/monsterhunterrise/mods/886>)
 - Stracker for "Convenient Spiribirds" (<https://www.nexusmods.com/monsterhunterrise/mods/807>)
--PeaslyWellbott for "VIP Dango Tickets" (<https://www.nexusmods.com/monsterhunterrise/mods/92>)
+- PeaslyWellbott for "VIP Dango Tickets" (<https://www.nexusmods.com/monsterhunterrise/mods/92>)
