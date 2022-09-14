@@ -1,18 +1,29 @@
 # RiseEnhanced
 
-This mod is more of a compilation of other mods than a mod of it's own, I did make some changes to the code of the mods mainly to suit the needs I have or make them work as modules for this mod, don't know much about lua or reframework but I'll try to fix any bug that is reported
+This mod is a compilation of other mods with some changes/enhancements mainly to suit the needs my friends and I have, don't know much about lua or reframework but I'll try to fix any bug that is reported
 
 Current modules:
 
 - Anomaly Investigation Legality Checker
 - Auto Cohoot Nest
 - Auto Dango + Eat again button
-- Auto NPC Talk (no bullshit mod)
-- Auto Restock (without spamming restock for every loadout change)
+- Auto NPC Talk
+- Auto Restock
 - Nearest Camp Revive
 - Reusable Buddy Recon
 - Skip Intro Logos and Online Warning
 - Spirit Birds QoL (start with custom ammount spiritbirds or prism spiritbird)
 - VIP Dango Ticket
 
-All of this mods can be obtain on modnexus by the original developers, but the custom code on auto dango, auto restock and the spiribird qol cannot sadly, if you only care about the modifications, it's not that hard to just copy/paste them on the original mod since the logic is quite simple
+Credits (in order of modules) to:
+
+- Gao_Bili & midghost for "Anomaly Investigations legality checker" (<https://www.nexusmods.com/monsterhunterrise/mods/1660>)
+- archwizard1204 for "Auto Cohoot Nest" (<https://www.nexusmods.com/monsterhunterrise/mods/1155>), "No Bullshit" (<https://www.nexusmods.com/monsterhunterrise/mods/1580>), "Nearest Camp Revive" (<https://www.nexusmods.com/monsterhunterrise/mods/1640>) and "Infinite Buddy Recon" (<https://www.nexusmods.com/monsterhunterrise/mods/1110>)
+- DSC173 for "AutoDango (REFramework)" (<https://www.nexusmods.com/monsterhunterrise/mods/783>)
+- raffRun for "Seconds please - Eat dango again" (<https://www.nexusmods.com/monsterhunterrise/mods/800>) and "Raff's Script Modding Starter Pack and Utilities" (<https://www.nexusmods.com/monsterhunterrise/mods/376>)
+- SamuelLing for "Auto Restock" (<https://www.nexusmods.com/monsterhunterrise/mods/1576>)
+- SecretFox2 for "Skip Intro Logos" (<https://www.nexusmods.com/monsterhunterrise/mods/1209>)
+- WonderlandAlice for "Online Warning Begone" (<https://www.nexusmods.com/monsterhunterrise/mods/1289>)
+- Bimmr for "SpiritBirds" (<https://www.nexusmods.com/monsterhunterrise/mods/886>)
+- Stracker for "Convenient Spiribirds" (<https://www.nexusmods.com/monsterhunterrise/mods/807>)
+-PeaslyWellbott for "VIP Dango Tickets" (<https://www.nexusmods.com/monsterhunterrise/mods/92>)
