@@ -2,17 +2,23 @@
 -- Only on NexusMods, my profile page: https://www.nexusmods.com/users/154089548?tab=user+files
 local module = {
 	folder = "Nearest Camp Revive",
+    managers = {
+        "QuestMapManager",
+        "PlayerManager",
+        "StagePointManager",
+    },
+    default = {
+		enable = true
+	},
 }
 
 local config
-local modUtils
+local settings
 
 local skipCreateNeko
 local skipWarpNeko
 local reviveCamp
 local nekoTaku
-
-local settings
 local nekoTakuList
 
 local function getCurrentMapNo()
@@ -117,15 +123,11 @@ local function redirectWarpNeko(args)
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
 	skipCreateNeko = false
 	skipWarpNeko = false
-
-	settings = modUtils.getConfigHandler({
-		enable = true
-	}, config.folder .. "/" .. module.folder)
 
 	nekoTakuList = {
 		[1] = {

@@ -1,3 +1,8 @@
+local function filledTable(size)
+    local table = {}
+    for i = 1, size do table[i] = -1 end
+    return table
+end
 local module = {
 	folder = "Auto Restock",
     managers = {
@@ -7,12 +12,21 @@ local module = {
         "ShortcutManager",
         "PlayerManager",
         "SystemDataManager",
-    }
+    },
+    default = {
+		enable = true,
+        cartEnable = true,
+		notification = true,
+		default = 1,
+		language = "en-US",
+		weaponConfig = filledTable(14),
+		loadoutConfig = filledTable(112),
+	},
 }
 
 local config
-local modUtils
 local settings
+
 local restockTimeTreshold
 local restockTime
 local timedRestock
@@ -359,36 +373,14 @@ local function resetRestock(retval)
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
+
     restockTimeTreshold = 30
     restockTime = 0
 
-	local weaponDefault = {}
-	for i = 1, 14, 1 do
-		if weaponDefault[i] == nil then
-			weaponDefault[i] = -1
-		end
-	end
-	local loadoutDefault = {}
-	for i = 1, 112, 1 do
-		if loadoutDefault[i] == nil then
-			loadoutDefault[i] = -1
-		end
-	end
-
 	lastRestock = nil
     timedRestock = false
-
-	settings = modUtils.getConfigHandler({
-		enable = true,
-        cartEnable = true,
-		notification = true,
-		default = 1,
-		language = "en-US",
-		weaponConfig = weaponDefault,
-		loadoutConfig = loadoutDefault,
-	}, config.folder .. "/" .. module.folder)
 
 	-- On apply equipment loadout
 	sdk.hook(

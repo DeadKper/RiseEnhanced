@@ -1,9 +1,17 @@
 local module = {
 	folder = "Spirit Birds",
+    managers = {
+        "PlayerManager",
+        "EnvironmentCreatureManager",
+    },
+    default = {
+        enable = true,
+        spawnPrism = false,
+        spiritBirds = { 5, 3, 0, 0 }
+    },
 }
 
 local config
-local modUtils
 local settings
 local spawned
 
@@ -15,7 +23,7 @@ local next_player
 
 -- Get the player
 local function getPlayer()
-    local player = sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
+    local player = config.PlayerManager:call("findMasterPlayer")
     if not player then return end
     player = player:call("get_GameObject")
     return player
@@ -30,13 +38,6 @@ local function getPlayerLocation()
     return location
 end
 
--- Get Creature Manager
-local function getEnvCreatureManager()
-    local envCreature = sdk.get_managed_singleton("snow.envCreature.EnvironmentCreatureManager")
-    if not envCreature then return end
-    return envCreature
-end
-
 -- Function to get length of table
 local function getLength(obj)
     local count = 0
@@ -46,11 +47,11 @@ end
 
 -- Spawn the bird
 local function spawnBird(type)
-    local envCreature = getEnvCreatureManager()
+    if not config.isEnabled(settings.data.enable, module.managers) then return end
     local location = getPlayerLocation()
 
     -- Create the bird
-    local ecList = envCreature:get_field("_EcPrefabList"):get_field("mItems"):get_elements()
+    local ecList = config.EnvironmentCreatureManager:get_field("_EcPrefabList"):get_field("mItems"):get_elements()
     local ecBird = ecList[SPIRIT_BIRDS[type]]
     if not ecBird:call("get_Standby") then ecBird:call("set_Standby", true) end
 
@@ -66,13 +67,8 @@ local function spawnBird(type)
 end
 
 function module.init()
-    config = require "RiseEnhanced.utils.config"
-    modUtils = require "RiseEnhanced.utils.mod_utils"
-    settings = modUtils.getConfigHandler({
-        enable = true,
-        spawnPrism = false,
-        spiritBirds = { 5, 3, 0, 0 }
-    }, config.folder .. "/" .. module.folder)
+    config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
     SPIRIT_BIRDS = {
         atk = 11,
@@ -118,7 +114,6 @@ function module.init()
             local player = sdk.to_managed_object(args[2])
             local count = sdk.to_int64(args[3])
 
-            local staminaMax = player:get_field("_refPlayerData"):get_field("_staminaMax")
             next_stamina_max = count * 30.0
             next_player = player
         end,
@@ -143,8 +138,7 @@ function module.draw()
         settings.imguit("spiritBirds", 4, imgui.slider_int, config.lang.birds.defense, 0, 10)
         settings.imgui("spawnPrism", imgui.checkbox, config.lang.birds.spawnPrism)
         if imgui.button(config.lang.reset) then
-            settings.update({5, 3, 0, 0}, "spiritBirds")
-            settings.update(false, "spawnPrism")
+            config.resetSettings(module, settings)
         end
         if imgui.tree_node("Manual spawn") then
             if imgui.button(config.lang.birds.healthButton) then spawnBird("hp") end

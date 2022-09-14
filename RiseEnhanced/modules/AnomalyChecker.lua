@@ -3,8 +3,12 @@ local module = {
 	managers = {
 		"ChatManager",
 		"QuestManager",
-		"StageManager"
-	}
+		"StageManager",
+	},
+	default = {
+		enable = true,
+		onlineOnly = false,
+	},
 }
 
 local config

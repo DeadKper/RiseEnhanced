@@ -12,6 +12,7 @@ local singletonManagersNames = {
 	ContentsIdDataManager = "snow.data.ContentsIdDataManager",
 	ShortcutManager = "snow.data.CustomShortcutSystem",
 	DataManager = "snow.data.DataManager",
+	EnvironmentCreatureManager = "snow.envCreature.EnvironmentCreatureManager",
 	EquipDataManager = "snow.data.EquipDataManager",
 	FacilityDataManager = "snow.data.FacilityDataManager",
 	FadeManager = "snow.SnowSingletonBehaviorRoot`1<snow.FadeManager>",
@@ -67,13 +68,18 @@ local function updateCache(args)
 	end
 end
 
-local function retrieveManagers()
+local function retrieveManagers(customManagers)
 	for key, value in pairs(singletonManagersNames) do
 		if config[key] == nil then
 			config[key] = sdk.get_managed_singleton(value)
 		end
 	end
 
+	if customManagers then
+		for _, key in pairs(customManagers) do
+			config[key] = sdk.get_managed_singleton(singletonManagersNames[key])
+		end
+	end
 	if config.ShortcutManager == nil and config.SystemDataManager ~= nil then
 		config.ShortcutManager = config.SystemDataManager:call("getCustomShortcutSystem")
 	end
@@ -180,7 +186,12 @@ function config.getQuestInitialTime()
 	return currentQuestTime
 end
 
-function config.managersRetrieved(managers)
+function config.managersRetrieved(managers, forceManagers)
+	if forceManagers == nil or forceManagers then
+		retrieveManagers(managers)
+	else
+		retrieveManagers()
+	end
 	if managers == nil then return true end
 	for _, key in pairs(managers) do
 		if config[key] == nil then return false end
@@ -188,8 +199,69 @@ function config.managersRetrieved(managers)
 	return true
 end
 
-function config.isEnabled(enabled, managers)
-	return enabled and config.managersRetrieved(managers)
+function config.isEnabled(enabled, managers, forceManagers)
+	return enabled and config.managersRetrieved(managers, forceManagers)
+end
+
+local function copyTable(original)
+	local copy = {}
+	for k, v in pairs(original) do
+		if type(v) == "table" then
+			v = copyTable(v)
+		end
+		copy[k] = v
+	end
+	return copy
+end
+
+local function getDefault(module)
+	local default
+
+	if module.default then
+		default = module.default
+	elseif module then
+		default = module
+	else
+		default = {}
+	end
+
+	return default
+end
+
+function config.makeSettings(module, filename, folder)
+	local default = getDefault(module)
+	if not filename or filename == "" then
+        filename = "config.json"
+    elseif not filename:match(".json$") then
+        filename = filename .. ".json"
+    end
+
+	if module.folder and not folder then
+		folder = config.folder .. "/" .. module.folder
+	elseif not folder then
+		folder = config.folder
+	end
+
+	return modUtils.getConfigHandler(copyTable(default), folder, filename)
+end
+
+function config.resetSettings(module, settings, properties)
+	local default = getDefault(module)
+	local newConfig
+
+	newConfig = {}
+	if properties then
+		if type(properties) == "table" then
+			for _, key in pairs(properties) do
+				newConfig[key] = default[key]
+			end
+		end
+		newConfig[properties] = default[properties]
+	else
+		newConfig = default
+	end
+
+	settings.saveConfig(copyTable(newConfig))
 end
 
 function config.addTimer(delay, func, ...)

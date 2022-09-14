@@ -1,10 +1,13 @@
 local module = {
 	folder = "Auto NPC Talk",
+	default = {
+		enable = true,
+	},
 }
 
 local config
-local modUtils
 local settings
+
 local npcList
 local npcTalkMessageList
 
@@ -39,8 +42,8 @@ local function talkHandler(retval)
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
 	npcList = {
 		-- カムラ
@@ -59,10 +62,6 @@ function module.init()
 	}
 
 	npcTalkMessageList = {}
-
-	settings = modUtils.getConfigHandler({
-		enable = true,
-	}, config.folder .. "/" .. module.folder)
 
 	sdk.hook(sdk.find_type_definition("snow.npc.NpcTalkMessageCtrl"):get_method("start"), getTalkTarget, nil)
 

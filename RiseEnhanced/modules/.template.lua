@@ -1,17 +1,17 @@
 local module = {
 	folder = "Template",
+	managers = {},
+	default = {
+		enable = true,
+	},
 }
 
 local config
-local modUtils
 local settings
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
-	settings = modUtils.getConfigHandler({
-		enable = true,
-	}, config.folder .. "/" .. module.folder)
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 end
 
 function module.draw()

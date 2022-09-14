@@ -7,11 +7,22 @@ local module = {
         "ChatManager",
         "ContentsIdDataManager",
         "QuestManager",
-    }
+    },
+    default = {
+		enable = true,
+        cartEnable = true,
+		sounds = true,
+        useVoucher = false,
+		useHoppingSkewers = false,
+		points = false,
+		notification = true,
+		currentSet = 1,
+        dangoPerWeapon = false,
+        weapons = {},
+	},
 }
 
 local config
-local modUtils
 local settings
 
 local DataShortcut
@@ -122,24 +133,11 @@ local function orderDango()
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
 	DataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
 	isOrdering = false
-
-	settings = modUtils.getConfigHandler({
-		enable = true,
-        cartEnable = true,
-		sounds = true,
-        useVoucher = false,
-		useHoppingSkewers = false,
-		points = false,
-		notification = true,
-		currentSet = 1,
-        dangoPerWeapon = false,
-        weapons = {},
-	}, config.folder .. "/" .. module.folder)
 
     for i = 1, 14, 1 do
 		if settings.data.weapons[i] == nil then

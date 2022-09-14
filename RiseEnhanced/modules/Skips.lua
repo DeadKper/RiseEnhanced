@@ -1,9 +1,16 @@
 local module = {
 	folder = "Skip Intro Logos & Online Warnings",
+	managers = {
+		"GuiGameStartFsmManager",
+		"FadeManagerInstance",
+	},
+	default = {
+		intro = true,
+		online = true,
+	},
 }
 
 local config
-local modUtils
 local settings
 
 local FINISHED
@@ -54,12 +61,8 @@ local function ClearFade(args)
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
-	settings = modUtils.getConfigHandler({
-		intro = true,
-		online = true,
-	}, config.folder .. "/" .. module.folder)
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
 	LOADING_STATES = {
 		[sdk.find_type_definition("snow.gui.fsm.title.GuiGameStartFsmManager.GameStartStateType"):get_field("Health_Caution"):get_data()] = true, -- 6

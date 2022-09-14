@@ -1,15 +1,22 @@
+local multiplier = 10
 local module = {
 	folder = "Reusable Buddy Recon",
+	managers = {
+		"OtomoManager",
+		"OtomoReconManager",
+	},
+	default = {
+		enable = true,
+		cost = math.floor(100 / multiplier),
+	},
 }
 
 local config
-local modUtils
 local settings
 
 -- infinite_buddy_recon.lua : written by arcwizard1204
 
 local travelCount
-local multiplier
 
 local function on_pre_onCompleteReconOtomoAct(args)
 	if settings.data.enable then
@@ -59,12 +66,7 @@ end
 
 function module.init()
 	config = require("RiseEnhanced.utils.config")
-	modUtils = require("RiseEnhanced.utils.mod_utils")
-	multiplier = 10
-	settings = modUtils.getConfigHandler({
-		enable = true,
-		cost = 100 / multiplier,
-	}, config.folder .. "/" .. module.folder)
+    settings = config.makeSettings(module)
 
 	travelCount = 0
 	config.OtomoReconManager = nil
@@ -84,8 +86,7 @@ function module.draw()
 		settings.imgui("enable", imgui.checkbox, config.lang.enable)
 		settings.imgui("cost", imgui.slider_int, config.lang.buddyRecon.cost, 0, 1000 / multiplier, settings.data.cost * multiplier)
 		if imgui.button(config.lang.reset) then
-            settings.update(true, "enable")
-			settings.update(math.floor(100 / multiplier), "cost")
+			config.resetSettings(module, settings)
         end
 		imgui.tree_pop()
 	end

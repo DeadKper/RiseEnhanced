@@ -1,9 +1,23 @@
 local module = {
 	folder = "VIP Dango Ticket",
+	managers = {
+        "FacilityDataManager",
+        "ProgressManager",
+        "PlayerManager",
+        "ChatManager",
+        "ContentsIdDataManager",
+        "QuestManager",
+    },
+	default = {
+		enable = true,
+		infiniteDangoTickets = false,
+		ticketByDefault = true,
+		showAllDango = false,
+		skewerLevels = {4, 3, 1}
+	},
 }
 
 local config
-local modUtils
 local settings
 
 local SavedDangoChance
@@ -11,21 +25,13 @@ local SavedDango
 local DangoTicketState
 
 function module.init()
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
+
 	VIPDT_debugLogs = false
 	SavedDangoChance = 100
 	SavedDango = nil
 	DangoTicketState = false
-
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
-
-	settings = modUtils.getConfigHandler({
-		enable = true,
-		infiniteDangoTickets = false,
-		ticketByDefault = true,
-		showAllDango = false,
-		skewerLevels = {4, 3, 1}
-	}, config.folder .. "/" .. module.folder)
 
 	sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillActiveRate"),
 		--force 100% activation
@@ -134,7 +140,7 @@ function module.draw()
 			settings.imguit("skewerLevels", 2, imgui.slider_int, config.lang.dangoTicket.mid, 1, 4)
 			settings.imguit("skewerLevels", 3, imgui.slider_int, config.lang.dangoTicket.bot, 1, 4)
 			if imgui.button(config.lang.reset) then
-				settings.update({4, 3, 1}, "skewerLevels")
+				settings.update(module.default.skewerLevels, "skewerLevels")
 			end
 			imgui.tree_pop()
 		end

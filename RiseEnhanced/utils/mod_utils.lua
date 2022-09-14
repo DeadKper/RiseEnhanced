@@ -188,7 +188,12 @@ local function getConfigHandler(defaultSettings, modName, fileName)
         fileName = fileName .. ".json"
     end
 
-    local configFile = modName .. "/" .. fileName
+    local configFile
+    if not modName or modName == "" then
+        configFile = fileName
+    else
+        configFile = modName .. "/" .. fileName
+    end
 
     settings.data = loadConfig(defaultSettings, configFile)
 
