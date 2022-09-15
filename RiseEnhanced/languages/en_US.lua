@@ -48,7 +48,6 @@ return {
         useVoucher = "Use voucher on eating",
 		manualEat = "Manually trigger eating",
 		manualEatAgain = "* Manually trigger eating (you have already eaten)",
-
 		emptySet = "<COL RED>Cannot order from an empty set</COL>",
 		eatMessage = "<COL YEL>Automatically ate \"%s\"",
 		voucherRemaining = " with a voucher (%d remaining).",
@@ -61,23 +60,19 @@ return {
 	},
 	restock = {
 		name = "Auto Restock",
-
 		restockAfterDying = "Auto-restock items after dying",
 		useDefaultItemSet = "Use Default Setting",
         weaponTypeNotSetUseDefault = "%s not set, use default setting %s",
         useWeaponTypeItemSet = "Use %s setting: %s",
-
         fromLoadout = "Restock for equipment loadout [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>]",
         mismatchLoadout = "Current equipment doesn't match any equipment loadout.\n",
         fromWeaponType = "Restock for weapon type [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>].",
         mismatchWeaponType = "Current equipment doesn't match any equipment loadout, and weapon type [<COL YEL>%s</COL>] has no settings.\n",
         fromDefault = "Restock from default item loadout [<COL YEL>%s</COL>].",
         outOfStock = "Restock [<COL YEL>%s</COL>] cancelled due to <COL RED>out of stock</COL>.",
-
         paletteNilError = "<COL RED>ERROR</COL>: Radial set is nil.",
         paletteApplied = "Radial set [<COL YEL>%s</COL>] applied.",
         paletteListEmpty = "Radial set list is empty, skipped.",
-
 		default = "Default Item Set",
 		equipmentLoadout = "Equipment Loadout",
 		currentSet = " (Current)",
