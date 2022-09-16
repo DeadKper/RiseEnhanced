@@ -16,7 +16,7 @@ end
 
 function module.draw()
 	if imgui.tree_node(config.lang.template.name) then
-		settings.imgui("enable", imgui.checkbox, config.lang.enable)
+		settings.imgui(imgui.checkbox, "enable", config.lang.enable)
 		imgui.tree_pop()
 	end
 end

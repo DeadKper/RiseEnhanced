@@ -67,12 +67,8 @@ function CheckQuest()
 end
 
 function module.init()
-	config = require "RiseEnhanced.utils.config"
-	modUtils = require "RiseEnhanced.utils.mod_utils"
-	settings = modUtils.getConfigHandler({
-		enable = true,
-		onlineOnly = false,
-	}, config.folder .. "/" .. module.folder)
+	config = require("RiseEnhanced.utils.config")
+    settings = config.makeSettings(module)
 
 	Checked = false
 
@@ -98,8 +94,8 @@ end
 
 function module.draw()
 	if imgui.tree_node(config.lang.anomalyChecker.name) then
-		settings.imgui("enable", imgui.checkbox, config.lang.enable)
-		settings.imgui("onlineOnly", imgui.checkbox, config.lang.anomalyChecker.onlineOnly)
+		settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+		settings.imgui(imgui.checkbox, "onlineOnly", config.lang.anomalyChecker.onlineOnly)
 		imgui.tree_pop()
 	end
 end

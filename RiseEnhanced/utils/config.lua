@@ -1,6 +1,4 @@
-local modUtils
 local languageTable
-local languageIndex
 
 local currentQuestStatus
 local currentQuestTime
@@ -192,12 +190,12 @@ function config.getQuestInitialTime()
 end
 
 function config.managersRetrieved(managers, forceManagers)
+	if managers == nil then return true end
 	if forceManagers == nil or forceManagers then
 		retrieveManagers(managers)
 	else
 		retrieveManagers()
 	end
-	if managers == nil then return true end
 	for _, key in pairs(managers) do
 		if config[key] == nil then return false end
 	end
@@ -208,11 +206,12 @@ function config.isEnabled(enabled, managers, forceManagers)
 	return enabled and config.managersRetrieved(managers, forceManagers)
 end
 
-local function copyTable(original)
+local function getCopy(original)
+	if type(original) ~= "table" then return original end
 	local copy = {}
 	for k, v in pairs(original) do
 		if type(v) == "table" then
-			v = copyTable(v)
+			v = getCopy(v)
 		end
 		copy[k] = v
 	end
@@ -233,6 +232,159 @@ local function getDefault(module)
 	return default
 end
 
+local function makeSettingsHandler(defaultSettings, folder, file)
+    local settings = {
+		default = defaultSettings ~= nil and defaultSettings or {},
+		data = {},
+	}
+
+    if file == nil or file == "" then
+        file = "config.json"
+    elseif not file:match(".json$") then
+        file = file .. ".json"
+    end
+
+    local configFile
+    if not folder or folder == "" then
+        configFile = file
+    else
+        configFile = folder .. "/" .. file
+    end
+
+	settings.file = configFile
+
+	local function load()
+		if json == nil then return end
+		local currentSettings = json.load_file(settings.file)
+        if currentSettings == nil then currentSettings = getCopy(settings.default) end
+        for k, v in pairs(currentSettings) do settings.data[k] = v end
+	end
+
+	local function save(table)
+		if json == nil then return end
+		if table == nil then table = settings.data end
+		json.dump_file(settings.file, table)
+	end
+
+    local function decode(propertyTable, table)
+		local property, key, value
+		value = table and table or settings.data
+		if type(propertyTable) ~= "table" then propertyTable = { propertyTable } end
+			
+		for _, v in pairs(propertyTable) do
+			property = value
+			key = v
+			value = value[v]
+		end
+		return property, key
+	end
+
+	function settings.reset(propertyTable)
+		if propertyTable == nil then
+			save({})
+			load()
+		else
+			local property, key = decode(propertyTable)
+			local defaultProperty, defaultKey = decode(propertyTable, settings.default)
+			property[key] = getCopy(defaultProperty[defaultKey])
+			save()
+		end
+    end
+
+	function settings.update(propertyTable, value, changed)
+		if changed ~= nil and not changed then return end
+        local property, key = decode(propertyTable)
+		property[key] = getCopy(value)
+		save()
+    end
+
+	function settings.insert(propertyTable, ...)
+		local property, key = decode(propertyTable)
+		table.insert(property[key], ...)
+		save()
+	end
+
+	function settings.imgui(imguiFunc, propertyTable, ...)
+        local args = {...}
+		local property, key = decode(propertyTable)
+		if type(imguiFunc) == "string" then imguiFunc = imgui[imguiFunc] end
+        local changed, newValue = imguiFunc(args[1], property[key], table.unpack(args, 2))
+        if changed == nil or newValue == nil then
+            error("settings.imgui was called with an invalid imgui func")
+        end
+        if changed then
+            property[key] = newValue
+			save()
+        end
+
+        return { changed, newValue }
+    end
+
+	function settings.combo(propertyTable, label, table)
+		local property, key = decode(propertyTable)
+		local unindexed = false
+		local value = property[key]
+		if type(value) ~= "number" then
+			unindexed = true
+			value = config.findIndex(table, value)
+		end
+        local changed, newValue = imgui.combo(label, value, table)
+		if unindexed then newValue = table[newValue] end
+        if changed then
+            property[key] = newValue
+			save()
+        end
+
+        return { changed, newValue }
+	end
+
+	function settings.slider_int(propertyTable, label, min, max, text, arg)
+		local property, key = decode(propertyTable)
+		local value = property[key]
+		local multiplier = false
+		local arguments = {
+			label,
+			value,
+			min,
+			max,
+		}
+		if arg == nil then
+		elseif type(arg) == "string" then
+			if type(text) == "function" then
+				local success, result = pcall(text)
+				text = success and result or arg
+			end
+			arguments = {
+				label,
+				value,
+				arg ~= nil and min - 1 or min,
+				max,
+				(text == nil or value < min) and arg or text
+			}
+		elseif type(arg) == "number" then
+			multiplier = true
+			arguments = {
+				label,
+				math.floor(value / arg),
+				math.floor(min / arg),
+				math.floor(max / arg),
+				value
+			}
+		end
+        local changed, newValue = imgui.slider_int(table.unpack(arguments))
+		if multiplier then newValue = newValue * arg end
+        if changed then
+            property[key] = newValue
+			save()
+        end
+
+        return { changed, newValue }
+	end
+
+	load()
+    return settings
+end
+
 function config.makeSettings(module, filename, folder)
 	local default = getDefault(module)
 	if not filename or filename == "" then
@@ -247,26 +399,7 @@ function config.makeSettings(module, filename, folder)
 		folder = config.folder
 	end
 
-	return modUtils.getConfigHandler(copyTable(default), folder, filename)
-end
-
-function config.resetSettings(module, settings, properties)
-	local default = getDefault(module)
-	local newConfig
-
-	newConfig = {}
-	if properties then
-		if type(properties) == "table" then
-			for _, key in pairs(properties) do
-				newConfig[key] = default[key]
-			end
-		end
-		newConfig[properties] = default[properties]
-	else
-		newConfig = default
-	end
-
-	settings.saveConfig(copyTable(newConfig))
+	return makeSettingsHandler(default, folder, filename)
 end
 
 function config.addTimer(delay, func, ...)
@@ -305,8 +438,6 @@ function config.cache(index1, index2)
 end
 
 function config.init()
-	modUtils = require("RiseEnhanced.utils.mod_utils")
-
 	languageTable = {}
 	local index = 1
 	for key, _ in pairs(languages) do
@@ -318,11 +449,8 @@ function config.init()
 	cache = config.makeSettings(modules.cache, config.cacheFile, config.folder)
 
 	if not config.settings.data.enable then
-		cache.wipe()
-		cache.data = {}
+		cache.reset()
 	end
-
-	languageIndex = config.findIndex(languageTable, config.settings.data.language)
 
 	config.lang = languages[config.settings.data.language]
 
@@ -336,15 +464,8 @@ function config.init()
 end
 
 local function drawInner()
-	local change
-	config.settings.imgui("enable", imgui.checkbox, config.lang.enable)
-	imgui.text(config.lang.resetScriptNote)
-	change, languageIndex = imgui.combo(config.lang.language, languageIndex, languageTable)
-
-	if change then
-		config.settings.update(languageTable[languageIndex], "language")
-		config.lang = languages[config.settings.data.language]
-	end
+	config.settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+	config.settings.combo("language", config.lang.language, languageTable)
 
 	if not config.initiated then
 		return
@@ -356,7 +477,6 @@ local function drawInner()
 		end
 		retrieveManagers()
 	end
-	-- imgui.text(config.getWeaponType())
 end
 
 function config.draw()

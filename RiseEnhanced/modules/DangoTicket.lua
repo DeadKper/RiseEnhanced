@@ -129,18 +129,19 @@ end
 
 function module.draw()
 	if imgui.tree_node(config.lang.dangoTicket.name) then
-		settings.imgui("enable", imgui.checkbox, config.lang.dangoTicket.enableVip)
-		settings.imgui("infiniteDangoTickets", imgui.checkbox, config.lang.dangoTicket.infiniteTickets)
-		settings.imgui("ticketByDefault", imgui.checkbox, config.lang.dangoTicket.ticketByDefault)
-		settings.imgui("showAllDango", imgui.checkbox, config.lang.dangoTicket.showAllDango)
+		settings.imgui(imgui.checkbox, "enable", config.lang.dangoTicket.enableVip)
+		settings.imgui(imgui.checkbox, "infiniteDangoTickets", config.lang.dangoTicket.infiniteTickets)
+		settings.imgui(imgui.checkbox, "ticketByDefault", config.lang.dangoTicket.ticketByDefault)
+		settings.imgui(imgui.checkbox, "showAllDango", config.lang.dangoTicket.showAllDango)
 		imgui.text(config.lang.restartNote)
 		imgui.new_line()
 		if imgui.tree_node(config.lang.dangoTicket.hoppingSkewers) then
-			settings.imguit("skewerLevels", 1, imgui.slider_int, config.lang.dangoTicket.top, 1, 4)
-			settings.imguit("skewerLevels", 2, imgui.slider_int, config.lang.dangoTicket.mid, 1, 4)
-			settings.imguit("skewerLevels", 3, imgui.slider_int, config.lang.dangoTicket.bot, 1, 4)
+			settings.imgui(imgui.slider_int, { "skewerLevels", 1 }, config.lang.dangoTicket.top, 1, 4)
+			settings.imgui(imgui.slider_int, { "skewerLevels", 2 }, config.lang.dangoTicket.mid, 1, 4)
+			settings.imgui(imgui.slider_int, { "skewerLevels", 3 }, config.lang.dangoTicket.bot, 1, 4)
+			
 			if imgui.button(config.lang.reset) then
-				settings.update(module.default.skewerLevels, "skewerLevels")
+				settings.reset("skewerLevels")
 			end
 			imgui.tree_pop()
 		end

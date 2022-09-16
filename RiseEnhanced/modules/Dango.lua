@@ -17,8 +17,8 @@ local module = {
 		points = false,
 		notification = true,
 		currentSet = 1,
-        dangoPerWeapon = false,
         weapons = {},
+        hasMaxedStats = false,
 	},
 }
 
@@ -27,21 +27,13 @@ local settings
 
 local DataShortcut
 local isOrdering
-local hasMaxedStats
 
 local function GetCurrentSet()
     local loadout = settings.data.weapons[config.getWeaponType() + 1]
-    if not settings.data.dangoPerWeapon or loadout == 0 then
+    if loadout == 0 then
         loadout = settings.data.currentSet
     end
     return loadout
-end
-
-local function getSetName(Kitchen, i)
-    if settings.data.weapons[i] == 0 then
-        return config.lang.useDefault
-    end
-    return Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName")
 end
 
 local function CreateOrder(setID)
@@ -95,10 +87,10 @@ local function OrderFood(order)
 
     local Player = config.PlayerManager:call("findMasterPlayer")
     local PlayerData = Player:get_field("_refPlayerData")
-    if not hasMaxedStats then
+    if not settings.data.hasMaxedStats then
         PlayerData:set_field("_vitalMax", PlayerData:get_field("_vitalMax") + 50)
         PlayerData:set_field("_staminaMax", PlayerData:get_field("_staminaMax") + 1500.0)
-        hasMaxedStats = true
+        settings.update("hasMaxedStats", true)
     end
 
     local OrderName = order:call("get_OrderName")
@@ -145,6 +137,8 @@ function module.init()
 		end
 	end
 
+    if config.getQuestStatusName() ~= "quest" then settings.reset("hasMaxedStats") end
+
 	sdk.hook(
 		sdk.find_type_definition("snow.QuestManager"):get_method("questActivate(snow.LobbyManager.QuestIdentifier)"),
 		function(args)
@@ -162,8 +156,8 @@ function module.init()
         local Kitchen = config.FacilityDataManager:call("get_Kitchen")
         if not Kitchen then return end
         Kitchen = Kitchen:call("get_MealFunc")
-        if config.getQuestStatus() ~= 2 and Kitchen:get_field("_AvailableWaitTimer") == 0 and hasMaxedStats then
-            hasMaxedStats = false
+        if config.getQuestStatus() ~= 2 and Kitchen:get_field("_AvailableWaitTimer") == 0 and settings.data.hasMaxedStats then
+            settings.reset("hasMaxedStats")
         end
     end)
 
@@ -188,6 +182,7 @@ function module.init()
 	)
 end
 
+local currentSet
 function module.draw()
     if imgui.tree_node(config.lang.dango.name) then
         if not config.managersRetrieved(module.managers) then
@@ -210,27 +205,33 @@ function module.draw()
             return
         end
 
-        settings.imgui("enable", imgui.checkbox, config.lang.enable)
-        settings.imgui("cartEnable", imgui.checkbox, config.lang.dango.eatAfterDying)
+        settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+        settings.imgui(imgui.checkbox, "cartEnable", config.lang.dango.eatAfterDying)
         imgui.new_line()
 
-        settings.imgui("currentSet", imgui.slider_int, config.lang.dango.currentSet, 1, 32, Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName"))
-
-        settings.imgui("dangoPerWeapon", imgui.checkbox, config.lang.dango.dangoPerWeapon)
-        if settings.data.dangoPerWeapon and imgui.tree_node(config.lang.weaponType) then
+        currentSet = Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.currentSet - 1):call("get_OrderName")
+        settings.imgui(imgui.slider_int, "currentSet", config.lang.dango.currentSet, 1, 32, currentSet)
+        if imgui.tree_node(config.lang.weaponType) then
             for i = 1, 14, 1 do
-                settings.imguit("weapons", i, imgui.slider_int, config.getWeaponName(i - 1), 0, 32, getSetName(Kitchen, i))
+                settings.slider_int(
+                    { "weapons", i },
+                    config.getWeaponName(i - 1),
+                    1,
+                    32,
+                    settings.data.weapons[i] >= 1 and Kitchen:call("get_MySetDataList"):call("get_Item", settings.data.weapons[i] - 1):call("get_OrderName") or nil,
+                    string.format(config.lang.useDefault, currentSet)
+                )
             end
             imgui.tree_pop();
         end
 
         imgui.new_line()
-        settings.imgui("points", imgui.checkbox, config.lang.dango.points, settings.data.points)
-        settings.imgui("useHoppingSkewers", imgui.checkbox, config.lang.dango.useHoppingSkewers, settings.data.useHoppingSkewers)
-        settings.imgui("useVoucher", imgui.checkbox, config.lang.dango.useVoucher, settings.data.useVoucher)
+        settings.imgui(imgui.checkbox, "points", config.lang.dango.points, settings.data.points)
+        settings.imgui(imgui.checkbox, "useHoppingSkewers", config.lang.dango.useHoppingSkewers, settings.data.useHoppingSkewers)
+        settings.imgui(imgui.checkbox, "useVoucher", config.lang.dango.useVoucher, settings.data.useVoucher)
         imgui.new_line()
-        settings.imgui("notification", imgui.checkbox, config.lang.notification, settings.data.notification)
-        settings.imgui("sounds", imgui.checkbox, config.lang.sounds, settings.data.sounds)
+        settings.imgui(imgui.checkbox, "notification", config.lang.notification, settings.data.notification)
+        settings.imgui(imgui.checkbox, "sounds", config.lang.sounds, settings.data.sounds)
         imgui.new_line()
 
         local manualText = config.lang.dango.manualEat
@@ -240,7 +241,7 @@ function module.draw()
 
         if imgui.button(manualText) then
             if Kitchen:get_field("_AvailableWaitTimer") > 0 then
-                hasMaxedStats = true
+                settings.update("hasMaxedStats", true)
                 Kitchen:set_field("_AvailableWaitTimer", 0)
             end
             orderDango()

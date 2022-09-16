@@ -10,7 +10,7 @@ return {
 	resetScriptNote = "Note: To toggle ON/OFF requires a script reset after.",
 	forceLoad = "Load \"%s\"",
 	restartNote = "Note: To toggle OFF requires game restart after.",
-	useDefault = "Use Default Setting",
+	useDefault = "Use Default: %s",
 	reinitSingletons = "Reinitialize Singletons (to try to fix the mod if it broke)",
 	weaponNames = {
 		[0] = "Great Sword",
@@ -60,6 +60,7 @@ return {
 	},
 	restock = {
 		name = "Auto Restock",
+		selectedSet = "Current item set",
 		restockAfterDying = "Auto-restock items after dying",
 		useDefaultItemSet = "Use Default Setting",
         weaponTypeNotSetUseDefault = "%s not set, use default setting %s",

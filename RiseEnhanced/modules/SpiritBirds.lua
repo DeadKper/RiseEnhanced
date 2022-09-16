@@ -7,17 +7,17 @@ local module = {
     default = {
         enable = true,
         spawnPrism = false,
-        spiritBirds = { 5, 3, 0, 0 }
+        spiritBirds = { 5, 3, 0, 0 },
+        spawned = false,
+        spawnedBirds = {},
     },
 }
 
 local config
 local settings
-local spawned
 
 -- Sprit Bird types w/ index for EnvironmentCreatureManager#_EcPrefabList.mItems
 local SPIRIT_BIRDS
-local spawnedBirds
 local next_stamina_max
 local next_player
 
@@ -45,6 +45,12 @@ local function getLength(obj)
     return count
 end
 
+local function clearBirds()
+    for _, bird in pairs(settings.data.spawnedBirds) do bird:call("destroy", bird) end
+    settings.reset("spawned")
+    settings.reset("spawnedBirds")
+end
+
 -- Spawn the bird
 local function spawnBird(type)
     if not config.isEnabled(settings.data.enable, module.managers) then return end
@@ -62,13 +68,17 @@ local function spawnBird(type)
     if not sdk.is_managed_object(bird) then
         spawnBird(type)
     else
-        table.insert(spawnedBirds, bird)
+        settings.insert("spawnedBirds", bird)
     end
 end
 
 function module.init()
     config = require("RiseEnhanced.utils.config")
     settings = config.makeSettings(module)
+    if config.getQuestStatusName() ~= "quest" then
+        settings.reset("spawned")
+        settings.reset("spawnedBirds")
+    end
 
     SPIRIT_BIRDS = {
         atk = 11,
@@ -79,15 +89,13 @@ function module.init()
         gold = 31
     }
 
-    spawned = false
-    spawnedBirds = {}
     next_stamina_max = 0.0
 
     -- Watch for Auto-Spawn of Prism and clear spawned birds after quest ends
     re.on_pre_application_entry("UpdateBehavior", function()
         -- If Auto spawn is enabled and quest status says it's active
-        if config.getQuestStatus() == 2 and settings.data.enable and not spawned then
-            if not spawned then
+        if config.getQuestStatus() == 2 and settings.data.enable and not settings.data.spawned then
+            if not settings.data.spawned then
                 if settings.data.spawnPrism then
                     spawnBird("all")
                 else
@@ -97,14 +105,12 @@ function module.init()
                     for _ = 1, settings.data.spiritBirds[4] do spawnBird("def") end
                 end
 
-                spawned = true
+                settings.update("spawned", true)
             end
 
             -- If the quest status is not active, clear the spawned birds, and set spawned to false
-        elseif config.getQuestStatus() ~= 2 and getLength(spawnedBirds) > 0 then
-            spawned = false
-            for _, bird in pairs(spawnedBirds) do bird:call("destroy", bird) end
-            spawnedBirds = {}
+        elseif config.getQuestStatus() ~= 2 and getLength(settings.data.spawnedBirds) > 0 then
+            clearBirds()
         end
     end)
 
@@ -123,22 +129,19 @@ function module.init()
     )
 
     -- Remove any spawned birds on script reset
-    re.on_script_reset(function()
-        for _, bird in pairs(spawnedBirds) do bird:call("destroy", bird) end
-        spawnedBirds = {}
-    end)
+    re.on_script_reset(clearBirds)
 end
 
 function module.draw()
     if imgui.tree_node(config.lang.birds.name) then
-        settings.imgui("enable", imgui.checkbox, config.lang.birds.autoSpawn)
-        settings.imguit("spiritBirds", 1, imgui.slider_int, config.lang.birds.health, 0, 10)
-        settings.imguit("spiritBirds", 2, imgui.slider_int, config.lang.birds.stamina, 0, 10)
-        settings.imguit("spiritBirds", 3, imgui.slider_int, config.lang.birds.attack, 0, 10)
-        settings.imguit("spiritBirds", 4, imgui.slider_int, config.lang.birds.defense, 0, 10)
-        settings.imgui("spawnPrism", imgui.checkbox, config.lang.birds.spawnPrism)
+        settings.imgui(imgui.checkbox, "enable", config.lang.birds.autoSpawn)
+        settings.imgui(imgui.slider_int, { "spiritBirds", 1 }, config.lang.birds.health, 0, 10)
+        settings.imgui(imgui.slider_int, { "spiritBirds", 2 }, config.lang.birds.stamina, 0, 10)
+        settings.imgui(imgui.slider_int, { "spiritBirds", 3 }, config.lang.birds.attack, 0, 10)
+        settings.imgui(imgui.slider_int, { "spiritBirds", 4 }, config.lang.birds.defense, 0, 10)
+        settings.imgui(imgui.checkbox, "spawnPrism", config.lang.birds.spawnPrism)
         if imgui.button(config.lang.reset) then
-            config.resetSettings(module, settings)
+            settings.reset()
         end
         if imgui.tree_node("Manual spawn") then
             if imgui.button(config.lang.birds.healthButton) then spawnBird("hp") end

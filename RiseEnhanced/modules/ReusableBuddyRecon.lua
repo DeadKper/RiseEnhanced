@@ -1,4 +1,3 @@
-local multiplier = 10
 local module = {
 	folder = "Reusable Buddy Recon",
 	managers = {
@@ -7,7 +6,7 @@ local module = {
 	},
 	default = {
 		enable = true,
-		cost = math.floor(100 / multiplier),
+		cost = 100,
 	},
 }
 
@@ -42,7 +41,7 @@ end
 
 local function on_pre_initRewardList(args)
 	if settings.data.enable then
-		local usedPoints = settings.data.cost * multiplier * travelCount
+		local usedPoints = settings.data.cost * travelCount
 		if travelCount > 0 then
 			config.OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", true)
 		end
@@ -58,7 +57,7 @@ local function on_pre_initQuestStart(args)
 			travelCount = 0
 			config.OtomoReconManager:set_field("_IsUseOtomoReconFastTravel", false)
 		end
-		config.OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", settings.data.cost * multiplier)
+		config.OtomoReconManager:set_field("UseOtomoReconFastTravelVillagePoint", settings.data.cost)
 	end
 
 	return sdk.PreHookResult.CALL_ORIGINAL
@@ -83,10 +82,10 @@ end
 
 function module.draw()
 	if imgui.tree_node(config.lang.buddyRecon.name) then
-		settings.imgui("enable", imgui.checkbox, config.lang.enable)
-		settings.imgui("cost", imgui.slider_int, config.lang.buddyRecon.cost, 0, 1000 / multiplier, settings.data.cost * multiplier)
+		settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+		settings.slider_int("cost", config.lang.buddyRecon.cost, 0, 1000, settings.data.cost, 10)
 		if imgui.button(config.lang.reset) then
-			config.resetSettings(module, settings)
+			settings.reset()
         end
 		imgui.tree_pop()
 	end

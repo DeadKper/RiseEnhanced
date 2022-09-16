@@ -427,6 +427,7 @@ function module.init()
 	    sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"), resetRestock)
 end
 
+local currentSet
 function module.draw()
 	if imgui.tree_node(config.lang.restock.name) then
         if not config.managersRetrieved(module.managers) then
@@ -434,17 +435,24 @@ function module.draw()
             imgui.tree_pop()
         end
 
-        settings.imgui("enable", imgui.checkbox, config.lang.enable)
-        settings.imgui("cartEnable", imgui.checkbox, config.lang.restock.restockAfterDying)
-        settings.imgui("notification", imgui.checkbox, config.lang.notification)
+        settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+        settings.imgui(imgui.checkbox, "cartEnable", config.lang.restock.restockAfterDying)
+        settings.imgui(imgui.checkbox, "notification", config.lang.notification)
 
-        settings.imgui("default", imgui.slider_int, config.lang.useDefault, 0, 39,
-        GetItemLoadoutName(settings.data.default))
+        currentSet = GetItemLoadoutName(settings.data.default)
+        settings.imgui(imgui.slider_int, "default", config.lang.restock.selectedSet, 0, 39, currentSet)
 
         if imgui.tree_node(config.lang.weaponType) then
             for i = 1, 14, 1 do
                 local weaponType = i - 1
-                settings.imguit("weaponConfig", i, imgui.slider_int, config.getWeaponName(weaponType), -1, 39, GetWeaponTypeItemLoadoutName(weaponType))
+                settings.slider_int(
+                    { "weaponConfig", i },
+                    config.getWeaponName(weaponType),
+                    0,
+                    39,
+                    settings.data.weaponConfig[i] >= 0 and GetItemLoadoutName(weaponType) or nil,
+                    string.format(config.lang.useDefault, currentSet)
+                )
             end
             imgui.tree_pop()
         end
@@ -456,9 +464,14 @@ function module.draw()
                 local isUsing = EquipmentLoadoutIsNotEmpty(loadoutIndex)
                 if name and isUsing then
                     local same = EquipmentLoadoutIsEquipped(loadoutIndex)
-                    local msg = ""
-                    if same then msg = config.lang.restock.currentSet end
-                    settings.imguit("loadoutConfig", i, imgui.slider_int, name .. msg, -1, 39, GetLoadoutItemLoadoutIndex(loadoutIndex))
+                    settings.slider_int(
+                        { "loadoutConfig", i },
+                        name .. (same and config.lang.restock.currentSet or ""),
+                        0,
+                        39,
+                        settings.data.loadoutConfig[i] >= 0 and GetLoadoutItemLoadoutIndex(loadoutIndex) or nil,
+                        string.format(config.lang.useDefault, currentSet)
+                    )
                 end
             end
             imgui.tree_pop();

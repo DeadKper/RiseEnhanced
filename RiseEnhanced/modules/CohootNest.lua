@@ -52,8 +52,8 @@ end
 
 function module.draw()
 	if imgui.tree_node(config.lang.cohoot.name) then
-		settings.imgui("enable", imgui.checkbox, config.lang.enable)
-		settings.imgui("maxStock", imgui.slider_int, config.lang.cohoot.maxStock, 1, 5)
+		settings.imgui(imgui.checkbox, "enable", config.lang.enable)
+		settings.imgui(imgui.slider_int, "maxStock", config.lang.cohoot.maxStock, 1, 5)
 
 		imgui.tree_pop()
 	end
