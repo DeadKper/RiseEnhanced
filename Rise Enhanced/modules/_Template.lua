@@ -1,0 +1,24 @@
+-- Import libraries
+local data = require("Rise Enhanced.utils.data")
+local utils = require("Rise Enhanced.utils.utils")
+
+-- Init module
+local module, settings, cache = data.getDefaultModule(
+	"Template",
+	"template"
+)
+
+-- Main code
+
+-- Draw module
+---@diagnostic disable-next-line: duplicate-set-field
+function module.init()
+
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function module.drawInnerUi()
+
+end
+
+return module
