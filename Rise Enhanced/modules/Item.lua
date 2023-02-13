@@ -59,7 +59,7 @@ local function restock()
     local message = "<COL YEL>" .. string.format(data.lang.Item.restocked, "</COL>" .. itemSetName .. "<COL YEL>" ) .. "</COL>"
 
     -- not enough items
-    if itemSetId:call("isEnoughItem") or true then
+    if not itemSetId:call("isEnoughItem") then
         message = message .. "\n<COL RED>" .. data.lang.Item.outOfStock .. "</COL>"
     end
 
