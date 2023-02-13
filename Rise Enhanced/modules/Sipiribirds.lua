@@ -94,6 +94,7 @@ re.on_pre_application_entry("UpdateBehavior",
             if cache.get("spawned") then return end
             if not module.enabled() then return end
 
+            cache.set("spawned", true)
             utils.addTimer(3, spawnBirds)
         elseif #spawned > 0 then
             clear()
