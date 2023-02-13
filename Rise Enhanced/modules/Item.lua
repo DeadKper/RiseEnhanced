@@ -135,8 +135,8 @@ function module.drawInnerUi()
                 {"weaponSet", i},
                 data.lang.weaponNames[i - 1],
                 1,
-                32,
-                getItemSetName(itemBox, i),
+                40,
+                getItemSetName(itemBox, getItemSet(i) - 1),
                 defaultSet
             )
         end
