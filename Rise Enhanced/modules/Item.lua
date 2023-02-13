@@ -128,7 +128,7 @@ function module.drawInnerUi()
     local setName = getItemSetName(itemBox, settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
-    settings.sliderInt("defaultSet", data.lang.Item.default, 1, 40, setName)
+    settings.sliderInt("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
     if imgui.tree_node(data.lang.Item.perWeapon) then
         for i = 1, 14 do
             settings.sliderInt(

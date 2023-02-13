@@ -41,7 +41,6 @@ return {
     },
     Item = {
         name = "Item",
-        selectedSet = "Current item set",
         useDefaultItemSet = "Use default",
         perWeapon = "Use different item set per weapon",
         notify = "Show notification when restocking",
