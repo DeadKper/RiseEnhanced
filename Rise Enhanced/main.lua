@@ -4,7 +4,7 @@ local utils = require("Rise Enhanced.utils.utils")
 
 -- Init library
 
-utils.init(data.cacheFile, data.folder)
+utils.init(data.folder, data.cacheFile)
 
 local module, settings, cache = data.getDefaultModule(
     data.folder, {
