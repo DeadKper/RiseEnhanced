@@ -111,14 +111,13 @@ return {
 		intro = "Skip Intro Logos",
 		online = "Skip Online Warning",
 	},
-	birds = {
+	Spiribirds = {
 		name = "Spiribirds",
-		autoSpawn = "Auto-Spawn Spiribirds",
 		health = "Health",
 		stamina = "Stamina",
 		attack = "Attack",
 		defense = "Defense",
-		spawnPrism = "Spawn Prism Spiribird Instead",
+		spawnPrism = "Spawn prism spiribird",
 		manual = "Manual spawn",
 		healthButton = "   « Health »    ",
 		staminaButton = "   « Stamina »   ",

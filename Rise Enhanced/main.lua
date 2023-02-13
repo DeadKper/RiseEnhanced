@@ -22,6 +22,7 @@ local modules = {
 	[0] = require("Rise Enhanced.modules._Template")
 }
 modules[#modules+1] = require("Rise Enhanced.modules.Dango")
+modules[#modules+1] = require("Rise Enhanced.modules.Sipiribirds")
 
 -- Init variables
 local initiated = false
