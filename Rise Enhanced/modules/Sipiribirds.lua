@@ -75,6 +75,16 @@ local function spawn(type)
     cache.set("spawned", true)
 end
 
+local function spawnBirds()
+    if settings.get("prism") then
+        spawn("prism")
+    else
+        for k, v in pairs(settings.get("birds")) do
+            for _ = 1, v do spawn(k) end
+        end
+    end
+end
+
 -- Hooks
 
 -- spawn birds
@@ -84,13 +94,7 @@ re.on_pre_application_entry("UpdateBehavior",
             if cache.get("spawned") then return end
             if not module.enabled() then return end
 
-            if settings.get("prism") then
-                spawn("prism")
-            else
-                for k, v in pairs(settings.get("birds")) do
-                    for _ = 1, v do spawn(k) end
-                end
-            end
+            utils.addTimer(3, spawnBirds)
         elseif #spawned > 0 then
             clear()
         end
