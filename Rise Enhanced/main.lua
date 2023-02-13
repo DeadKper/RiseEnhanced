@@ -19,7 +19,7 @@ utils.addLanguage("en_US", require("Rise Enhanced.languages.en_US"))
 -- Load modules
 local modules = {
 	-- Used for code completion only, will always be ignored
-	[1] = require("Rise Enhanced.modules._Template")
+	[0] = require("Rise Enhanced.modules._Template")
 }
 modules[#modules+1] = require("Rise Enhanced.modules.Dango")
 
@@ -73,7 +73,7 @@ local function debugWindow()
 	data.print()
 	utils.printInfoNodes()
 	utils.treeText(data.lang.modName, settings.data, "settings.data")
-	for i = 2, #modules do
+	for i = 1, #modules do
 		mod = modules[i]
 		utils.treeText(mod.getName(), {
 			settings = mod.getSettings(),
@@ -118,7 +118,7 @@ local function drawWindow()
 
 	drawTree(data.lang.config.name)
 
-	for i = 2, #modules do
+	for i = 1, #modules do
 		mod = modules[i]
 		mod.drawUi()
 	end
@@ -139,7 +139,7 @@ function module.init()
 	cache.setNil("isMenuOpen", false)
 	cache.setNil("isDebugOpen", false)
 
-	for i = 2, #modules do -- Start on 2 to ignore template module
+	for i = 1, #modules do -- start on 1 to ignore template module
 		mod = modules[i]
 		mod.init()
 	end
@@ -157,7 +157,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.onFrame()
-	for i = 2, #modules do
+	for i = 1, #modules do
 		mod = modules[i]
 		mod.onFrame()
 	end
