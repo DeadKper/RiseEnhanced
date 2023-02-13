@@ -4,25 +4,25 @@ local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
 local module, settings, cache = data.getDefaultModule(
-	"Dango", {
-		enabled = true,
-		increasedChance = true,
-		ticket = true,
-		skewers = true,
-		kamuraPoints = false,
-		infiniteTickets = true,
-		showAllDango = false,
-		skewerLevels = {4, 3, 1},
-		autoEat = true,
+    "Dango", {
+        enabled = true,
+        increasedChance = true,
+        ticket = true,
+        skewers = true,
+        kamuraPoints = false,
+        infiniteTickets = true,
+        showAllDango = false,
+        skewerLevels = {4, 3, 1},
+        autoEat = true,
         eatOnQuest = true,
         disableTimer = true,
-		defaultSet = 1,
+        defaultSet = 1,
         defaultCartSet = 1,
-		weaponSet = utils.filledTable(13, 0),
-		cartWeaponSet = utils.filledTable(13, 0),
-		notification = true,
+        weaponSet = utils.filledTable(13, 0),
+        cartWeaponSet = utils.filledTable(13, 0),
+        notification = true,
         notificationSound = false
-	}
+    }
 )
 
 local dango = {
@@ -118,7 +118,7 @@ local function autoDango()
 
     order:set_field("IsSpecialSkewer", settings.get("skewers"))
 
-	cache.set("isOrdering", true)
+    cache.set("isOrdering", true)
     kitchen:call("order", order, settings.get("kamuraPoints") and 1 or 0, facilityLevel)
     cache.set("isOrdering", false)
 
@@ -390,12 +390,12 @@ function module.drawInnerUi()
     settings.call("showAllDango", imgui.checkbox, data.lang.Dango.showAllDango)
     imgui.text(data.lang.restartNote)
     if imgui.tree_node(data.lang.Dango.hoppingSkewersLevels) then
-		settings.sliderInt({ "skewerLevels", 1 }, data.lang.Dango.top, 1, 4)
-		settings.sliderInt({ "skewerLevels", 2 }, data.lang.Dango.mid, 1, 4)
-		settings.sliderInt({ "skewerLevels", 3 }, data.lang.Dango.bot, 1, 4)
-		module.resetButton("skewerLevels")
-		imgui.tree_pop()
-	end
+        settings.sliderInt({ "skewerLevels", 1 }, data.lang.Dango.top, 1, 4)
+        settings.sliderInt({ "skewerLevels", 2 }, data.lang.Dango.mid, 1, 4)
+        settings.sliderInt({ "skewerLevels", 3 }, data.lang.Dango.bot, 1, 4)
+        module.resetButton("skewerLevels")
+        imgui.tree_pop()
+    end
     settings.call("autoEat", imgui.checkbox, data.lang.Dango.autoEat)
     settings.call("eatOnQuest", imgui.checkbox, data.lang.Dango.eatOnQuest)
     imgui.text(data.lang.Dango.eatOnQuestNote)

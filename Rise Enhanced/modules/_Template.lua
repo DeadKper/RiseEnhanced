@@ -4,9 +4,9 @@ local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
 local module, settings, cache = data.getDefaultModule(
-	"Template", {
-		enabled = true,
-	}
+    "Template", {
+        enabled = true,
+    }
 )
 
 -- Main code
@@ -21,7 +21,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
-	module.enabledCheck()
+    module.enabledCheck()
 end
 
 return module

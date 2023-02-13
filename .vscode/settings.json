@@ -1,11 +1,11 @@
 {
-	"Lua.diagnostics.globals": [
-		"sdk",
-		"json",
-		"imgui",
-		"re",
-		"log",
-		"Vector3f",
-		"reframework"
-	]
+    "Lua.diagnostics.globals": [
+        "sdk",
+        "json",
+        "imgui",
+        "re",
+        "log",
+        "Vector3f",
+        "reframework"
+    ]
 }
