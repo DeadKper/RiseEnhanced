@@ -413,7 +413,7 @@ function module.drawInnerUi()
     local defaultSet = string.format(data.lang.useDefault, setName)
 
     settings.sliderInt("defaultSet", data.lang.Dango.defaultSet, 1, 32, setName)
-    settings.sliderInt("defaultCartSet", data.lang.Dango.defaultCartSet, 0, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1, defaultSet))
+    settings.sliderInt("defaultCartSet", data.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
     drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
     drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
 

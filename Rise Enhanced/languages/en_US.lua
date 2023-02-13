@@ -33,15 +33,23 @@ return {
         [12] = "Insect Glaive",
         [13] = "Bow",
     },
-    template = {
+    Template = {
         name = "Template",
     },
     config = {
         name = "Mod Configuration"
     },
-    cohoot = {
-        name = "Auto Cohoot Nest",
-        maxStock = "Maximum stock",
+    Item = {
+        name = "Item",
+        selectedSet = "Current item set",
+        useDefaultItemSet = "Use default",
+        perWeapon = "Use different item set per weapon",
+        notify = "Show notification when restocking",
+        sound = "Play sound along side the notification",
+        restockOnQuest = "Restock inside quest",
+        restocked = "Restocked from: %s",
+        emptySet = "Cannot restock from empty set",
+        outOfStock = "Out of stock",
     },
     Dango = {
         name = "Dango",
@@ -76,41 +84,6 @@ return {
         outOufTickets = "out of tickets",
         hoppingSkewers = "Hopping skewer was used"
     },
-    npc = {
-        name = "Auto NPC Talk",
-    },
-    restock = {
-        name = "Auto Restock",
-        selectedSet = "Current item set",
-        restockAfterDying = "Auto-restock items after dying",
-        useDefaultItemSet = "Use Default Setting",
-        weaponTypeNotSetUseDefault = "%s not set, use default setting %s",
-        useWeaponTypeItemSet = "Use %s setting: %s",
-        fromLoadout = "Restock for equipment loadout [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>]",
-        mismatchLoadout = "Current equipment doesn't match any equipment loadout.\n",
-        fromWeaponType = "Restock for weapon type [<COL YEL>%s</COL>] from item loadout [<COL YEL>%s</COL>].",
-        mismatchWeaponType = "Current equipment doesn't match any equipment loadout, and weapon type [<COL YEL>%s</COL>] has no settings.\n",
-        fromDefault = "Restock from default item loadout [<COL YEL>%s</COL>].",
-        outOfStock = "Restock [<COL YEL>%s</COL>] cancelled due to <COL RED>out of stock</COL>.",
-        paletteNilError = "<COL RED>ERROR</COL>: Radial set is nil.",
-        paletteApplied = "Radial set [<COL YEL>%s</COL>] applied.",
-        paletteListEmpty = "Radial set list is empty, skipped.",
-        default = "Default Item Set",
-        equipmentLoadout = "Equipment Loadout",
-        currentSet = " (Current)",
-    },
-    revive = {
-        name = "Nearest Camp Revive",
-    },
-    buddyRecon = {
-        name = "Reusable Buddy Recon",
-        cost = "Cost",
-    },
-    skips = {
-        name = "Skip Intro Logos & Online Warnings",
-        intro = "Skip Intro Logos",
-        online = "Skip Online Warning",
-    },
     Spiribirds = {
         name = "Spiribirds",
         health = "Health",
@@ -125,23 +98,5 @@ return {
         defenseButton = "   « Defense »   ",
         rainbowButton = "                 « Rainbow »                  ",
         goldenButton = "                  « Golden »                    ",
-    },
-    dangoTicket = {
-        name = "VIP Dango Ticket",
-        enableVip = "Enable VIP Ticket (100% chance on dangos with ticket)",
-        infiniteTickets = "Infinite Dango Tickets",
-        ticketByDefault = "Use Dango Ticket by default",
-        showAllDango = "Show all available Dango (including daily)",
-        hoppingSkewers = "Configure Hopping Skewer Dango Levels",
-        eatingFailed = "<COL RED>AutoDango was unable to eat!, please trigger eating manually.</COL>",
-        top = "Top Dango",
-        mid = "Mid Dango",
-        bot = "Bot Dango",
-    },
-    anomalyChecker = {
-        name = "Anomaly Investigation Legality Checker",
-        onlineOnly = "Only Check Online Quests",
-        manual = "Manual Check",
-        warning = "<COL RED>You are playing an illegal quest!\nPlease abandon this anomaly investigation.</COL>",
     }
 }
