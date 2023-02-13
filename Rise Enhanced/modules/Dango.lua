@@ -418,14 +418,17 @@ function module.drawInnerUi()
     drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
     drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
 
-    if imgui.button(data.lang.Dango.manualEat) then
-        if kitchen:get_field("_AvailableWaitTimer") > 0 then
-            kitchen:set_field("_AvailableWaitTimer", 0)
+    local questStatus = utils.getQuestStatus()
+    if questStatus == 0 or questStatus == 2 then
+        if imgui.button(data.lang.Dango.manualEat) then
+            if kitchen:get_field("_AvailableWaitTimer") > 0 then
+                kitchen:set_field("_AvailableWaitTimer", 0)
+            end
+            if not cache.get("shouldEat") then
+                cache.set("shouldEat", true)
+            end
+            autoDango()
         end
-        if not cache.get("shouldEat") then
-            cache.set("shouldEat", true)
-        end
-        autoDango()
     end
 end
 
