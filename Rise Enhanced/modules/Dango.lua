@@ -367,9 +367,8 @@ end
 local function drawWeaponSliders(name, kitchen, property, carted)
     if imgui.tree_node(name) then
         for i = 1, 14 do
-            settings.call(
+            settings.sliderInt(
                 {property, i},
-                imgui.slider_int,
                 data.lang.weaponNames[i - 1],
                 0,
                 32,
@@ -413,8 +412,8 @@ function module.drawInnerUi()
     local setName = getDangoSetName(kitchen, settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
-    settings.call("defaultSet", imgui.slider_int, data.lang.Dango.defaultSet, 1, 32, setName)
-    settings.call("defaultCartSet", imgui.slider_int, data.lang.Dango.defaultCartSet, 0, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1, defaultSet))
+    settings.sliderInt("defaultSet", data.lang.Dango.defaultSet, 1, 32, setName)
+    settings.sliderInt("defaultCartSet", data.lang.Dango.defaultCartSet, 0, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1, defaultSet))
     drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
     drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
 
