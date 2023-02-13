@@ -739,7 +739,6 @@ function utils.printInfoNodes()
 		indexed = localization.indexed,
 		current = localization.current,
 	}, "localization")
-	utils.treeText("Hooks", hooksAlias, "hookAlias")
 end
 
 -- Util Initialization
