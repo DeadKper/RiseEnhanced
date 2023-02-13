@@ -155,6 +155,13 @@ local function autoDango()
         return false
     end
 
+    if not cache.get("hasEatStats") then
+        cache.set("hasEatStats", true)
+        local playerData = player:get_field("_refPlayerData")
+        playerData:set_field("_vitalMax", playerData:get_field("_vitalMax") + 50)
+        playerData:set_field("_staminaMax", playerData:get_field("_staminaMax") + 1500.0)
+    end
+
     if settings.get("skewers") then
         message = message .. "\n<COL YEL>(" .. data.lang.Dango.hoppingSkewers .. ")</COL>"
     end
@@ -352,6 +359,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
         cache.set("shouldEat", true)
         cache.set("carted", false)
         cache.set("questCheck", false)
+        cache.set("hasEatStats", false)
     end
 )
 
@@ -362,6 +370,7 @@ function module.init()
     cache.setNil("isOrdering", false)
     cache.setNil("carted", false)
     cache.setNil("questCheck", false)
+    cache.setNil("hasEatStats", false)
 end
 
 local function drawWeaponSliders(name, kitchen, property, carted)
