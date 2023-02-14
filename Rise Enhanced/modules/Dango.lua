@@ -319,13 +319,10 @@ sdk.hook(
     end
 )
 
--- event callback hook for eating inside quest
-re.on_pre_application_entry("UpdateBehavior",
-    function()
-        if utils.getQuestStatusName() ~= "quest" or cache.get("questCheck") then return end
+-- auto eat inside quest
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
+    function(args)
         if not module.enabled() then return end
-
-        cache.set("questCheck", true)
         if settings.get("eatOnQuest") then
             utils.addTimer(1.5, autoDango)
         end
@@ -351,7 +348,7 @@ sdk.hook(
 )
 
 -- auto eat on cart
-sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"),
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
         if module.enabled() then
             cache.set("carted", true)
@@ -366,7 +363,6 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
     function (args)
         cache.set("shouldEat", true)
         cache.set("carted", false)
-        cache.set("questCheck", false)
         cache.set("hasEatStats", false)
         cache.set("retry", false)
     end
@@ -378,7 +374,6 @@ function module.init()
     cache.setNil("shouldEat", true)
     cache.setNil("isOrdering", false)
     cache.setNil("carted", false)
-    cache.setNil("questCheck", false)
     cache.setNil("hasEatStats", false)
     cache.setNil("retry", false)
 end
