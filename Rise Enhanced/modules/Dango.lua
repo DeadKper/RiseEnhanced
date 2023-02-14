@@ -151,8 +151,13 @@ local function autoDango()
     end
 
     if skillCount == 0 then
-        chatManager:call("reqAddChatInfomation", "<COL RED>" .. data.lang.Dango.eatingFailed .. "</COL>", settings.get("notificationSound") and 2289944406 or 0)
-        return false
+        if not cache.get("retry") then -- If can't eat try again
+            utils.addTimer(1, autoDango)
+        else
+            cache.set("retry", false)
+            chatManager:call("reqAddChatInfomation", "<COL RED>" .. data.lang.Dango.eatingFailed .. "</COL>", settings.get("notificationSound") and 2289944406 or 0)
+            return false
+        end
     end
 
     if not cache.get("hasEatStats") then
@@ -319,7 +324,7 @@ re.on_pre_application_entry("UpdateBehavior",
 
         cache.set("questCheck", true)
         if settings.get("eatOnQuest") then
-            utils.addTimer(2, autoDango)
+            utils.addTimer(1.5, autoDango)
         end
     end
 )
@@ -360,6 +365,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
         cache.set("carted", false)
         cache.set("questCheck", false)
         cache.set("hasEatStats", false)
+        cache.set("retry", false)
     end
 )
 
@@ -371,6 +377,7 @@ function module.init()
     cache.setNil("carted", false)
     cache.setNil("questCheck", false)
     cache.setNil("hasEatStats", false)
+    cache.setNil("retry", false)
 end
 
 local function drawWeaponSliders(name, kitchen, property, carted)
