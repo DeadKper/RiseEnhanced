@@ -3,7 +3,7 @@ local data = require("Rise Enhanced.utils.data")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings, cache = data.getDefaultModule(
+local module, settings = data.getDefaultModule(
     "Spiribirds", {
         enabled = true,
         prism = true,
