@@ -14,6 +14,10 @@ local module, settings, cache = data.getDefaultModule(
     }
 )
 
+local consumables = {
+
+}
+
 -- Main code
 
 local function getItemSet(weapon)
@@ -68,6 +72,10 @@ local function restock()
     end
 end
 
+local function consume()
+
+end
+
 -- Hooks
 
 -- restock when joining quest
@@ -82,20 +90,16 @@ sdk.hook(
 )
 
 -- event callback hook for restocking inside quest
-re.on_pre_application_entry("UpdateBehavior",
-    function()
-        if utils.getQuestStatusName() ~= "quest" or cache.get("questCheck") then return end
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
+    function(args)
         if not module.enabled() then return end
-
-        cache.set("questCheck", true)
-        if settings.get("restockOnQuest") then
-            utils.addTimer(2, restock)
-        end
+        if not settings.get("restockOnQuest") then return end
+        utils.addTimer(2, restock)
     end
 )
 
 -- restock on cart
-sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"),
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
         if module.enabled() then
             utils.addTimer(5, restock)
@@ -103,19 +107,7 @@ sdk.hook(sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("st
     end
 )
 
--- clear cache
-sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
-    function (args)
-        cache.set("questCheck", false)
-    end
-)
-
 -- Draw module
----@diagnostic disable-next-line: duplicate-set-field
-function module.init()
-    cache.setNil("questCheck", false)
-end
-
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()

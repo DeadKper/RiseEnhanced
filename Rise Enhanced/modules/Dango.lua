@@ -31,6 +31,11 @@ local dango = {
     ticket = false
 }
 
+local isOrdering = false
+local needStats = false
+local retryEating = false
+local carted = false
+
 local dataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
 
 -- Main code
@@ -48,33 +53,32 @@ local function getMealFunction()
 end
 
 local function getDangoSet(weapon, forceCarted)
-    local loadout = settings.get("weaponSet")[weapon]
+    local set = settings.get("weaponSet")[weapon]
     local isDefault = false
-    if loadout == 0 then
-        loadout = settings.get("defaultSet")
+    if set == 0 then
+        set = settings.get("defaultSet")
         isDefault = true
     end
 
-    if cache.get("carted") or forceCarted then
-        local carted = settings.get("cartWeaponSet")[weapon]
-        if carted == 0 then
+    if carted or forceCarted then
+        local cartSet = settings.get("cartWeaponSet")[weapon]
+        if cartSet == 0 then
             if isDefault then
-                carted = settings.get("defaultCartSet")
+                cartSet = settings.get("defaultCartSet")
             else
                 isDefault = true
             end
         end
-        if carted ~= 0 then
-            loadout = carted
+        if cartSet ~= 0 then
+            set = cartSet
         end
     end
 
-    return loadout, isDefault
+    return set, isDefault
 end
 
 -- order dango function
 local function autoDango()
-    if not cache.get("shouldEat") then return end
     if not module.enabled() then return end
     if utils.getQuestStatus() ~= 0 and utils.getQuestStatus() ~= 2 then
         return true
@@ -118,9 +122,9 @@ local function autoDango()
 
     order:set_field("IsSpecialSkewer", settings.get("skewers"))
 
-    cache.set("isOrdering", true)
+    isOrdering = true
     kitchen:call("order", order, settings.get("kamuraPoints") and 1 or 0, facilityLevel)
-    cache.set("isOrdering", false)
+    isOrdering = false
 
     local playerManager = sdk.get_managed_singleton("snow.player.PlayerManager")
     local player = playerManager:call("findMasterPlayer")
@@ -151,20 +155,19 @@ local function autoDango()
     end
 
     if skillCount == 0 then
-        if not cache.get("retry") then -- If can't eat try again
-            cache.set("retry", true)
+        if not retryEating then -- If can't eat try again
+            retryEating = true
             utils.addTimer(1, autoDango)
         else
-            cache.set("retry", false)
+            retryEating = false
             chatManager:call("reqAddChatInfomation", "<COL RED>" .. data.lang.Dango.eatingFailed .. "</COL>", settings.get("notificationSound") and 2289944406 or 0)
             return false
         end
     end
 
-    cache.set("retry", false)
+    retryEating = false
 
-    if not cache.get("hasEatStats") then
-        cache.set("hasEatStats", true)
+    if needStats then
         local playerData = player:get_field("_refPlayerData")
         playerData:set_field("_vitalMax", playerData:get_field("_vitalMax") + 50)
         playerData:set_field("_staminaMax", playerData:get_field("_staminaMax") + 1500.0)
@@ -287,10 +290,6 @@ sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("
     function(args)
     end,
     function(retval)
-        if cache.get("shouldEat") then
-            cache.set("shouldEat", false)
-        end
-
         if not module.enabled() then return retval end
 
         if settings.get("disableTimer") then
@@ -315,6 +314,7 @@ sdk.hook(
         if not module.enabled() then return end
 
         if settings.get("eatOnQuest") then return end
+        needStats = true
         autoDango()
     end
 )
@@ -323,61 +323,46 @@ sdk.hook(
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() then return end
-        if settings.get("eatOnQuest") then
-            utils.addTimer(1.5, autoDango)
-        end
+        if not settings.get("eatOnQuest") then return end
+        utils.addTimer(1.5, function ()
+            needStats = true
+            autoDango()
+        end)
     end
 )
 
 -- bypass check for eating
 sdk.hook(
     sdk.find_type_definition("snow.facility.MealOrderData"):get_method("canOrder"),
-    function(args)
-    end,
+    nil,
     function(retval)
-        if not module.enabled() then return retval end
+        if not module.enabled() or not isOrdering then return retval end
 
-        local bool
-        if cache.get("isOrdering") then
-            bool = sdk.create_instance("System.Boolean"):add_ref()
-            bool:set_field("mValue", true)
-            retval = sdk.to_ptr(bool)
-        end
-        return retval
+        local bool = sdk.create_instance("System.Boolean"):add_ref()
+        bool:set_field("mValue", true)
+        return sdk.to_ptr(bool)
     end
 )
 
 -- auto eat on cart
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
-        if module.enabled() then
-            cache.set("carted", true)
-            cache.set("shouldEat", true)
-            utils.addTimer(5, autoDango)
-        end
+        if not module.enabled() then return end
+        utils.addTimer(5, function ()
+            carted = true
+            autoDango()
+        end)
     end
 )
 
 -- clear eat stats from cache
 sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
     function (args)
-        cache.set("shouldEat", true)
-        cache.set("carted", false)
-        cache.set("hasEatStats", false)
-        cache.set("retry", false)
+        carted = false
     end
 )
 
 -- Draw module
----@diagnostic disable-next-line: duplicate-set-field
-function module.init()
-    cache.setNil("shouldEat", true)
-    cache.setNil("isOrdering", false)
-    cache.setNil("carted", false)
-    cache.setNil("hasEatStats", false)
-    cache.setNil("retry", false)
-end
-
 local function drawWeaponSliders(name, kitchen, property, carted)
     if imgui.tree_node(name) then
         for i = 1, 14 do
@@ -436,9 +421,6 @@ function module.drawInnerUi()
         if imgui.button(data.lang.Dango.manualEat) then
             if kitchen:get_field("_AvailableWaitTimer") > 0 then
                 kitchen:set_field("_AvailableWaitTimer", 0)
-            end
-            if not cache.get("shouldEat") then
-                cache.set("shouldEat", true)
             end
             autoDango()
         end

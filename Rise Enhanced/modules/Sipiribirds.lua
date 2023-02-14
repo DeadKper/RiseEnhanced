@@ -42,8 +42,9 @@ local function getPlayerLocation()
     return location
 end
 
--- clear spawned birds
-local function clear()
+-- remove spawned birds
+local function destroyBirds()
+    if #spawned == 0 then return end
     for _, bird in pairs(spawned) do
         bird:call("destroy", bird)
     end
@@ -71,8 +72,6 @@ local function spawn(type)
     else
         table.insert(spawned, bird)
     end
-
-    cache.set("spawned", true)
 end
 
 local function spawnBirds()
@@ -87,20 +86,17 @@ end
 
 -- Hooks
 
--- spawn birds
-re.on_pre_application_entry("UpdateBehavior",
-    function()
-        if utils.getQuestStatusName() == "quest" then
-            if cache.get("spawned") then return end
-            if not module.enabled() then return end
+-- spawn birds on quest start
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
+    function(args)
+        if not module.enabled() then return end
 
-            cache.set("spawned", true)
-            utils.addTimer(3, spawnBirds)
-        elseif #spawned > 0 then
-            clear()
-        end
+        utils.addTimer(3, spawnBirds)
     end
 )
+
+-- remove birds on quest end
+sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"), destroyBirds)
 
 -- fill stamina when picking up spiribird
 sdk.hook(sdk.find_type_definition("snow.player.PlayerQuestBase"):get_method("calcLvBuffStamina"),
@@ -114,24 +110,10 @@ sdk.hook(sdk.find_type_definition("snow.player.PlayerQuestBase"):get_method("cal
     end
 )
 
--- clear cache
-sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
-    function (args)
-        cache.set("spawned", false)
-    end
-)
-
 -- remove spiribirds on script reset
-re.on_script_reset(function()
-    clear()
-end)
+re.on_script_reset(destroyBirds)
 
 -- Draw module
----@diagnostic disable-next-line: duplicate-set-field
-function module.init()
-    cache.setNil("spawned", false)
-end
-
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()

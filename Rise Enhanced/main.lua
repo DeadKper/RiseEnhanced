@@ -41,6 +41,9 @@ local window = {
     flags = 0x10120,
 }
 
+local isDebugOpen = false
+local isMenuOpen = false
+
 -- Set initial language
 local function setLanguage(change, value)
     if not change then return end
@@ -55,10 +58,11 @@ setLanguage(true, settings.get("lang"))
 
 -- Draw functions
 local function debugWindow()
-    utils.imguiButton(data.lang.debug.button,
-    cache.set, "isDebugOpen", not cache.get("isDebugOpen"))
+    utils.imguiButton(data.lang.debug.button, function ()
+        isDebugOpen = not isDebugOpen
+    end)
 
-    if not cache.get("isDebugOpen") then return end
+    if not isDebugOpen then return end
 
     imgui.set_next_window_pos(window.debugPosition, window.condition, window.pivot)
     imgui.set_next_window_size(window.debugSize, window.condition)
@@ -68,7 +72,7 @@ local function debugWindow()
         window.showCloseButton,
         window.flags
     ) then
-        cache.set("isDebugOpen", false)
+        isDebugOpen = false
     end
 
     imgui.text("Time: " .. os.clock())
@@ -99,10 +103,11 @@ local function drawTree(text)
 end
 
 local function drawWindow()
-    utils.imguiButton("[ " .. data.lang.modName .. " ]",
-        cache.set, "isMenuOpen", not cache.get("isMenuOpen"))
+    utils.imguiButton("[ " .. data.lang.modName .. " ]", function ()
+        isMenuOpen = not isMenuOpen
+    end)
 
-    if not cache.get("isMenuOpen") then return end
+    if not isMenuOpen then return end
 
     if not isWindowSet then
         isWindowSet = true
@@ -115,7 +120,7 @@ local function drawWindow()
         window.showCloseButton,
         window.flags
     ) then
-        cache.set("isMenuOpen", false)
+        isMenuOpen = false
     end
 
     drawTree(data.lang.config.name)
@@ -138,8 +143,6 @@ function module.init()
     if initiated then return end
     if not settings.get("enabled") then return end
     initiated = true
-    cache.setNil("isMenuOpen", false)
-    cache.setNil("isDebugOpen", false)
 
     for i = 1, #modules do -- start on 1 to ignore template module
         mod = modules[i]

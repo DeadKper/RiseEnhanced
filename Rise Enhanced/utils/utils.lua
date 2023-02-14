@@ -231,8 +231,8 @@ re.on_frame(tickTimers)
 
 local loops = {}
 
--- Allows a function to loop until the given condition is false, in which case it will be
--- executed 1 last time, the first argument will be whether the condition is true or false
+-- Allows a function to loop until the given condition function returns false
+-- when the condition returns false the loop entry will be deleted automatically
 function utils.addLoop(sleep, conditionFunc, func)
     table.insert(loops, {
         lastExecution = os.clock() - sleep,
@@ -252,7 +252,6 @@ local function tickLoops()
                 loop.func()
             end
         else
-            loop.func()
             loops[i] = nil
         end
     end
@@ -465,15 +464,15 @@ end
 
 -- Custom Hooks
 
-local hooksAlias = {}
+-- local hooksAlias = {}
 
 -- Hooks a previous aliased function to a pre and/or post func, not that useful if you only use that hook 1 time, useful when the hook needs to be used more than once
 -- Default Hooks: "onCart", "onQuestActivate", "onQuestUpdate", "onReturn", "onQuestKill", "onEquipEquipmentLoadout"
-function utils.hook(hook, preFunc, postFunc)
-    if type(hook) ~= "string" then error("utils.hook was called without an alias") end
-    hook = hooksAlias[hook]
-    hook.func(hook.hook, preFunc, postFunc)
-end
+-- function utils.hook(hook, preFunc, postFunc)
+--     if type(hook) ~= "string" then error("utils.hook was called without an alias") end
+--     hook = hooksAlias[hook]
+--     hook.func(hook.hook, preFunc, postFunc)
+-- end
 
 -- Adds an alias to a hook, uses sdk.hook as _registerFunc by default, ex:
 -- utils.hookAlias("onCart", sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic")) for an "onCart" hook
@@ -508,6 +507,13 @@ local questStatusName = {
     [7] = "returned",
 }
 
+local questFlowName = {
+    [0] = "quest",
+    [1] = "countdown",
+    [8] = "animation",
+    [16] = "over"
+}
+
 -- Returns questStatus
 function utils.getQuestStatus()
     local manager = sdk.get_managed_singleton("snow.QuestManager")
@@ -522,28 +528,17 @@ function utils.getQuestStatusName()
     return questStatusName[utils.getQuestStatus()]
 end
 
-local function updateQuestStatus()
-    if not utils.cache then return end
-    local status = utils.getQuestStatus()
-    local cacheStatus = cache.get("questStatus")
-    if cacheStatus == status then return end
-    cache.set("questTime", os.clock())
-    cache.set("questStatus", status)
+function utils.getQuestEndFlow()
+    local manager = sdk.get_managed_singleton("snow.QuestManager")
+    if manager == nil then return end
+    return manager:get_field("_EndFlow")
 end
 
--- Returns time spend in the last questStatus for example, will return Quest Time if questStatus == 2
-function utils.getQuestTime()
-    if not utils.cache then return end
-    return os.clock() - cache.get("questTime")
+function utils.getQuestEndFlowName()
+    local status = utils.getQuestEndFlow()
+    if status == nil then return "nil" end
+    return questFlowName[utils.getQuestStatus()]
 end
-
--- Returns time at which the current questStatus was set
-function utils.getQuestInitialTime()
-    if not utils.cache then return end
-    return cache.get("questTime")
-end
-
-re.on_pre_application_entry("UpdateBehavior", updateQuestStatus)
 
 -- Localization
 
