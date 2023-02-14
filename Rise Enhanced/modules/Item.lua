@@ -125,6 +125,8 @@ function module.drawInnerUi()
 
     local itemBox = sdk.get_managed_singleton("snow.data.DataManager"):get_field("_ItemMySet")
 
+    if not itemBox then return end
+
     local setName = getItemSetName(itemBox, settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 

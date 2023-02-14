@@ -13,7 +13,6 @@ local module, settings, cache = data.getDefaultModule(
     }
 )
 
-utils.setShouldSaveCacheFunction(settings.get, "enabled")
 utils.addLanguage("en_US", require("Rise Enhanced.languages.en_US"))
 
 -- Load modules
@@ -72,6 +71,7 @@ local function debugWindow()
         cache.set("isDebugOpen", false)
     end
 
+    imgui.text("Time: " .. os.clock())
     data.print()
     utils.printInfoNodes()
     utils.treeText(data.lang.modName, settings.data, "settings.data")

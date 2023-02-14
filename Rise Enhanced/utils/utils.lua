@@ -85,11 +85,10 @@ local function setNilCache(propertyTable, moduleName, value)
 end
 
 -- Returns a cache handler, similar to the settings handler but cache will be deleted on
--- game startup, only preservers values on script reset, if the moduleName is "__persist" it will
--- be renamed to "persist", if no moduleName is passed, it will be assinged to "__general"
+-- game startup, only preservers values on script reset
+-- if no moduleName is passed, it will be assinged to "__general"
 function utils.getCacheHandler(_moduleName)
     if _moduleName == nil then _moduleName = "__general" end
-    if _moduleName == "__persist" then _moduleName = "persist" end
     local handler = {
         name = _moduleName
     }
@@ -115,24 +114,6 @@ end
 
 -- Only for code completion, will not be usable until utils.init()
 cache = utils.getCacheHandler("utils")
-local cacheAux = {}
-
--- Can be used in combination of an enable var to save only if the mod is enabled, func should return true or false, ex: function() return settings.get("enable") end
-function utils.setShouldSaveCacheFunction(func, ...)
-    if type(func) ~= "function" then
-        error("func is not a function in utils.setShouldSaveCacheFunction")
-    end
-    cacheAux.shouldSave = func
-    cacheAux.args = ...
-end
-
--- This function doesn't use the modular approach automatically assing in cache to prevent
--- any outside code to override the "__persist" value
-re.on_script_reset(function ()
-    if not utils.cache then return end
-    if cacheAux.shouldSave and not cacheAux.shouldSave(cacheAux.args) then return end
-    utils.cache.set("__persist", true)
-end)
 
 -- Returns settingsHandler, cacheHandler. settingsHandler handles and persists configuration, cacheHandler will only persist data on script resets
 function utils.getHandlers(settingsDefaults,
@@ -225,22 +206,17 @@ end
 
 local timers = {}
 
--- Returns time since reframework loaded
-function utils.time()
-    return os.clock()
-end
-
 -- Allows a function to be used with a delay in seconds
 function utils.addTimer(delay, func)
     table.insert(timers, {
-        delay = utils.time() + delay,
+        delay = os.clock() + delay,
         action = func
     })
 end
 
 local timeTimer
 local function tickTimers()
-    timeTimer = utils.time()
+    timeTimer = os.clock()
     for i, timer in pairs(timers) do
         if timer.delay - timeTimer <= 0 then
             timer.action()
@@ -257,27 +233,26 @@ local loops = {}
 
 -- Allows a function to loop until the given condition is false, in which case it will be
 -- executed 1 last time, the first argument will be whether the condition is true or false
-function utils.addLoop(sleep, condition, func, ...)
+function utils.addLoop(sleep, conditionFunc, func)
     table.insert(loops, {
-        lastExecution = utils.time() - sleep,
+        lastExecution = os.clock() - sleep,
         sleep = sleep,
-        condition = condition,
-        func = func,
-        arguments = ...
+        condition = conditionFunc,
+        func = func
     })
 end
 
 local timeLoop
 local function tickLoops()
-    timeLoop = utils.time()
+    timeLoop = os.clock()
     for i, loop in pairs(loops) do
-        if loop.condition then
-            if loop.lastExecution - timeLoop > loop.sleep then
+        if loop.condition() then
+            if timeLoop - loop.lastExecution > loop.sleep then
                 loop.lastExecution = timeLoop
-                loop.func(true, loop.arguments)
+                loop.func()
             end
         else
-            loop.func(false, loop.arguments)
+            loop.func()
             loops[i] = nil
         end
     end
@@ -552,14 +527,14 @@ local function updateQuestStatus()
     local status = utils.getQuestStatus()
     local cacheStatus = cache.get("questStatus")
     if cacheStatus == status then return end
-    cache.set("questTime", utils.time())
+    cache.set("questTime", os.clock())
     cache.set("questStatus", status)
 end
 
 -- Returns time spend in the last questStatus for example, will return Quest Time if questStatus == 2
 function utils.getQuestTime()
     if not utils.cache then return end
-    return utils.time() - cache.get("questTime")
+    return os.clock() - cache.get("questTime")
 end
 
 -- Returns time at which the current questStatus was set
@@ -751,10 +726,11 @@ function utils.init(cacheFolder, _cacheFile)
     initialized = true
     -- Init Cache
     local cacheHandler = utils.getSettingsHandler({}, cacheFolder, _cacheFile)
-    if not cacheHandler.get("__persist") and next(cacheHandler.data) ~= nil then
+
+    -- reset cache if on the first 5 mins of the game opening
+    if os.clock() <= 300 and next(cacheHandler.data) ~= nil then
         cacheHandler.reset()
     end
-    cacheHandler.set("__persist", false)
     utils.cache = cacheHandler
     cache = utils.getCacheHandler("utils")
 end
