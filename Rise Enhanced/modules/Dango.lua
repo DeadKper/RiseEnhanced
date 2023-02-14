@@ -152,6 +152,7 @@ local function autoDango()
 
     if skillCount == 0 then
         if not cache.get("retry") then -- If can't eat try again
+            cache.set("retry", true)
             utils.addTimer(1, autoDango)
         else
             cache.set("retry", false)
@@ -159,6 +160,8 @@ local function autoDango()
             return false
         end
     end
+
+    cache.set("retry", false)
 
     if not cache.get("hasEatStats") then
         cache.set("hasEatStats", true)
