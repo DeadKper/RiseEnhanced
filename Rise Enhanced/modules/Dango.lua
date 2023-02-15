@@ -49,25 +49,21 @@ local function getMealFunction()
 end
 
 local function getDangoSet(weapon, forceCarted)
-    local set = settings.get("weaponSet")[weapon]
+    local set = 0
     local isDefault = false
-    if set == 0 then
-        set = settings.get("defaultSet")
-        isDefault = true
+    if carted or forceCarted then
+        set = settings.get("cartWeaponSet")[weapon]
+        if set == 0 then
+            set = settings.get("defaultCartSet")
+            isDefault = true
+        end
     end
 
-    if carted or forceCarted then
-        isDefault = false
-        local cartSet = settings.get("cartWeaponSet")[weapon]
-        if cartSet == 0 then
-            if isDefault then
-                cartSet = settings.get("defaultCartSet")
-            else
-                isDefault = true
-            end
-        end
-        if cartSet ~= 0 then
-            set = cartSet
+    if set == 0 then
+        set = settings.get("weaponSet")[weapon]
+        if set == 0 then
+            set = settings.get("defaultSet")
+            isDefault = true
         end
     end
 
