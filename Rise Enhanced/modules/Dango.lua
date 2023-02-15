@@ -41,13 +41,11 @@ local dataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref
 -- get meal function
 local function getMealFunction()
     local kitchen =
-        sdk.get_managed_singleton("snow.data.FacilityDataManager"):call(
-            "get_Kitchen")
+        sdk.get_managed_singleton("snow.data.FacilityDataManager")
     if not kitchen then return nil end
-    kitchen = kitchen:call("get_MealFunc")
-
+    kitchen = kitchen:call("get_Kitchen")
     if not kitchen then return nil end
-    return kitchen
+    return kitchen:call("get_MealFunc")
 end
 
 local function getDangoSet(weapon, forceCarted)
