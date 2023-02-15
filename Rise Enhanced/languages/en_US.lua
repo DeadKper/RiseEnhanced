@@ -39,6 +39,7 @@ return {
     },
     Item = {
         name = "Item",
+        autoRestock = "Restock items automatically",
         useDefaultItemSet = "Use default",
         perWeapon = "Use different item set per weapon",
         restocked = "Restocked from: %s",

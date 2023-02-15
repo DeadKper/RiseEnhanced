@@ -6,6 +6,7 @@ local utils = require("Rise Enhanced.utils.utils")
 local module, settings = data.getDefaultModule(
     "Item", {
         enabled = true,
+        autoRestock = true,
         autoItems = true,
         infiniteItems = false,
         buffRefresh = true,
@@ -362,7 +363,7 @@ end)
 -- event callback hook for restocking inside quest
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
-        if not module.enabled() then return end
+        if not module.enabled() or not settings.get("autoRestock") then return end
         utils.addTimer(2, function ()
             restock()
             questStartTrigger = true
@@ -374,7 +375,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
 -- restock on cart
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
-        if not module.enabled() then return end
+        if not module.enabled() or not settings.get("autoRestock") then return end
         pauseAutoItems = true
         utils.addTimer(5, function ()
             restock()
@@ -394,6 +395,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
+    settings.call("autoRestock", imgui.checkbox, data.lang.Item.autoRestock)
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
     settings.call("buffRefresh", imgui.checkbox, data.lang.Item.buffRefresh)
