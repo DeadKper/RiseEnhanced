@@ -8,7 +8,7 @@ local module, settings = data.getDefaultModule(
         enabled = true,
         autoItems = true,
         infiniteItems = false,
-        combatRefresh = true,
+        buffRefresh = true,
         itemList = utils.filledTable(#data.lang.Item.itemList, 1),
         defaultSet = 1,
         weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
@@ -286,14 +286,14 @@ local function autoItems()
 
     if utils.isWeaponSheathed() then
         drawFlag = true
-    elseif drawFlag then
+    elseif drawFlag or settings.get("buffRefresh") then
         activationLevel = 4
         drawFlag = false
     end
 
     if not utils.inBattle() then
         combatFlag = true
-    elseif combatFlag or settings.get("combatRefresh") then
+    elseif combatFlag or settings.get("buffRefresh") then
         activationLevel = 3
         combatFlag = false
     end
@@ -396,7 +396,7 @@ function module.drawInnerUi()
     module.enabledCheck()
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
-    settings.call("combatRefresh", imgui.checkbox, data.lang.Item.combatRefresh)
+    settings.call("buffRefresh", imgui.checkbox, data.lang.Item.buffRefresh)
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 

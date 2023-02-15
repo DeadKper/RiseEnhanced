@@ -51,7 +51,7 @@ return {
         autoItems = "Use items automatically",
         infiniteItems = "Infinite items",
         itemConfig = "Configure auto items",
-        combatRefresh = "Refresh buffs in combat when expired",
+        buffRefresh = "Refresh buffs when they expire",
         itemList = {
             "Demondrug",
             "Mega Demondrug",
