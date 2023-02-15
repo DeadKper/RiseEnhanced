@@ -14,12 +14,11 @@ local module, settings = data.getDefaultModule(
         showAllDango = false,
         skewerLevels = {4, 3, 1},
         autoEat = true,
-        eatOnQuest = true,
         disableTimer = true,
         defaultSet = 1,
         defaultCartSet = 0,
-        weaponSet = utils.filledTable(13, 0),
-        cartWeaponSet = utils.filledTable(13, 0),
+        weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
+        cartWeaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
         notification = true,
         notificationSound = false
     }
@@ -33,7 +32,6 @@ local dango = {
 
 local isOrdering = false
 local needStats = false
-local retryEating = false
 local carted = false
 
 local dataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
@@ -98,13 +96,9 @@ local function autoDango()
 
     kitchen:call("resetDailyDango")
 
-    local chatManager = sdk.get_managed_singleton("snow.gui.ChatManager")
-
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
-        chatManager:call(
-                "reqAddChatInfomation",
-                "<COL RED>" .. data.lang.Dango.emptySet .. "</COL>",
-                settings.get("notificationSound") and 2412657311 or 0)
+        utils.chat("<COL RED>%s</COL>",
+                settings.get("notificationSound") and 2412657311 or 0, data.lang.Dango.emptySet)
         return false
     end
 
@@ -126,8 +120,7 @@ local function autoDango()
     kitchen:call("order", order, settings.get("kamuraPoints") and 1 or 0, facilityLevel)
     isOrdering = false
 
-    local playerManager = sdk.get_managed_singleton("snow.player.PlayerManager")
-    local player = playerManager:call("findMasterPlayer")
+    local player = utils.getPlayer()
 
     local orderName = order:call("get_OrderName")
     local message = string.format("<COL YEL>" .. data.lang.Dango.eatMessage, orderName)
@@ -155,22 +148,18 @@ local function autoDango()
     end
 
     if skillCount == 0 then
-        if not retryEating then -- If can't eat try again
-            retryEating = true
-            utils.addTimer(1, autoDango)
-        else
-            retryEating = false
-            chatManager:call("reqAddChatInfomation", "<COL RED>" .. data.lang.Dango.eatingFailed .. "</COL>", settings.get("notificationSound") and 2289944406 or 0)
-            return false
-        end
+        utils.chat("<COL RED>%s</COL>",
+                settings.get("notificationSound") and 2412657311 or 0, data.lang.Dango.eatingFailed)
+        return false
     end
-
-    retryEating = false
 
     if needStats then
         local playerData = player:get_field("_refPlayerData")
-        playerData:set_field("_vitalMax", playerData:get_field("_vitalMax") + 50)
+        local maxHp = playerData:get_field("_vitalMax") + 50
+        playerData:set_field("_vitalMax", maxHp)
+        playerData:set_field("_r_Vital", maxHp)
         playerData:set_field("_staminaMax", playerData:get_field("_staminaMax") + 1500.0)
+        needStats = false
     end
 
     if settings.get("skewers") then
@@ -178,7 +167,7 @@ local function autoDango()
     end
 
     if settings.get("notification") then
-        chatManager:call("reqAddChatInfomation", message, settings.get("notificationSound") and 2289944406 or 0)
+        utils.chat(message, settings.get("notificationSound") and 2289944406 or 0)
     end
 
     if not settings.get("disableTimer") then
@@ -307,23 +296,11 @@ sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("
     end
 )
 
--- auto eat when joining quest
-sdk.hook(
-    sdk.find_type_definition("snow.QuestManager"):get_method("questActivate(snow.LobbyManager.QuestIdentifier)"),
-    function(args)
-        if not module.enabled() then return end
-
-        if settings.get("eatOnQuest") then return end
-        needStats = true
-        autoDango()
-    end
-)
-
 -- auto eat inside quest
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() then return end
-        if not settings.get("eatOnQuest") then return end
+
         utils.addTimer(1.5, function ()
             needStats = true
             autoDango()
@@ -365,13 +342,13 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 -- Draw module
 local function drawWeaponSliders(name, kitchen, property, carted)
     if imgui.tree_node(name) then
-        for i = 1, 14 do
+        for key, value in pairs(data.lang.weaponNames) do
             settings.sliderInt(
-                {property, i},
-                data.lang.weaponNames[i - 1],
+                {property, key + 1},
+                value,
                 0,
                 32,
-                getDangoSetByWeapon(kitchen, i, carted)
+                getDangoSetByWeapon(kitchen, key + 1, carted)
             )
         end
         imgui.tree_pop()
@@ -396,11 +373,9 @@ function module.drawInnerUi()
         imgui.tree_pop()
     end
     settings.call("autoEat", imgui.checkbox, data.lang.Dango.autoEat)
-    settings.call("eatOnQuest", imgui.checkbox, data.lang.Dango.eatOnQuest)
-    imgui.text(data.lang.Dango.eatOnQuestNote)
     settings.call("disableTimer", imgui.checkbox, data.lang.Dango.disableTimer)
-    settings.call("notification", imgui.checkbox, data.lang.Dango.notify)
-    settings.call("notificationSound", imgui.checkbox, data.lang.Dango.sound)
+    settings.call("notification", imgui.checkbox, data.lang.notification)
+    settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
     local kitchen = getMealFunction()
     if not kitchen then
