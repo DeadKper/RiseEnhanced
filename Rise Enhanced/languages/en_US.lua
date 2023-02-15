@@ -35,7 +35,11 @@ return {
         name = "Template",
     },
     config = {
-        name = "Mod Configuration"
+        name = "Mod Configuration",
+    },
+    Tweaks = {
+        name = "Tweaks",
+        saveDelay = "Autosave delay in mins"
     },
     Item = {
         name = "Item",
@@ -85,9 +89,6 @@ return {
             "Second dango",
             "Third dango"
         },
-        top = "Top Dango",
-        mid = "Mid Dango",
-        bot = "Bot Dango",
         autoEat = "Eat automatically",
         defaultSet = "Default set",
         defaultCartSet = "Default cart set",

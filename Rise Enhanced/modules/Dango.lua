@@ -338,7 +338,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 local function drawWeaponSliders(name, kitchen, property, hasCarted)
     if imgui.tree_node(name) then
         for key, value in pairs(data.lang.weaponNames) do
-            settings.sliderInt(
+            settings.slider(
                 {property, key + 1},
                 value,
                 0,
@@ -363,7 +363,7 @@ function module.drawInnerUi()
     imgui.text(data.lang.restartNote)
     if imgui.tree_node(data.lang.Dango.hoppingSkewersLevels) then
         for i, text in pairs(data.lang.Dango.usableDangos) do
-            settings.sliderInt({ "skewerLevels", i }, text, 1, 4)
+            settings.slider({ "skewerLevels", i }, text, 1, 4)
         end
         module.resetButton("skewerLevels")
         imgui.tree_pop()
@@ -382,8 +382,8 @@ function module.drawInnerUi()
     local setName = getDangoSetName(kitchen, settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
-    settings.sliderInt("defaultSet", data.lang.Dango.defaultSet, 1, 32, setName)
-    settings.sliderInt("defaultCartSet", data.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
+    settings.slider("defaultSet", data.lang.Dango.defaultSet, 1, 32, setName)
+    settings.slider("defaultCartSet", data.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
     drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
     drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
 

@@ -338,14 +338,14 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         return changed, newValue
     end
 
-    --- Allows slider_int to have a default return (will be min - 1) or have steps in the slider
+    --- Allows slider functions to have a default return (will be min - 1) or have steps in the slider
     -- if _arg is a string or function that returns a string it will be used as the default display text on the slider for min - 1
     -- if _arg is a number ex: settings.slider_int("cost", "Cost", 0, 100, settings.data.cost * 10, 10) will make the slider display and return numbers from 0 to 100 times 10, effectively 0 - 1000 in steps of 10
     -- _func is optional and imgui.slider_int by default
-    function settings.sliderInt(propertyTable, label, min, max, text, _arg, _func)
+    function settings.slider(propertyTable, label, min, max, _text, _arg, _func)
         if _func == nil then _func = imgui.slider_int end
         if type(_func) ~= "function" then
-            error("settings.sliderInt was called with an invalid func")
+            error("settings.slider was called with an invalid func")
         end
         local property, key = decodeProperty(propertyTable)
         local value = property[key]
@@ -358,14 +358,14 @@ function utils.getSettingsHandler(defaults, folder, _filename)
                 min,
                 max,
             }
-            if text ~= nil then arguments[#arguments+1] = text end
+            if _text ~= nil then arguments[#arguments+1] = _text end
         elseif type(_arg) == "string" then
             arguments = {
                 label,
                 value,
                 _arg ~= nil and min - 1 or min,
                 max,
-                (text == nil or value < min) and _arg or text
+                (_text == nil or value < min) and _arg or _text
             }
         elseif type(_arg) == "number" then
             multiplier = true
@@ -377,7 +377,7 @@ function utils.getSettingsHandler(defaults, folder, _filename)
                 value
             }
         else
-            error("settings.sliderInt was called with an invalid arg (nil, string, number)")
+            error("settings.slider was called with an invalid arg (nil, string, number)")
         end
         local changed, newValue = _func(table.unpack(arguments))
         if multiplier then newValue = newValue * _arg end

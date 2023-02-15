@@ -20,6 +20,7 @@ local modules = {
     -- Used for code completion only, will always be ignored
     [0] = require("Rise Enhanced.modules._Template")
 }
+modules[#modules+1] = require("Rise Enhanced.modules.Tweaks")
 modules[#modules+1] = require("Rise Enhanced.modules.Item")
 modules[#modules+1] = require("Rise Enhanced.modules.Dango")
 modules[#modules+1] = require("Rise Enhanced.modules.Sipiribirds")

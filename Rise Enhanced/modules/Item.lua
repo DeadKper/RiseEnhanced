@@ -411,10 +411,10 @@ function module.drawInnerUi()
     local setName = getItemSetName(settings.get("defaultSet") - 1, dataManager)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
-    settings.sliderInt("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
+    settings.slider("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
     if imgui.tree_node(data.lang.Item.perWeapon) then
         for key, value in pairs(data.lang.weaponNames) do
-            settings.sliderInt(
+            settings.slider(
                 {"weaponSet", key + 1},
                 value,
                 1,
@@ -429,7 +429,7 @@ function module.drawInnerUi()
     if imgui.tree_node(data.lang.Item.itemConfig) then
         for key, value in pairs(data.lang.Item.itemList) do
             local current = settings.get("itemList")[key]
-            settings.sliderInt(
+            settings.slider(
                 {"itemList", key},
                 value,
                 1,
