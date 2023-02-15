@@ -58,17 +58,6 @@ local consumables = {
             { { "_VitalizerTimer", "_VitalizerTimer", true } }),
     makeItemData(68157913, 102, { "buff", "stamina" },
             { { "_StaminaUpBuffSecondTimer", "_StaminaUpBuffSecond", true } }),
-
-    -- misc items
-    -- makeItemData(0, -1, { "sharpness" }),
-    -- makeItemData(68157445, 100, { "health" }),
-    -- makeItemData(68157912, -1, { "stamina" }),
-
-    -- misc supply items
-    -- makeItemData("EZ Ration", 68157940, -1, { "stamina" }),
-    -- makeItemData("First-aid Med", 68157941, -1, { "health" }),
-    -- makeItemData("First-aid Med+", 68157942, -1, { "health" }),
-    -- makeItemData("EZ Max Potion", 68157943, -1, { "health" }),
 }
 
 local polishSkill = { [0] = 0, 30, 60, 90 }
@@ -265,29 +254,7 @@ local function useItem(item)
         end
     end
 
-    -- if contains(item.types, "health") and not dataTable.inCombat then
-    --     local maxHp = player:get_field("_vitalMax")
-    --     if player:get_field("_r_Vital") < maxHp then
-    --         applied = true
-    --         player:set_field("_r_Vital", maxHp)
-    --     end
-    -- end
-
     local itemProlongerMultiplier = itemProlongerSkill[dataTable.itemProlongerLevel]
-
-    -- if contains(item.types, "sharpness") then
-    --     local maxSharpness = player:get_field("<SharpnessGaugeMax>k__BackingField")
-    --     local currentSharpness = player:get_field("<SharpnessGauge>k__BackingField")
-
-    --     if currentSharpness ~= maxSharpness then
-    --         -- check protective polish --
-    --         player:set_field("_SharpnessGaugeBoostTimer",
-    --                 polishSkill[dataTable.polishLevel] * 60 * itemProlongerMultiplier)
-    --         -- heal sharpness guage --
-    --         player:set_field("<SharpnessGauge>k__BackingField", maxSharpness)
-    --         applied = true
-    --     end
-    -- end
 
     if contains(item.types, "buff") then
         local dataList = dataTable.dataItemList

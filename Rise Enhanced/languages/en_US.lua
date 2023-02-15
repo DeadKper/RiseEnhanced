@@ -64,9 +64,6 @@ return {
             "Gourmet Fish",
             "Immunizer",
             "Dash Juice",
-            -- "Whetstone",
-            -- "Max Potion",
-            -- "Ration",
         },
         triggerList = {
             "Disabled",
