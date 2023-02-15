@@ -6,7 +6,7 @@ local utils = require("Rise Enhanced.utils.utils")
 local module, settings = data.getDefaultModule(
     "Tweaks", {
         enabled = true,
-        saveDelay = 0,
+        saveDelay = 5,
     }
 )
 
