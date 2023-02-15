@@ -60,7 +60,6 @@ local consumables = {
             { { "_StaminaUpBuffSecondTimer", "_StaminaUpBuffSecond", true } }),
 }
 
-local polishSkill = { [0] = 0, 30, 60, 90 }
 local freeMealSkill = { [0] = 0, 10, 25, 45 }
 local itemProlongerSkill = { [0] = 1, 1.1, 1.25, 1.5 }
 local dataTable = {
