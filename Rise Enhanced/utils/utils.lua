@@ -1,59 +1,5 @@
 local utils = {}
 
--- Singleton manager
-
--- Returns a manager from sdk.get_managed_singleton
--- function utils.manager(name)
---     return sdk.get_managed_singleton(name)
--- end
-
--- Returns a definition from sdk.find_type_definition
--- function utils.definition(name)
---     return sdk.find_type_definition(name)
--- end
-
--- Does a call from a manager, singleton can be either the managed singleton or a string of
--- said manager, in which case it will first do:
--- singleton = utils.manager(singleton)
--- nameOrTable can be either the name of the function to call, in which case args can be passed
--- normally, or can be a table like {{name = "reqAddChatInfomation", args = {2289944406}}},
--- it will loop through the table doing subsequent :call on each result
--- function utils.managerCall(singleton, nameOrTable, ...)
---     if type(singleton) == "string" then
---         singleton = utils.manager(singleton)
---     end
---     if type(nameOrTable) == "table" then
---         local current = singleton
---         for i = 1, #nameOrTable do
---             current = current:call(nameOrTable[i].name, table.unpack(nameOrTable[i].args))
---         end
---         return current
---     end
---     return singleton:call(nameOrTable, ...)
--- end
-
--- Does a get_field from a manager, singleton can be either the managed singleton or a string of
--- said manager, in which case it will first do:
--- singleton = utils.manager(singleton)
--- nameOrTable can be either the name of the field to get or a table of all fields to get in order
--- ex: { "_Kitchen", "_MealFunc" } or simply "_Kitchen"
--- function utils.managerField(singleton, nameOrTable)
---     if type(singleton) == "string" then
---         singleton = utils.manager(singleton)
---     end
---     if type(nameOrTable) == "table" then
---         local current = singleton
---         for i = 1, #nameOrTable do
---             current = current:get_field(nameOrTable[i])
---         end
---         return current
---     end
---     return singleton:get_field(nameOrTable)
--- end
-
--- Cache manager
-
-local cache
 utils.cache = {}
 
 local function getPropertyTable(propertyTable, moduleName)
@@ -112,8 +58,6 @@ function utils.getCacheHandler(_moduleName)
     return handler
 end
 
--- Only for code completion, will not be usable until utils.init()
-cache = utils.getCacheHandler("utils")
 
 -- Returns settingsHandler, cacheHandler. settingsHandler handles and persists configuration, cacheHandler will only persist data on script resets
 function utils.getHandlers(settingsDefaults,
@@ -126,37 +70,39 @@ end
 
 -- Useful functions
 
-local function inBattleCheck()
-    local currentBattleState =
-        sdk.get_managed_singleton("snow.wwise.WwiseMusicManager"):get_field("_CurrentEnemyAction")
-    local currentMixUsed =
-        sdk.get_managed_singleton("snow.wwise.WwiseMixManager"):get_field("_Current")
-
-    local questManager = sdk.get_managed_singleton("snow.QuestManager")
-    local currentQuestType = questManager.get_field("_QuestType")
-    local currentQuestStatus = questManager.get_field("_QuestStatus")
-
-    local inBattle = currentBattleState == 3 -- Fighting a monster
-    or currentMixUsed == 37 -- Fighting a wave of monsters
-    or currentMixUsed == 10 -- Stronger battle music mix is being used
-    or currentMixUsed == 31 -- Used in some arena battles
-    or currentQuestType == 64 -- Fighting in the arena (Utsushi)
-
-    return inBattle and currentQuestStatus == 2
-end
-
 -- Return whether or not the player is in battle
 function utils.inBattle()
-    local success, result = pcall(inBattleCheck)
-    if not success then return end
-    return result
+    local musicManager = sdk.get_managed_singleton("snow.wwise.WwiseMusicManager")
+    if not musicManager then return false end
+
+    local currentMusicType = musicManager:get_field("_FightBGMType")
+    local currentBattleState = musicManager:get_field("_CurrentEnemyAction")
+
+    local musicMixManager = sdk.get_managed_singleton("snow.wwise.WwiseMixManager")
+    if not musicMixManager then return false end
+    local currentMixUsed = musicMixManager:get_field("_Current")
+
+    local questManager = sdk.get_managed_singleton("snow.QuestManager")
+    if not questManager then return false end
+
+    local currentQuestType = questManager:get_field("_QuestType")
+    local currentQuestStatus = questManager:get_field("_QuestStatus")
+
+    local inBattle = currentBattleState == 3 -- Fighting a monster
+        or currentMixUsed == 37 -- Fighting a wave of monsters
+        or currentMixUsed == 10 -- Stronger battle music mix is being used
+        or currentMixUsed == 31 -- Used in some arena battles
+        or currentQuestType == 64 -- Fighting in the arena (Utsushi)
+
+    local isQuestComplete = currentQuestStatus == 3 -- Completed the quest
+        or currentQuestStatus == 0 -- Not in a quest
+
+    return inBattle and not isQuestComplete
 end
 
 -- Returns whether the quest es online or not, only works properly inside of mission
 function utils.isQuestOnline()
-    local manager = sdk.get_managed_singleton("snow.stage.StageManager")
-    if not manager then return nil end
-    return manager:get_IsQuestOnline()
+    return sdk.get_managed_singleton("snow.stage.StageManager"):get_IsQuestOnline()
 end
 
 -- Returns the player count inside of a quest, will return 1 in lobby
@@ -172,34 +118,36 @@ end
 
 -- Returns the player
 function utils.getPlayer()
-    local manager = sdk.get_managed_singleton("snow.player.PlayerManager")
-    if manager == nil then return nil end
-    return manager:call("findMasterPlayer")
+    return sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
 end
 
 -- Returns the ingame player object
 function utils.getPlayerObject()
-    local player = utils.getPlayer()
-    if player == nil then return nil end
-    return player:call("get_GameObject")
+    return utils.getPlayer():call("get_GameObject")
 end
 
 -- Returns the current weapon
 function utils.getPlayerWeapon()
-    local player = utils.getPlayer()
-    if player == nil then return nil end
-    return player:get_field("_playerWeaponType")
+    return utils.getPlayer():get_field("_playerWeaponType")
 end
 
--- Can be used to know wheter the mod is enabled or not by also checking for loaded _managers (optional) or wheter if _combatPause (optional) is true and the player is not in combat
-function utils.isEnabled(enabled, _managers, _combatPause)
-    if not enabled then return false end
-    if _combatPause and utils.inBattle() then return false end
-    if _managers == nil then return true end
-    for _, manager in pairs(_managers) do
-        if not sdk.get_managed_singleton(manager) then return false end
+-- Returns true if the weapon is sheathed
+function utils.isWeaponSheathed()
+    local player = utils.getPlayer()
+    local playerAction = sdk.find_type_definition("snow.player.PlayerBase")
+            :get_field("<RefPlayerAction>k__BackingField"):get_data(player)
+    return sdk.find_type_definition("snow.player.PlayerAction"):get_field("_weaponFlag")
+            :get_data(playerAction) == 0
+end
+
+--
+function utils.chat(message, sound, ...)
+    if type(message) ~= "string" then return end
+    if not sound or type(sound) ~= "number" then
+        sound = 0
     end
-    return true
+    sdk.get_managed_singleton("snow.gui.ChatManager")
+            :call("reqAddChatInfomation", string.format(message, ...), sound)
 end
 
 -- Time handler
@@ -214,11 +162,11 @@ function utils.addTimer(delay, func)
     })
 end
 
-local timeTimer
+local time
 local function tickTimers()
-    timeTimer = os.clock()
+    time = os.clock()
     for i, timer in pairs(timers) do
-        if timer.delay - timeTimer <= 0 then
+        if timer.delay - time <= 0 then
             timer.action()
             timers[i] = nil
         end
@@ -226,38 +174,6 @@ local function tickTimers()
 end
 
 re.on_frame(tickTimers)
-
--- Loop handler
-
-local loops = {}
-
--- Allows a function to loop until the given condition function returns false
--- when the condition returns false the loop entry will be deleted automatically
-function utils.addLoop(sleep, conditionFunc, func)
-    table.insert(loops, {
-        lastExecution = os.clock() - sleep,
-        sleep = sleep,
-        condition = conditionFunc,
-        func = func
-    })
-end
-
-local timeLoop
-local function tickLoops()
-    timeLoop = os.clock()
-    for i, loop in pairs(loops) do
-        if loop.condition() then
-            if timeLoop - loop.lastExecution > loop.sleep then
-                loop.lastExecution = timeLoop
-                loop.func()
-            end
-        else
-            loops[i] = nil
-        end
-    end
-end
-
-re.on_frame(tickLoops)
 
 -- Settings handler
 
@@ -305,9 +221,23 @@ function utils.getSettingsHandler(defaults, folder, _filename)
     local function load(_file)
         if json == nil then return end
         if _file == nil then _file = settings.file end
+        settings.data = utils.copy(settings.default)
         local currentSettings = json.load_file(_file)
-        if currentSettings == nil then currentSettings = utils.copy(settings.default) end
-        settings.data = currentSettings
+
+        if currentSettings ~= nil then
+            local function updateValues(table, savedValues)
+                for key, value in pairs(table) do
+                    if savedValues[key] ~= nil then
+                        if type(value) == "table" then
+                            updateValues(value, savedValues[key])
+                        else
+                            table[key] = savedValues[key]
+                        end
+                    end
+                end
+            end
+            updateValues(settings.data, currentSettings)
+        end
     end
 
     load(settings.file)
@@ -462,40 +392,6 @@ function utils.getSettingsHandler(defaults, folder, _filename)
     return settings
 end
 
--- Custom Hooks
-
--- local hooksAlias = {}
-
--- Hooks a previous aliased function to a pre and/or post func, not that useful if you only use that hook 1 time, useful when the hook needs to be used more than once
--- Default Hooks: "onCart", "onQuestActivate", "onQuestUpdate", "onReturn", "onQuestKill", "onEquipEquipmentLoadout"
--- function utils.hook(hook, preFunc, postFunc)
---     if type(hook) ~= "string" then error("utils.hook was called without an alias") end
---     hook = hooksAlias[hook]
---     hook.func(hook.hook, preFunc, postFunc)
--- end
-
--- Adds an alias to a hook, uses sdk.hook as _registerFunc by default, ex:
--- utils.hookAlias("onCart", sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic")) for an "onCart" hook
--- utils.hookAlias("onQuestUpdate", "UpdateBehavior", re.on_pre_application_entry) for an "onQuestUpdate" hook
--- function utils.hookAlias(alias, hook, _registerFunc)
---     if _registerFunc == nil then _registerFunc = sdk.hook end
---     hooksAlias[alias] = {
---         hook = hook,
---         func = _registerFunc,
---     }
--- end
-
--- local function defaultHooks()
---     utils.hookAlias("onCart", sdk.find_type_definition("snow.wwise.WwiseMusicManager"):get_method("startToPlayPlayerDieMusic"))
---     utils.hookAlias("onQuestActivate", sdk.find_type_definition("snow.QuestManager"):get_method("questActivate(snow.LobbyManager.QuestIdentifier)"))
---     utils.hookAlias("onQuestUpdate", "UpdateBehavior", re.on_pre_application_entry)
---     utils.hookAlias("onReturn", sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"))
---     utils.hookAlias("onQuestKill", sdk.find_type_definition("snow.enemy.EnemyCharacterBase"):get_method("questEnemyDie"))
---     utils.hookAlias("onEquipEquipmentLoadout", sdk.find_type_definition("snow.data.EquipDataManager"):get_method("applyEquipMySet(System.Int32)"))
--- end
-
--- defaultHooks()
-
 -- Quest manager
 
 local questStatusName = {
@@ -618,7 +514,7 @@ end
 -- Returns a table of the given size filled with the given value, _value is nil by default
 function utils.filledTable(size, _value)
     local table = {}
-    size = size + 1
+    size = size
     for i = 1, size do table[i] = _value end
     return table
 end
@@ -727,7 +623,6 @@ function utils.init(cacheFolder, _cacheFile)
         cacheHandler.reset()
     end
     utils.cache = cacheHandler
-    cache = utils.getCacheHandler("utils")
 end
 
 return utils
