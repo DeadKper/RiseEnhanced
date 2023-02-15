@@ -153,6 +153,7 @@ local function autoDango()
         local maxHp = playerData:get_field("_vitalMax") + 50
         playerData:set_field("_vitalMax", maxHp)
         playerData:set_field("_r_Vital", maxHp)
+        playerData:call("set__vital", maxHp + .0)
         playerData:set_field("_staminaMax", playerData:get_field("_staminaMax") + 1500.0)
         needStats = false
     end
