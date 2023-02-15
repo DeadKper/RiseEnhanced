@@ -122,6 +122,7 @@ function module.drawInnerUi()
     settings.sliderInt({ "birds", "spd" }, data.lang.Spiribirds.stamina, 0, 10)
     settings.sliderInt({ "birds", "atk" }, data.lang.Spiribirds.attack,  0, 10)
     settings.sliderInt({ "birds", "def" }, data.lang.Spiribirds.defense, 0, 10)
+    module.resetButton("birds")
 
     if utils.getQuestStatusName() ~= "quest" then return end
     if imgui.tree_node("Manual spawn") then

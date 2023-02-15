@@ -364,9 +364,9 @@ function module.drawInnerUi()
     settings.call("showAllDango", imgui.checkbox, data.lang.Dango.showAllDango)
     imgui.text(data.lang.restartNote)
     if imgui.tree_node(data.lang.Dango.hoppingSkewersLevels) then
-        settings.sliderInt({ "skewerLevels", 1 }, data.lang.Dango.top, 1, 4)
-        settings.sliderInt({ "skewerLevels", 2 }, data.lang.Dango.mid, 1, 4)
-        settings.sliderInt({ "skewerLevels", 3 }, data.lang.Dango.bot, 1, 4)
+        for i, text in pairs(data.lang.Dango.usableDangos) do
+            settings.sliderInt({ "skewerLevels", i }, text, 1, 4)
+        end
         module.resetButton("skewerLevels")
         imgui.tree_pop()
     end

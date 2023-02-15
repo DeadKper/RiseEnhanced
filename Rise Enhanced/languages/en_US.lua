@@ -64,9 +64,9 @@ return {
             "Gourmet Fish",
             "Immunizer",
             "Dash Juice",
-            "Whetstone",
-            "Max Potion",
-            "Ration",
+            -- "Whetstone",
+            -- "Max Potion",
+            -- "Ration",
         },
         triggerList = {
             "Disabled",
@@ -82,6 +82,11 @@ return {
         infiniteTickets = "Infinite dango tickets",
         showAllDango = "Show all available dango (including daily)",
         hoppingSkewersLevels = "Configure hopping skewer levels",
+        usableDangos = {
+            "First dango",
+            "Second dango",
+            "Third dango"
+        },
         top = "Top Dango",
         mid = "Mid Dango",
         bot = "Bot Dango",

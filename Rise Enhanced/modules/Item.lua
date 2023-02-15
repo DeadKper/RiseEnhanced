@@ -60,9 +60,9 @@ local consumables = {
             { { "_StaminaUpBuffSecondTimer", "_StaminaUpBuffSecond", true } }),
 
     -- misc items
-    makeItemData(0, -1, { "sharpness" }),
-    makeItemData(68157445, 100, { "health" }),
-    makeItemData(68157912, -1, { "stamina" }),
+    -- makeItemData(0, -1, { "sharpness" }),
+    -- makeItemData(68157445, 100, { "health" }),
+    -- makeItemData(68157912, -1, { "stamina" }),
 
     -- misc supply items
     -- makeItemData("EZ Ration", 68157940, -1, { "stamina" }),
@@ -203,18 +203,6 @@ local function consume(id)
     sdk.find_type_definition("snow.data.DataShortcut"):get_method("consumeItemFromPouch"):call(nil, id, 1)
 end
 
-local function recoverStamina(player)
-    local stamina = player:get_field("_stamina")
-    local staminaMax = player:get_field("_staminaMax")
-
-    if stamina == staminaMax then
-        return false
-    end
-
-    player:set_field("_stamina", staminaMax)
-    return true
-end
-
 local function updateDataTable()
     dataTable.itemProlongerLevel = dataTable.playerDataManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", dataTable.playerIndex, 88)
     dataTable.freeMealLevel = dataTable.playerDataManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", dataTable.playerIndex, 90)
@@ -277,29 +265,29 @@ local function useItem(item)
         end
     end
 
-    if contains(item.types, "health") and not dataTable.inCombat then
-        local maxHp = player:get_field("_vitalMax")
-        if player:get_field("_r_Vital") < maxHp then
-            applied = true
-            player:set_field("_r_Vital", maxHp)
-        end
-    end
+    -- if contains(item.types, "health") and not dataTable.inCombat then
+    --     local maxHp = player:get_field("_vitalMax")
+    --     if player:get_field("_r_Vital") < maxHp then
+    --         applied = true
+    --         player:set_field("_r_Vital", maxHp)
+    --     end
+    -- end
 
     local itemProlongerMultiplier = itemProlongerSkill[dataTable.itemProlongerLevel]
 
-    if contains(item.types, "sharpness") then
-        local maxSharpness = player:get_field("<SharpnessGaugeMax>k__BackingField")
-        local currentSharpness = player:get_field("<SharpnessGauge>k__BackingField")
+    -- if contains(item.types, "sharpness") then
+    --     local maxSharpness = player:get_field("<SharpnessGaugeMax>k__BackingField")
+    --     local currentSharpness = player:get_field("<SharpnessGauge>k__BackingField")
 
-        if currentSharpness ~= maxSharpness then
-            -- check protective polish --
-            player:set_field("_SharpnessGaugeBoostTimer",
-                    polishSkill[dataTable.polishLevel] * 60 * itemProlongerMultiplier)
-            -- heal sharpness guage --
-            player:set_field("<SharpnessGauge>k__BackingField", maxSharpness)
-            applied = true
-        end
-    end
+    --     if currentSharpness ~= maxSharpness then
+    --         -- check protective polish --
+    --         player:set_field("_SharpnessGaugeBoostTimer",
+    --                 polishSkill[dataTable.polishLevel] * 60 * itemProlongerMultiplier)
+    --         -- heal sharpness guage --
+    --         player:set_field("<SharpnessGauge>k__BackingField", maxSharpness)
+    --         applied = true
+    --     end
+    -- end
 
     if contains(item.types, "buff") then
         local dataList = dataTable.dataItemList
@@ -480,6 +468,7 @@ function module.drawInnerUi()
                 data.lang.Item.triggerList[current]
             )
         end
+        module.resetButton("itemList")
         imgui.tree_pop()
     end
 end
