@@ -455,6 +455,7 @@ function module.drawInnerUi()
                 defaultSet
             )
         end
+        module.resetButton("weaponSet")
         imgui.tree_pop()
     end
     if imgui.tree_node(data.lang.Item.itemConfig) then

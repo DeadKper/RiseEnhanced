@@ -57,6 +57,7 @@ local function getDangoSet(weapon, forceCarted)
     end
 
     if carted or forceCarted then
+        isDefault = false
         local cartSet = settings.get("cartWeaponSet")[weapon]
         if cartSet == 0 then
             if isDefault then
@@ -181,8 +182,8 @@ local function getDangoSetName(kitchen, id, default)
     return kitchen:call("get_MySetDataList"):call("get_Item", id):call("get_OrderName")
 end
 
-local function getDangoSetByWeapon(kitchen, weapon, carted)
-    local id, default = getDangoSet(weapon, carted)
+local function getDangoSetByWeapon(kitchen, weapon, hasCarted)
+    local id, default = getDangoSet(weapon, hasCarted)
     local name = getDangoSetName(kitchen, id - 1)
     if default then
         return string.format(data.lang.useDefault, name)
@@ -338,7 +339,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 )
 
 -- Draw module
-local function drawWeaponSliders(name, kitchen, property, carted)
+local function drawWeaponSliders(name, kitchen, property, hasCarted)
     if imgui.tree_node(name) then
         for key, value in pairs(data.lang.weaponNames) do
             settings.sliderInt(
@@ -346,9 +347,10 @@ local function drawWeaponSliders(name, kitchen, property, carted)
                 value,
                 0,
                 32,
-                getDangoSetByWeapon(kitchen, key + 1, carted)
+                getDangoSetByWeapon(kitchen, key + 1, hasCarted)
             )
         end
+        module.resetButton(property)
         imgui.tree_pop()
     end
 end
