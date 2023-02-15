@@ -35,6 +35,7 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         module.file,
         name
     )
+
     module.settings = settings
     module.cache = cache
 
@@ -84,10 +85,9 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         end
     end
 
-    function module.enabled(_property, _combatPause)
+    function module.enabled(_property)
         if _property == nil then _property = "enabled" end
-        return data.enabled and utils.isEnabled(settings.get(_property),
-            module.managers, _combatPause)
+        return data.enabled and settings.get(_property)
     end
 
     return module, settings, cache
