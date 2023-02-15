@@ -144,6 +144,8 @@ function module.init()
     if not settings.get("enabled") then return end
     initiated = true
 
+    math.randomseed(os.clock() * 1000) -- set seed for random method
+
     for i = 1, #modules do -- start on 1 to ignore template module
         mod = modules[i]
         mod.init()
