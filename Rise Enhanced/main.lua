@@ -75,7 +75,6 @@ local function debugWindow()
         isDebugOpen = false
     end
 
-    imgui.text("Time: " .. os.clock())
     data.print()
     utils.printInfoNodes()
     utils.treeText(data.lang.modName, settings.data, "settings.data")
@@ -144,7 +143,7 @@ function module.init()
     if not settings.get("enabled") then return end
     initiated = true
 
-    math.randomseed(os.clock() * 1000) -- set seed for random method
+    math.randomseed(os.time()) -- set seed for random method
 
     for i = 1, #modules do -- start on 1 to ignore template module
         mod = modules[i]
