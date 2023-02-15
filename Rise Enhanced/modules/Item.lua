@@ -100,13 +100,20 @@ local function getItemSet(weapon)
     return loadout, false
 end
 
-local function getItemSetId(itemBox, id)
-    local itemList = itemBox:get_field("_MySetList"):call("ToArray")
-    return itemList[id]
+local function getItemSetById(id, _dataManager)
+    if _dataManager == nil then
+        _dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    end
+    if _dataManager == nil then return end
+    local itemSet = _dataManager:call("get_ItemMySet")
+    return itemSet:call("getData", id)
 end
 
-local function getItemSetName(itemBox, id)
-    local itemSet = getItemSetId(itemBox, id)
+local function getItemSetName(id, _dataManager)
+    local itemSet = getItemSetById(id, _dataManager)
+    if itemSet == nil then
+        return "? ? ? ? ? ? ? ?"
+    end
     local setName = itemSet:get_field("_Name")
     if string.len(setName) == 0 then
         return "? ? ? ? ? ? ? ?"
@@ -116,24 +123,50 @@ end
 
 local function restock()
     if not module.enabled() then return end
-    local itemBox = sdk.get_managed_singleton("snow.data.DataManager"):get_field("_ItemMySet")
-    if not itemBox then return end
-    local itemSet = getItemSet(utils.getPlayerWeapon() + 1)
-    itemBox:call("applyItemMySet", itemSet - 1)
-    local itemSetId = getItemSetId(itemBox, itemSet - 1)
-    local itemSetName = itemSetId:get_field("_Name")
+    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    if not dataManager then return end
+    local itemBox = dataManager:get_field("_ItemMySet")
+    local itemSetId = getItemSet(utils.getPlayerWeapon() + 1) - 1
+    local itemSet = getItemSetById(itemSetId, dataManager)
+    ---@diagnostic disable-next-line: need-check-nil
+    local itemSetName = itemSet:get_field("_Name")
 
     -- empty set
-    if string.len(itemSetId:get_field("_Name")) == 0 then
+    if string.len(itemSetName) == 0 then
         utils.chat("<COL RED>%s</COL>",
                 settings.get("notificationSound") and 2412657311 or 0, data.lang.Item.emptySet)
         return
     end
 
-    local message = "<COL YEL>" .. string.format(data.lang.Item.restocked, "</COL>" .. itemSetName .. "<COL YEL>" ) .. "</COL>"
+    itemBox:call("applyItemMySet", itemSetId)
+
+    local message = "<COL YEL>" .. string.format(data.lang.Item.restocked, "</COL>" .. itemSetName)
+
+    ---@diagnostic disable-next-line: need-check-nil
+    local radialSetId = itemSet:call("get_PaletteSetIndex")
+    if radialSetId == nil then
+        message = message .. "\n<COL RED>" .. data.lang.Item.nilRadial .. "</COL>"
+    else
+        local shortcutManager = sdk.get_managed_singleton("snow.data.SystemDataManager")
+                :call("getCustomShortcutSystem")
+        local radialSet = radialSetId:call("GetValueOrDefault")
+        local radialList = shortcutManager:call("getPaletteSetList", 0) -- current set
+        if radialList then
+            local radial = radialList:call("get_Item", radialSet)
+            if radial then
+                message = message .. string.format(
+                        "\n<COL YEL>" .. data.lang.Item.radialApplied .. "</COL>",
+                        "</COL>" .. radial:call("get_Name"))
+                shortcutManager:call("setUsingPaletteIndex", 0, radialSet)
+            else
+                message = message .. data.lang.Item.emptyRadial
+            end
+        end
+    end
 
     -- not enough items
-    if not itemSetId:call("isEnoughItem") then
+    ---@diagnostic disable-next-line: need-check-nil
+    if not itemSet:call("isEnoughItem") then
         message = message .. "\n<COL RED>" .. data.lang.Item.outOfStock .. "</COL>"
     end
 
@@ -413,11 +446,13 @@ function module.drawInnerUi()
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
-    local itemBox = sdk.get_managed_singleton("snow.data.DataManager")
-    if not itemBox then return end
-    itemBox = itemBox:get_field("_ItemMySet")
+    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    if not dataManager then
+        imgui.text("\n" .. data.lang.loading)
+        return
+    end
 
-    local setName = getItemSetName(itemBox, settings.get("defaultSet") - 1)
+    local setName = getItemSetName(settings.get("defaultSet") - 1, dataManager)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
     settings.sliderInt("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
@@ -428,7 +463,7 @@ function module.drawInnerUi()
                 value,
                 1,
                 40,
-                getItemSetName(itemBox, getItemSet(key + 1) - 1),
+                getItemSetName(getItemSet(key + 1) - 1, dataManager),
                 defaultSet
             )
         end
