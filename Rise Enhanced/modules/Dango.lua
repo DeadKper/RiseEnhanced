@@ -297,7 +297,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() then return end
 
-        utils.addTimer(1.5, function ()
+        utils.addTimer(5, function ()
             needStats = true
             autoDango()
         end)

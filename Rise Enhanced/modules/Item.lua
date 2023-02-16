@@ -354,7 +354,7 @@ re.on_pre_application_entry("UpdateBehavior", function()
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
-    utils.addTimer(3, function ()
+    utils.addTimer(5, function ()
         pauseAutoItems = false
     end)
 end)
@@ -363,7 +363,7 @@ end)
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() or not settings.get("autoRestock") then return end
-        utils.addTimer(2, function ()
+        utils.addTimer(5, function ()
             restock()
             questStartTrigger = true
             pauseAutoItems = false

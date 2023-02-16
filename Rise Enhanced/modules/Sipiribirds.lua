@@ -91,7 +91,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() then return end
 
-        utils.addTimer(3, spawnBirds)
+        utils.addTimer(6, spawnBirds)
     end
 )
 
