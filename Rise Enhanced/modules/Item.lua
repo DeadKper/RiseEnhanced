@@ -338,7 +338,6 @@ local function inQuest()
 end
 
 -- Hooks
-
 re.on_frame(function ()
     if pauseAutoItems or not module.enabled() or not inQuest() or not settings.get("autoItems") then
         return
@@ -381,6 +380,14 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath")
             restock()
             pauseAutoItems = false
         end)
+    end
+)
+
+-- restock on quest enemy kill
+sdk.hook(sdk.find_type_definition("snow.enemy.EnemyCharacterBase"):get_method("questEnemyDie"),
+    function ()
+        if not module.enabled() or not settings.get("autoRestock") then return end
+        restock()
     end
 )
 
