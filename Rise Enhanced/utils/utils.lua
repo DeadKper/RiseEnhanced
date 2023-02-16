@@ -365,7 +365,7 @@ function utils.getSettingsHandler(defaults, folder, _filename)
                 value,
                 _arg ~= nil and min - 1 or min,
                 max,
-                (_text == nil or value < min) and _arg or _text
+                value < min and _arg or _text
             }
         elseif type(_arg) == "number" then
             multiplier = true
