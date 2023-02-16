@@ -54,7 +54,7 @@ return {
         outOfStock = "Out of stock",
         usedItems = "Items used:",
         autoItems = "Use items automatically",
-        infiniteItems = "Infinite items",
+        infiniteItems = "Infinite consumable items",
         itemConfig = "Configure auto items",
         buffRefresh = "Refresh buffs when they expire",
         itemList = {
