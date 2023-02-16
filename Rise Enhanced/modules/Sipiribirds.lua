@@ -116,13 +116,13 @@ re.on_script_reset(destroyBirds)
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
-    module.enabledCheck()
+    -- module.enabledCheck()
     settings.call("prism", imgui.checkbox, data.lang.Spiribirds.spawnPrism)
-    settings.slider({ "birds", "hp"  }, data.lang.Spiribirds.health,  0, 10)
-    settings.slider({ "birds", "spd" }, data.lang.Spiribirds.stamina, 0, 10)
-    settings.slider({ "birds", "atk" }, data.lang.Spiribirds.attack,  0, 10)
-    settings.slider({ "birds", "def" }, data.lang.Spiribirds.defense, 0, 10)
-    module.resetButton("birds")
+    -- settings.slider({ "birds", "hp"  }, data.lang.Spiribirds.health,  0, 10)
+    -- settings.slider({ "birds", "spd" }, data.lang.Spiribirds.stamina, 0, 10)
+    -- settings.slider({ "birds", "atk" }, data.lang.Spiribirds.attack,  0, 10)
+    -- settings.slider({ "birds", "def" }, data.lang.Spiribirds.defense, 0, 10)
+    -- module.resetButton("birds")
 
     if utils.getQuestStatusName() ~= "quest" then return end
     if imgui.tree_node("Manual spawn") then

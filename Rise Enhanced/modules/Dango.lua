@@ -148,7 +148,7 @@ local function autoDango()
         return false
     end
 
-    if needStats then
+    if needStats and not carted then
         local playerData = player:get_field("_refPlayerData")
         local maxHp = playerData:get_field("_vitalMax") + 50
         playerData:set_field("_vitalMax", maxHp)
