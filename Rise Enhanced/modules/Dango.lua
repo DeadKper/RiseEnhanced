@@ -148,19 +148,6 @@ local function autoDango()
         return false
     end
 
-    if needStats then
-        local playerData = player:get_field("_refPlayerData")
-        local maxHp = playerData:get_field("_vitalMax") + 50
-        local maxHpFloat = maxHp + .0
-        local maxStamina = playerData:get_field("_staminaMax") + 1500
-        playerData:set_field("_vitalMax", maxHp + 50)
-        playerData:set_field("_r_Vital", maxHp)
-        -- playerData:call("set__vital", maxHpFloat)
-        playerData:set_field("_staminaMax", maxStamina)
-        playerData:set_field("_stamina", maxStamina)
-        needStats = false
-    end
-
     if settings.get("skewers") then
         message = message .. "\n<COL YEL>(" .. data.lang.Dango.hoppingSkewers .. ")</COL>"
     end
@@ -192,6 +179,22 @@ local function getDangoSetByWeapon(kitchen, weapon, hasCarted)
 end
 
 -- Hooks
+-- set player hp and stamina when eating
+sdk.hook(sdk.find_type_definition("snow.player.PlayerManager"):get_method("update"),
+    function(args)
+        if needStats then
+            needStats = false
+            local playerData = utils.getPlayer():get_field("_refPlayerData")
+            local newHp = playerData:get_field("_vitalMax") + 50
+            local newStamina = playerData:get_field("_staminaMax") + 1500
+            playerData:set_field("_vitalMax", newHp)
+            playerData:set_field("_r_Vital", newHp)
+            playerData:call("set__vital", newHp + .0) -- context dependent
+            playerData:set_field("_staminaMax", newStamina)
+            playerData:set_field("_stamina", newStamina)
+        end
+    end
+)
 
 -- increase chance for dango skills on ticket when option is enabled
 sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillActiveRate"),
@@ -331,7 +334,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath")
     end
 )
 
--- clear eat stats from cache
+-- clear carted state
 sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
     function (args)
         carted = false
