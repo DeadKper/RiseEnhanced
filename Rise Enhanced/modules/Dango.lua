@@ -32,6 +32,7 @@ local dango = {
 
 local isOrdering = false
 local needStats = false
+local didEat = false
 local carted = false
 
 local dataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
@@ -148,6 +149,8 @@ local function autoDango()
         return false
     end
 
+    didEat = true
+
     if settings.get("skewers") then
         message = message .. "\n<COL YEL>(" .. data.lang.Dango.hoppingSkewers .. ")</COL>"
     end
@@ -182,8 +185,9 @@ end
 -- set player hp and stamina when eating
 sdk.hook(sdk.find_type_definition("snow.player.PlayerManager"):get_method("update"),
     function(args)
-        if needStats then
+        if needStats and didEat then
             needStats = false
+            didEat = false
             local playerData = utils.getPlayer():get_field("_refPlayerData")
             local newHp = playerData:get_field("_vitalMax") + 50
             local newStamina = playerData:get_field("_staminaMax") + 1500
