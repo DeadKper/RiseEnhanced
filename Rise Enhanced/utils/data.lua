@@ -49,8 +49,6 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         return utils.copy(module.settings.data)
     end
 
-    function module.onFrame() end
-
     function module.enabledCheck(_value, _label)
         settings.call(
             _value ~= nil and _value or "enabled",
@@ -67,7 +65,7 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         )
     end
 
-    -- If inner returns true a reset to default button will appear below automatically
+    -- If inner returns true a reset to default button will appear below automatically.
     -- Will print an enabled button and return nil if not overriden
     function module.drawInnerUi()
         module.enabledCheck()
@@ -85,9 +83,18 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         end
     end
 
-    function module.enabled(_property)
-        if _property == nil then _property = "enabled" end
-        return data.enabled and settings.get(_property)
+    -- check other properties to determine wheter the option is enabled or not
+    function module.enabled(...)
+        local table = {...}
+        local globalEnable = data.enabled and settings.get("enabled")
+        if #table == 0 then
+            return globalEnable
+        end
+        local check = false
+        for _, v in pairs(table) do
+            check = check or settings.get(v)
+        end
+        return globalEnable and check
     end
 
     return module, settings, cache
