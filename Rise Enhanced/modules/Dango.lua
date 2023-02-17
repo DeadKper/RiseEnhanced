@@ -199,9 +199,8 @@ sdk.hook(sdk.find_type_definition("snow.player.PlayerManager"):get_method("updat
 -- increase chance for dango skills on ticket when option is enabled
 sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillActiveRate"),
     function(args)
-        if not module.enabled() then return end
+        if not module.enabled("increasedChance") then return end
 
-        if not settings.get("increasedChance") then return end
         local kitchen = getMealFunction()
         if not kitchen then return false end
 
@@ -213,12 +212,9 @@ sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillAc
         end
     end,
     function(retval)
-        if not module.enabled() then return retval end
+        if not module.enabled("increasedChance") and dango.ticket then return retval end
 
-        if settings.get("increasedChance") and dango.ticket then
-            dango.saved:get_field("_Param"):set_field("_SkillActiveRate", dango.chance)
-        end
-
+        dango.saved:get_field("_Param"):set_field("_SkillActiveRate", dango.chance)
         return retval
     end
 )
@@ -258,18 +254,16 @@ sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("
         end
     end,
     function(retval)
-        if not module.enabled() then return retval end
+        if not module.enabled("showAllDango") then return retval end
 
-        if settings.get("showAllDango") then
-            local kitchen = getMealFunction()
-            if not kitchen then return false end
-            local dangoData = kitchen:get_field("<DangoDataList>k__BackingField"):call("ToArray")
-            for _, value in ipairs(dangoData) do
-                local flagDataManager = sdk.get_managed_singleton("snow.data.FlagDataManager")
-                local isDangoUnlock = flagDataManager:call("isUnlocked(snow.data.DataDef.DangoId)", value:get_field("_Param"):get_field("_Id"))
-                if isDangoUnlock then
-                    value:get_field("_Param"):set_field("_DailyRate", 0)
-                end
+        local kitchen = getMealFunction()
+        if not kitchen then return false end
+        local dangoData = kitchen:get_field("<DangoDataList>k__BackingField"):call("ToArray")
+        for _, value in ipairs(dangoData) do
+            local flagDataManager = sdk.get_managed_singleton("snow.data.FlagDataManager")
+            local isDangoUnlock = flagDataManager:call("isUnlocked(snow.data.DataDef.DangoId)", value:get_field("_Param"):get_field("_Id"))
+            if isDangoUnlock then
+                value:get_field("_Param"):set_field("_DailyRate", 0)
             end
         end
         return retval
@@ -301,7 +295,7 @@ sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("
 -- auto eat inside quest
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
-        if not module.enabled() then return end
+        if not module.enabled("autoEat") then return end
 
         utils.addTimer(3, function ()
             needStats = true
@@ -315,7 +309,7 @@ sdk.hook(
     sdk.find_type_definition("snow.facility.MealOrderData"):get_method("canOrder"),
     nil,
     function(retval)
-        if not module.enabled() or not isOrdering then return retval end
+        if not module.enabled("autoEat") or not isOrdering then return retval end
 
         local bool = sdk.create_instance("System.Boolean"):add_ref()
         bool:set_field("mValue", true)
@@ -326,7 +320,7 @@ sdk.hook(
 -- auto eat on cart
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
-        if not module.enabled() then return end
+        if not module.enabled("autoEat") then return end
         utils.addTimer(5, function ()
             carted = true
             autoDango()
