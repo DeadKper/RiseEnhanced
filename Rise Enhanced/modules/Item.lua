@@ -371,21 +371,6 @@ re.on_frame(function ()
     autoItems() -- restock on battle off triggger
 end)
 
--- check for items every second
-re.on_pre_application_entry("UpdateBehavior", function()
-    if not inQuest() then return end
-
-
-    -- set flags
-    drawFlag = utils.isWeaponSheathed()
-    combatFlag = not utils.inBattle()
-
-    utils.addTimer(5, function ()
-        makeDataTable()
-        pauseAutoItems = false
-    end)
-end)
-
 -- event callback hook for restocking inside quest
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
@@ -402,8 +387,8 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
 -- restock on cart
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
     function(args)
-        if not module.enabled() or not settings.get("autoRestock") then return end
         pauseAutoItems = true
+        if not module.enabled() or not settings.get("autoRestock") then return end
         utils.addTimer(5, function ()
             restock()
             pauseAutoItems = false
@@ -416,13 +401,17 @@ local enemyCharacterBase = sdk.find_type_definition("snow.enemy.EnemyCharacterBa
 local isLargeMonster = enemyCharacterBase:get_method("get_isBossEnemy")
 sdk.hook(enemyCharacterBase:get_method("questEnemyDie"),
     function (args)
-        if not module.enabled() or not settings.get("autoRestock")
-                or not settings.get("largeMonsterRestock") or not utils.getQuestEndFlow() == 0
-                or not isLargeMonster(sdk.to_managed_object(args[2])) then
-            return
-        end
+        utils.addTimer(5, function ()
+            if not settings.get("autoRestock")
+                    or not settings.get("largeMonsterRestock")
+                    or not utils.getQuestStatus() == 2
+                    or not utils.getQuestEndFlow() == 0
+                    or not isLargeMonster(sdk.to_managed_object(args[2])) then
+                return
+            end
 
-        restock()
+            restock()
+        end)
     end
 )
 
@@ -435,6 +424,20 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 )
 
 -- Draw module
+---@diagnostic disable-next-line: duplicate-set-field
+function module.init()
+    if not inQuest() then return end
+
+    -- set flags
+    drawFlag = utils.isWeaponSheathed()
+    combatFlag = not utils.inBattle()
+
+    utils.addTimer(5, function ()
+        makeDataTable()
+        pauseAutoItems = false
+    end)
+end
+
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
