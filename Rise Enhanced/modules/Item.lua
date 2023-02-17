@@ -7,9 +7,10 @@ local module, settings = data.getDefaultModule(
     "Item", {
         enabled = true,
         autoRestock = true,
+        largeMonsterRestock = true,
         autoItems = true,
         infiniteItems = false,
-        buffRefresh = true,
+        buffRefreshCd = 5,
         itemList = utils.filledTable(#data.lang.Item.itemList, 1),
         defaultSet = 1,
         weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
@@ -281,28 +282,43 @@ local pauseAutoItems = true
 local drawFlag = false
 local combatFlag = false
 local questStartTrigger = false
+local itemUsedTime = 0
 
 local function autoItems()
+    local refreshLevel = 5
     local activationLevel = 5
 
     if utils.isWeaponSheathed() then
         drawFlag = true
-    elseif drawFlag or settings.get("buffRefresh") then
-        activationLevel = 4
-        drawFlag = false
+    else
+        refreshLevel = 4
+        if drawFlag then
+            activationLevel = 4
+            drawFlag = false
+        end
     end
 
     if not utils.inBattle() then
         combatFlag = true
-    elseif combatFlag or settings.get("buffRefresh") then
-        activationLevel = 3
-        combatFlag = false
+    else
+        refreshLevel = 3
+        if combatFlag then
+            activationLevel = 3
+            combatFlag = false
+        end
+    end
+
+    local cooldown = settings.get("buffRefreshCd")
+    if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
+        activationLevel = refreshLevel
     end
 
     local item, used, free, message
+    local usedFlag = false
     local activateList = {}
     for key, value in pairs(settings.get("itemList")) do
         if value >= activationLevel or (questStartTrigger and value == 2) then
+            usedFlag = true
             -- why lua doesn't have "continue"? so dumb
             item = consumables[key]
             used, free = useItem(item)
@@ -314,6 +330,10 @@ local function autoItems()
                 table.insert(activateList, message)
             end
         end
+    end
+
+    if usedFlag then
+        itemUsedTime = os.clock()
     end
 
     if questStartTrigger then
@@ -338,23 +358,25 @@ local function inQuest()
 end
 
 -- Hooks
+
 re.on_frame(function ()
     if pauseAutoItems or not module.enabled() or not inQuest() or not settings.get("autoItems") then
         return
     end
-    autoItems()
+    autoItems() -- restock on battle off triggger
 end)
 
 -- check for items every second
 re.on_pre_application_entry("UpdateBehavior", function()
     if not inQuest() then return end
-    makeDataTable()
+
 
     -- set flags
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
     utils.addTimer(5, function ()
+        makeDataTable()
         pauseAutoItems = false
     end)
 end)
@@ -363,7 +385,8 @@ end)
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() or not settings.get("autoRestock") then return end
-        utils.addTimer(5, function ()
+        utils.addTimer(3, function ()
+            makeDataTable()
             restock()
             questStartTrigger = true
             pauseAutoItems = false
@@ -384,9 +407,16 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath")
 )
 
 -- restock on quest enemy kill
-sdk.hook(sdk.find_type_definition("snow.enemy.EnemyCharacterBase"):get_method("questEnemyDie"),
-    function ()
-        if not module.enabled() or not settings.get("autoRestock") then return end
+local enemyCharacterBase = sdk.find_type_definition("snow.enemy.EnemyCharacterBase")
+local isLargeMonster = enemyCharacterBase:get_method("get_isBossEnemy")
+sdk.hook(enemyCharacterBase:get_method("questEnemyDie"),
+    function (args)
+        if not module.enabled() or not settings.get("autoRestock")
+                or not settings.get("largeMonsterRestock") or not utils.getQuestEndFlow() == 0
+                or not isLargeMonster(sdk.to_managed_object(args[2])) then
+            return
+        end
+
         restock()
     end
 )
@@ -395,6 +425,7 @@ sdk.hook(sdk.find_type_definition("snow.enemy.EnemyCharacterBase"):get_method("q
 sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
     function (args)
         pauseAutoItems = true
+        itemUsedTime = 0
     end
 )
 
@@ -403,9 +434,10 @@ sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyRetur
 function module.drawInnerUi()
     module.enabledCheck()
     settings.call("autoRestock", imgui.checkbox, data.lang.Item.autoRestock)
+    settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
-    settings.call("buffRefresh", imgui.checkbox, data.lang.Item.buffRefresh)
+    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 1, 10, nil, data.lang.disabled)
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
