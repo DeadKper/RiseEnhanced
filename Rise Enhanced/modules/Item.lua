@@ -265,7 +265,7 @@ local function useItem(item)
 
             applied = true
             if hasDuration then
-                local duration = settings.get("itemDuration") * 3600 * itemProlongerMultiplier
+                local duration = settings.get("itemDuration") * 60 * itemProlongerMultiplier
                 if duration == 0 then
                     duration = dataList:get_field(buff) * 60 * itemProlongerMultiplier
                 end
@@ -283,15 +283,23 @@ local function useItem(item)
     return applied, free
 end
 
+local function inQuest()
+    return utils.getQuestStatus() == 2 and utils.getQuestEndFlow() == 0
+end
+
+-- Hooks
 local pauseAutoItems = true
 local drawFlag = false
 local combatFlag = false
 local questStartTrigger = false
 local itemUsedTime = 0
+re.on_frame(function ()
+    if pauseAutoItems or not module.enabled("autoItems") or not inQuest() then
+        return
+    end
 
-local function autoItems()
     local refreshLevel = 5
-    local activationLevel = 5
+    local activationLevel = 6
 
     if utils.isWeaponSheathed() then
         drawFlag = true
@@ -316,6 +324,10 @@ local function autoItems()
     local cooldown = settings.get("buffRefreshCd")
     if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
         activationLevel = refreshLevel
+    end
+
+    if activationLevel == 6 then
+        return
     end
 
     local item, used, free, message
@@ -356,25 +368,12 @@ local function autoItems()
         message = message .. "\n" .. value
     end
     utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
-end
-
-local function inQuest()
-    return utils.getQuestStatus() == 2 and utils.getQuestEndFlow() == 0
-end
-
--- Hooks
-
-re.on_frame(function ()
-    if pauseAutoItems or not module.enabled() or not inQuest() or not settings.get("autoItems") then
-        return
-    end
-    autoItems() -- restock on battle off triggger
 end)
 
 -- event callback hook for restocking inside quest
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
-        if not module.enabled() or not settings.get("autoRestock") then return end
+        if not module.enabled("autoRestock") then return end
         utils.addTimer(3, function ()
             makeDataTable()
             restock()
@@ -454,20 +453,20 @@ function module.drawInnerUi()
     if duration == 0 then
         showText = data.lang.disabled
     elseif duration == 1 then
-        showText = string.format(data.lang.Item.itemDurationTextSingular, duration)
+        showText = string.format(data.lang.secondText, duration)
     else
-        showText = string.format(data.lang.Item.itemDurationTextPlural, duration)
+        showText = string.format(data.lang.secondsText, duration)
     end
-    settings.slider("itemDuration", data.lang.Item.itemDuration, 0, 50, showText)
+    settings.slider("itemDuration", data.lang.Item.itemDuration, 0, 3600, showText, 10)
     duration = settings.get("buffRefreshCd")
     if duration == 0 then
         showText = data.lang.disabled
     elseif duration == 1 then
-        showText = string.format(data.lang.Item.buffRefreshCdSingular, duration)
+        showText = string.format(data.lang.secondText, duration)
     else
-        showText = string.format(data.lang.Item.buffRefreshCdPlural, duration)
+        showText = string.format(data.lang.secondsText, duration)
     end
-    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 0, 10, showText)
+    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 0, 10, showText, 0.5)
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
