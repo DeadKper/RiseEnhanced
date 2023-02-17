@@ -10,7 +10,8 @@ local module, settings = data.getDefaultModule(
         largeMonsterRestock = true,
         autoItems = true,
         infiniteItems = false,
-        buffRefreshCd = 5,
+        itemDuration = 0,
+        buffRefreshCd = 0,
         itemList = utils.filledTable(#data.lang.Item.itemList, 1),
         defaultSet = 1,
         weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
@@ -264,7 +265,11 @@ local function useItem(item)
 
             applied = true
             if hasDuration then
-                playerRef:set_field(name, dataList:get_field(buff) * 60 * itemProlongerMultiplier)
+                local duration = settings.get("itemDuration") * 3600 * itemProlongerMultiplier
+                if duration == 0 then
+                    duration = dataList:get_field(buff) * 60 * itemProlongerMultiplier
+                end
+                playerRef:set_field(name, duration)
             else
                 playerRef:set_field(name, dataList:get_field(buff))
             end
@@ -437,7 +442,25 @@ function module.drawInnerUi()
     settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
-    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 1, 10, nil, data.lang.disabled)
+    local duration = settings.get("itemDuration")
+    local showText
+    if duration == 0 then
+        showText = data.lang.disabled
+    elseif duration == 1 then
+        showText = string.format(data.lang.Item.itemDurationTextSingular, duration)
+    else
+        showText = string.format(data.lang.Item.itemDurationTextPlural, duration)
+    end
+    settings.slider("itemDuration", data.lang.Item.itemDuration, 0, 50, showText)
+    duration = settings.get("buffRefreshCd")
+    if duration == 0 then
+        showText = data.lang.disabled
+    elseif duration == 1 then
+        showText = string.format(data.lang.Item.buffRefreshCdSingular, duration)
+    else
+        showText = string.format(data.lang.Item.buffRefreshCdPlural, duration)
+    end
+    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 0, 10, showText)
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 

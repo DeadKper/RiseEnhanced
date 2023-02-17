@@ -58,7 +58,13 @@ return {
         autoItems = "Use items automatically",
         infiniteItems = "Infinite consumable items",
         itemConfig = "Configure auto items",
+        itemDuration = "Custom item duration",
         buffRefreshCd = "Buff refresh cooldown",
+        itemDurationTextSingular = "%s minute",
+        itemDurationTextPlural = "%s minutes",
+        buffRefreshCdSingular = "%s second",
+        buffRefreshCdPlural = "%s seconds",
+        customNote = "item duration is in minutes, buff cooldown is in seconds",
         itemList = {
             "Demondrug",
             "Mega Demondrug",
