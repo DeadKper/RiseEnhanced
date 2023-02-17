@@ -347,10 +347,24 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         return changed, newValue
     end
 
-    --- Allows slider functions to have a default return (will be min - 1) or have steps in the slider
-    -- if _arg is a string or function that returns a string it will be used as the default display text on the slider for min - 1
-    -- if _arg is a number ex: settings.slider_int("cost", "Cost", 0, 100, settings.data.cost * 10, 10) will make the slider display and return numbers from 0 to 100 times 10, effectively 0 - 1000 in steps of 10
-    -- _func is optional and imgui.slider_int by default
+    local function toStep(number, step)
+        if type(step) == "number" then
+            if step < 0 then
+                local int, float = math.modf(number)
+                float = math.floor(float / step + 0.5) * step
+                return int + float
+            else
+                return math.floor(number / step + 0.5) * step
+            end
+        else
+            return math.floor(number + 0.5) * 1
+        end
+    end
+
+    --- Allows slider functions to have a default return (will be min - 1) or have steps in the slider.
+    -- if _arg is a string or function that returns a string it will be used as the default display text on the slider for min - 1.
+    -- if _arg is a number ex: settings.slider_int("cost", "Cost", 0, 1000, settings.data.cost, 10) will make the slider display and return numbers from 0 to 1000 in steps of 10.
+    -- _func is optional and imgui.slider_int by default, will use imgui.slider_float if step is float
     function settings.slider(propertyTable, label, min, max, _text, _arg, _func)
         if _func == nil then _func = imgui.slider_int end
         if type(_func) ~= "function" then
@@ -358,16 +372,16 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         end
         local property, key = decodeProperty(propertyTable)
         local value = property[key]
-        local multiplier = false
-        local arguments
+        local inSteps = false
+        local arguments, float
         if _arg == nil then
             arguments = {
                 label,
                 value,
                 min,
                 max,
+                _text ~= nil and _text or value
             }
-            if _text ~= nil then arguments[#arguments+1] = _text end
         elseif type(_arg) == "string" then
             arguments = {
                 label,
@@ -377,19 +391,22 @@ function utils.getSettingsHandler(defaults, folder, _filename)
                 value < min and _arg or _text
             }
         elseif type(_arg) == "number" then
-            multiplier = true
+            inSteps = true
+            if math.type(_arg) == "float" then
+                _func = imgui.slider_float
+            end
             arguments = {
                 label,
-                math.floor(value / _arg),
-                math.floor(min / _arg),
-                math.floor(max / _arg),
-                value
+                value,
+                min,
+                max,
+                _text ~= nil and _text or value
             }
         else
             error("settings.slider was called with an invalid arg (nil, string, number)")
         end
         local changed, newValue = _func(table.unpack(arguments))
-        if multiplier then newValue = newValue * _arg end
+        if inSteps then newValue = toStep(newValue, _arg) end
         if changed then
             property[key] = newValue
             save()
