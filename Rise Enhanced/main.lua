@@ -152,24 +152,14 @@ function module.init()
     end
 end
 
----@diagnostic disable-next-line: duplicate-set-field
-function module.drawUi()
-    if initiated then
-        drawWindow()
-    else
-        drawTree(module.getName())
-        module.init()
-    end
-end
-
----@diagnostic disable-next-line: duplicate-set-field
-function module.onFrame()
-    for i = 1, #modules do
-        mod = modules[i]
-        mod.onFrame()
-    end
-end
-
 module.init()
-re.on_draw_ui(module.drawUi)
-re.on_frame(module.onFrame)
+re.on_draw_ui(
+    function ()
+        if initiated then
+            drawWindow()
+        else
+            drawTree(module.getName())
+            module.init()
+        end
+    end
+)
