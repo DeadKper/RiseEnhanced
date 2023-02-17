@@ -393,6 +393,8 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath")
             if settings.get("autoRestock") then
                 restock()
             end
+        end)
+        utils.addTimer(10, function ()
             pauseAutoItems = false
         end)
     end
