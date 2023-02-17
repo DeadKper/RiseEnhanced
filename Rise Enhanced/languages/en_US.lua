@@ -1,6 +1,7 @@
 return {
     modName = "Rise Enhanced",
     enabled = "Enabled",
+    disabled = "Disabled",
     loading = "Loading...",
     notification = "Enable notification",
     sounds = "Enable notification sounds",
@@ -57,7 +58,7 @@ return {
         autoItems = "Use items automatically",
         infiniteItems = "Infinite consumable items",
         itemConfig = "Configure auto items",
-        buffRefresh = "Refresh buffs when they expire",
+        buffRefreshCd = "Buff refresh cooldown",
         itemList = {
             "Demondrug",
             "Mega Demondrug",
