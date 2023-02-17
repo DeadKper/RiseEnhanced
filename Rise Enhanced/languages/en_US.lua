@@ -102,7 +102,7 @@ return {
         defaultCartSet = "Default cart set",
         dangoPerWeapon = "Use different dango set per weapon",
         useHoppingSkewers = "Use hopping skewers",
-        usePoints = "Pay with Kamura Points",
+        usePoints = "Pay with kamura points",
         useTicket = "Use ticket by default",
         resetEatTimer = "Reset eating timer",
         disableTimer = "Disable eat timer (allows eating multiple times)",
