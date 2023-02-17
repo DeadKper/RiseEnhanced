@@ -408,8 +408,8 @@ sdk.hook(enemyCharacterBase:get_method("questEnemyDie"),
         utils.addTimer(5, function ()
             if not settings.get("autoRestock")
                     or not settings.get("largeMonsterRestock")
-                    or not utils.getQuestStatus() == 2
-                    or not utils.getQuestEndFlow() == 0
+                    or utils.getQuestStatus() ~= 2
+                    or utils.getQuestEndFlow() ~= 0
                     or not isLargeMonster(sdk.to_managed_object(args[2])) then
                 return
             end
