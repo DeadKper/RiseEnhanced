@@ -152,7 +152,7 @@ end
 --
 function utils.chat(message, sound, ...)
     if type(message) ~= "string" then return end
-    if not sound or type(sound) ~= "number" then
+    if  sound == nil or not sound or type(sound) ~= "number" then
         sound = 0
     end
     sdk.get_managed_singleton("snow.gui.ChatManager")
