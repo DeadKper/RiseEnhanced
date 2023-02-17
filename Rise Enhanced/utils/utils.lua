@@ -116,6 +116,15 @@ function utils.isMultiplayerQuest()
     return utils.getPlayerCount() > 1
 end
 
+-- Return the player, playerIndex, playerList[playerIndex + 1], playerList
+function utils.getPlayerData()
+    local playerDataManager = sdk.get_managed_singleton("snow.player.PlayerManager")
+    local playerList = playerDataManager:get_field("<PlayerData>k__BackingField"):get_elements()
+    local player = playerDataManager:call("findMasterPlayer")
+    local playerIndex = player:call("getPlayerIndex")
+    return player, playerIndex, playerList[playerIndex + 1], playerList
+end
+
 -- Returns the player
 function utils.getPlayer()
     return sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
