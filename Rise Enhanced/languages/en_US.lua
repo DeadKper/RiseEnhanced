@@ -14,6 +14,8 @@ return {
     useDefault = "Use default: %s",
     secondText = "%s second",
     secondsText = "%s seconds",
+    minuteText = "%s minute",
+    minutesText = "%s minutes",
     debug = {
         test = "Test",
         button = "[ --- DEBUG INFO --- ]",
@@ -42,7 +44,7 @@ return {
     },
     Tweaks = {
         name = "Tweaks",
-        saveDelay = "Autosave delay in mins"
+        saveDelay = "Autosave delay"
     },
     Item = {
         name = "Item",

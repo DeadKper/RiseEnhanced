@@ -70,6 +70,20 @@ end
 
 -- Useful functions
 
+-- Returns the duration text formatted
+function utils.durationText(duration, singular, plural, _disabled, _disabled_at)
+    if _disabled ~= nil and _disabled_at == nil then
+        _disabled_at = 0
+    end
+    if duration == _disabled_at then
+        return _disabled
+    elseif duration == 1 then
+        return string.format(singular, duration)
+    else
+        return string.format(plural, duration)
+    end
+end
+
 -- Return whether or not the player is in battle
 function utils.inBattle()
     local musicManager = sdk.get_managed_singleton("snow.wwise.WwiseMusicManager")

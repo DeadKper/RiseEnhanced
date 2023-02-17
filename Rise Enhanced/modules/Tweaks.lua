@@ -48,7 +48,17 @@ end
 function module.drawInnerUi()
     module.enabledCheck()
 
-    settings.slider("saveDelay", data.lang.Tweaks.saveDelay, 1, 30, nil, data.lang.disabled)
+    settings.slider("saveDelay",
+        data.lang.Tweaks.saveDelay,
+        0,
+        30,
+        utils.durationText(
+            settings.get("saveDelay"),
+            data.lang.minuteText,
+            data.lang.minutesText,
+            data.lang.disabled
+        )
+    )
 end
 
 return module

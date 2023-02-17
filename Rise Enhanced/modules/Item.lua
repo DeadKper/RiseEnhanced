@@ -448,25 +448,30 @@ function module.drawInnerUi()
     settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
-    local duration = settings.get("itemDuration")
-    local showText
-    if duration == 0 then
-        showText = data.lang.disabled
-    elseif duration == 1 then
-        showText = string.format(data.lang.secondText, duration)
-    else
-        showText = string.format(data.lang.secondsText, duration)
-    end
-    settings.slider("itemDuration", data.lang.Item.itemDuration, 0, 3600, showText, 10)
-    duration = settings.get("buffRefreshCd")
-    if duration == 0 then
-        showText = data.lang.disabled
-    elseif duration == 1 then
-        showText = string.format(data.lang.secondText, duration)
-    else
-        showText = string.format(data.lang.secondsText, duration)
-    end
-    settings.slider("buffRefreshCd", data.lang.Item.buffRefreshCd, 0, 10, showText, 0.5)
+    settings.slider("itemDuration",
+        data.lang.Item.itemDuration,
+        0,
+        3600,
+        utils.durationText(
+            settings.get("itemDuration"),
+            data.lang.secondText,
+            data.lang.secondsText,
+            data.lang.disabled
+        ),
+        10
+    )
+    settings.slider("buffRefreshCd",
+        data.lang.Item.buffRefreshCd,
+        0,
+        10,
+        utils.durationText(
+            settings.get("buffRefreshCd"),
+            data.lang.secondText,
+            data.lang.secondsText,
+            data.lang.disabled
+        ),
+        0.5
+    )
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
