@@ -148,13 +148,16 @@ local function autoDango()
         return false
     end
 
-    if needStats and not carted then
+    if needStats then
         local playerData = player:get_field("_refPlayerData")
         local maxHp = playerData:get_field("_vitalMax") + 50
-        playerData:set_field("_vitalMax", maxHp)
+        local maxHpFloat = maxHp + .0
+        local maxStamina = playerData:get_field("_staminaMax") + 1500
+        playerData:set_field("_vitalMax", maxHp + 50)
         playerData:set_field("_r_Vital", maxHp)
-        playerData:call("set__vital", maxHp + .0)
-        playerData:set_field("_staminaMax", playerData:get_field("_staminaMax") + 1500.0)
+        playerData:call("set__vital", maxHpFloat)
+        playerData:set_field("_staminaMax", maxStamina)
+        playerData:set_field("_stamina", maxStamina)
         needStats = false
     end
 
@@ -297,7 +300,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
     function(args)
         if not module.enabled() then return end
 
-        utils.addTimer(5, function ()
+        utils.addTimer(3, function ()
             needStats = true
             autoDango()
         end)
@@ -380,6 +383,13 @@ function module.drawInnerUi()
         return
     end
 
+    local questStatus = utils.getQuestStatus()
+    if (questStatus == 0 or questStatus == 2) and kitchen:get_field("_AvailableWaitTimer") > 0 then
+        if imgui.button(data.lang.Dango.resetEatTimer) then
+            kitchen:set_field("_AvailableWaitTimer", 0)
+        end
+    end
+
     local setName = getDangoSetName(kitchen, settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
@@ -387,16 +397,6 @@ function module.drawInnerUi()
     settings.slider("defaultCartSet", data.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
     drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
     drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
-
-    local questStatus = utils.getQuestStatus()
-    if questStatus == 0 or questStatus == 2 then
-        if imgui.button(data.lang.Dango.manualEat) then
-            if kitchen:get_field("_AvailableWaitTimer") > 0 then
-                kitchen:set_field("_AvailableWaitTimer", 0)
-            end
-            autoDango()
-        end
-    end
 end
 
 return module
