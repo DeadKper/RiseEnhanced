@@ -12,6 +12,8 @@ return {
     forceLoad = "Load \"%s\"",
     restartNote = "Note: to toggle OFF requires game restart after.",
     useDefault = "Use default: %s",
+    secondText = "%s second",
+    secondsText = "%s seconds",
     debug = {
         test = "Test",
         button = "[ --- DEBUG INFO --- ]",
@@ -60,10 +62,6 @@ return {
         itemConfig = "Configure auto items",
         itemDuration = "Custom item duration",
         buffRefreshCd = "Buff refresh cooldown",
-        itemDurationTextSingular = "%s minute",
-        itemDurationTextPlural = "%s minutes",
-        buffRefreshCdSingular = "%s second",
-        buffRefreshCdPlural = "%s seconds",
         customNote = "item duration is in minutes, buff cooldown is in seconds",
         itemList = {
             "Demondrug",
