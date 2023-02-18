@@ -445,6 +445,31 @@ function module.drawInnerUi()
     module.enabledCheck()
     settings.call("autoRestock", imgui.checkbox, data.lang.Item.autoRestock)
     settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
+    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    if not dataManager then
+        settings.call("notification", imgui.checkbox, data.lang.notification)
+        settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
+        imgui.text("\n" .. data.lang.loading)
+        return
+    end
+    local setName = getItemSetName(settings.get("defaultSet") - 1, dataManager)
+    local defaultSet = string.format(data.lang.useDefault, setName)
+
+    settings.slider("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
+    if imgui.tree_node(data.lang.Item.perWeapon) then
+        for key, value in pairs(data.lang.weaponNames) do
+            settings.slider(
+                {"weaponSet", key + 1},
+                value,
+                1,
+                40,
+                getItemSetName(getItemSet(key + 1) - 1, dataManager),
+                defaultSet
+            )
+        end
+        module.resetButton("weaponSet")
+        imgui.tree_pop()
+    end
     settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
     settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
     settings.slider("itemDuration",
@@ -471,33 +496,6 @@ function module.drawInnerUi()
         ),
         0.5
     )
-    settings.call("notification", imgui.checkbox, data.lang.notification)
-    settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
-
-    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
-    if not dataManager then
-        imgui.text("\n" .. data.lang.loading)
-        return
-    end
-
-    local setName = getItemSetName(settings.get("defaultSet") - 1, dataManager)
-    local defaultSet = string.format(data.lang.useDefault, setName)
-
-    settings.slider("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
-    if imgui.tree_node(data.lang.Item.perWeapon) then
-        for key, value in pairs(data.lang.weaponNames) do
-            settings.slider(
-                {"weaponSet", key + 1},
-                value,
-                1,
-                40,
-                getItemSetName(getItemSet(key + 1) - 1, dataManager),
-                defaultSet
-            )
-        end
-        module.resetButton("weaponSet")
-        imgui.tree_pop()
-    end
     if imgui.tree_node(data.lang.Item.itemConfig) then
         for key, value in pairs(data.lang.Item.itemList) do
             local current = settings.get("itemList")[key]
@@ -512,6 +510,8 @@ function module.drawInnerUi()
         module.resetButton("itemList")
         imgui.tree_pop()
     end
+    settings.call("notification", imgui.checkbox, data.lang.notification)
+    settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 end
 
 return module
