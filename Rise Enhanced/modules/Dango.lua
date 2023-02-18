@@ -241,7 +241,7 @@ sdk.hook(sdk.find_type_definition("snow.gui.fsm.kitchen.GuiKitchen"):get_method(
     end
 )
 
---inform dango order constructor of dango levels
+-- inform dango order constructor of dango levels
 sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("updateList"),
     function(args)
         if not module.enabled() then return end
