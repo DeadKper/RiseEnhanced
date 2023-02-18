@@ -59,8 +59,9 @@ sdk.hook(sdk.find_type_definition("snow.player.PlayerQuestBase"):get_method("upd
 )
 
 sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"),
-    function (args)
-        if not module.enabled("useMultipliers") then return end
+    nil,
+    function (retval)
+        if not module.enabled("useMultipliers") then return retval end
         local multipliers = settings.get("multipliers")
         local questManager = sdk.get_managed_singleton("snow.QuestManager")
         local useSmart = settings.get("useSmartMultipliers")
@@ -114,6 +115,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"),
             questManager:set_field("_RemMasterRankPoint", mr)
             questManager:set_field("_RemMysteryResearchPoint", anomaly / 1.1)
         end
+        return retval
     end
 )
 
