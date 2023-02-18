@@ -4,8 +4,8 @@ local data = {
     file = "config",
     folder = "Rise Enhanced",
     cacheFile = "cache",
-    version = "3.0.0",
-    beta = true,
+    version = "4.0.0",
+    beta = false,
     enabled = true,
     lang = require("Rise Enhanced.languages.en_US")
 }
