@@ -21,7 +21,8 @@ Current modules:
 ## Spirit Birds
 - Spawn prism or custom ammount (quest start)
 
-Credits for the original mods which I based my work on:
+## Credits
+Huge thanks to all original mod creators which I based my work on
 
 - PeaslyWellbott for "No Hit Stop" (<https://www.nexusmods.com/monsterhunterrise/mods/163>) and  "VIP Dango Tickets" (<https://www.nexusmods.com/monsterhunterrise/mods/92>)
 - spboxer3 for "Reward multiplier" (<https://www.nexusmods.com/monsterhunterrise/mods/319>)
