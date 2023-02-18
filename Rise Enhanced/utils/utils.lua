@@ -70,13 +70,31 @@ end
 
 -- Useful functions
 
--- Returns the duration text formatted
-function utils.durationText(duration, singular, plural, _disabled, _disabled_at)
-    if _disabled ~= nil and _disabled_at == nil then
-        _disabled_at = 0
+-- Formats number with comas every thousands or returns _default_text when number is equal to _default_at, _default_at denifed as 0 if not given
+function  utils.formatNumber(number, _default_text, _default_at)
+    if _default_text ~= nil then
+        if _default_at == nil then
+            _default_at = 0
+        end
+        if number == _default_at then
+            return _default_text
+        end
     end
-    if duration == _disabled_at then
-        return _disabled
+    if number < 1000 and number > -1000 then
+        return number
+    end
+    local _, _, minus, int, fraction = tostring(number):find('([-]?)(%d+)([.]?%d*)')
+    int = int:reverse():gsub("(%d%d%d)", "%1,")
+    return minus .. int:reverse():gsub("^,", "") .. fraction
+end
+
+-- Returns the duration text formatted
+function utils.durationText(duration, singular, plural, _default_text, _default_at)
+    if _default_text ~= nil and _default_at == nil then
+        _default_at = 0
+    end
+    if duration == _default_at then
+        return _default_text
     elseif duration == 1 then
         return string.format(singular, duration)
     else
@@ -295,6 +313,12 @@ function utils.getSettingsHandler(defaults, folder, _filename)
     function settings.get(propertyTable)
         local property, key = decodeProperty(propertyTable)
         return property[key]
+    end
+
+    -- Return a copy of the default value given by the propertyTable
+    function settings.getDefault(propertyTable)
+        local property, key = decodeProperty(propertyTable, settings.default)
+        return utils.copy(property[key])
     end
 
     -- Sets value given by the propertyTable, _changed is optional and assumed as true, ex: settings.set({"skewerLvl", "top"}, 4) will set as settings.data.skewerLvl.top = 4, can also use settings.set("enabled", true) to set settings.data.enabled = true

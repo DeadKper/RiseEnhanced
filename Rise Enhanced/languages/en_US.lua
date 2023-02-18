@@ -2,6 +2,7 @@ return {
     modName = "Rise Enhanced",
     enabled = "Enabled",
     disabled = "Disabled",
+    always = "Always enabled",
     loading = "Loading...",
     notification = "Enable notification",
     sounds = "Enable notification sounds",
@@ -44,7 +45,26 @@ return {
     },
     Tweaks = {
         name = "Tweaks",
-        saveDelay = "Autosave delay"
+        noHitStop = "Disable hit stop",
+        saveDelay = "Autosave delay",
+        useMultipliers = "Use reward multipliers",
+        configureMultipliers = "Configure reward multipliers",
+        multipliers =  {
+            "Money",
+            "Kamura points",
+            "Hunter rank",
+            "Master rank",
+            "Anomaly research"
+        },
+        useSmartMultipliers = "Use multipliers when lower than configured threshold",
+        configureSmartThresh = "Configure multipliers thresholds",
+        smartMultipliers =  {
+            "Money",
+            "Kamura points",
+            "HR experience",
+            "MR experience",
+            "Anomaly experience"
+        },
     },
     Item = {
         name = "Item",
