@@ -70,7 +70,7 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"),
             local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
             local progressManager = sdk.get_managed_singleton("snow.progress.ProgressManager")
             local threshold = settings.get({"smartMultipliers", 1})
-            if threshold == 0 or threshold < dataManager:call("getHandMoney"):get_field("_Value") then
+            if threshold == 0 or threshold > dataManager:call("getHandMoney"):get_field("_Value") then
                 local questLife = questManager:call("getQuestLife")
                 ammount = questManager:call("getRemMoney") * multipliers[1]
                 questManager:set_field("_StartRemMoney", ammount)
@@ -78,22 +78,22 @@ sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"),
                 questManager:set_field("_RemMoney", ammount)
             end
             threshold = settings.get({"smartMultipliers", 2})
-            if threshold == 0 or threshold < dataManager:call("getVillagePoint"):call("get_Point") then
+            if threshold == 0 or threshold > dataManager:call("getVillagePoint"):call("get_Point") then
                 ammount = questManager:call("getRemVillagePoint") * multipliers[2]
                 questManager:set_field("_RemVillagePoint", ammount)
             end
             threshold = settings.get({"smartMultipliers", 3})
-            if threshold == 0 or threshold < progressManager:call("get_HunterRank") then
+            if threshold == 0 or threshold > progressManager:call("get_HunterRank") then
                 ammount = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
                 questManager:set_field("_RemRankPoint", ammount)
             end
             threshold = settings.get({"smartMultipliers", 4})
-            if threshold == 0 or threshold < progressManager:call("get_MasterRank") then
+            if threshold == 0 or threshold > progressManager:call("get_MasterRank") then
                 ammount = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
                 questManager:set_field("_RemMasterRankPoint", ammount)
             end
             threshold = settings.get({"smartMultipliers", 5})
-            if threshold == 0 or threshold < progressManager:call("get_MysteryResearchLevel") then
+            if threshold == 0 or threshold > progressManager:call("get_MysteryResearchLevel") then
                 ammount =
                         questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
                 questManager:set_field("_RemMysteryResearchPoint", ammount / 1.1)
