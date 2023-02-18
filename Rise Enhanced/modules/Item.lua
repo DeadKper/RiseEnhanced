@@ -407,8 +407,7 @@ sdk.hook(enemyCharacterBase:get_method("questEnemyDie"),
         utils.addTimer(5, function ()
             if not settings.get("autoRestock")
                     or not settings.get("largeMonsterRestock")
-                    or utils.getQuestStatus() ~= 2
-                    or utils.getQuestEndFlow() ~= 0
+                    or not inQuest()
                     or not isLargeMonster(sdk.to_managed_object(args[2])) then
                 return
             end
@@ -451,7 +450,7 @@ function module.drawInnerUi()
     settings.slider("itemDuration",
         data.lang.Item.itemDuration,
         0,
-        3600,
+        600,
         utils.durationText(
             settings.get("itemDuration"),
             data.lang.secondText,
