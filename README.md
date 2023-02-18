@@ -1,13 +1,35 @@
 # RiseEnhanced
 
-This mod is more of a compilation of other mods than a mod of it's own, I did make some changes to the code of the mods mainly to suit the needs I have or make them work as modules for this mod, don't know much about lua or reframework but I'll try to fix any bug that is reported
+This mod is a compilation of other mods with some changes/enhancements mainly to suit the needs my friends and I have, don't know much about lua or reframework but I'll try to fix any bug that is reported.
+I removed modules from my previous version since I don't belive I was really enhancing them, just copying the work done by others which is not good, the only reason I still do this for no hit stop is that I do want an easy way to disable when I want.
 
 Current modules:
 
-- Auto Cohoot Nest
-- Auto Dango + Eat again button
-- Auto NPC Talk (no bullshit mod)
-- Auto Restock (without spamming restock for every loadout change)
-- Nearest Camp Revive
-- Spirit Birds QoL (start with custom spiritbirds)
-- VIP Dango Ticket
+## Tweaks
+- Disable hit stop
+- Autosave delay (delay procs when returning to village)
+- Smart reward multipliers (configurable thresholds)
+
+## Item
+- Auto restock (quest start, large monster kill and death)
+- Auto items (with custom triggers and rebuff option)
+
+## Dango
+- Auto dango (quest start and death with custom set when carting)
+- Increase dango skill chance to 100%
+
+## Spirit Birds
+- Spawn prism or custom ammount (quest start)
+
+## Credits
+Huge thanks to all original mod creators which I based my work on
+
+- PeaslyWellbott for "No Hit Stop" (<https://www.nexusmods.com/monsterhunterrise/mods/163>) and  "VIP Dango Tickets" (<https://www.nexusmods.com/monsterhunterrise/mods/92>)
+- spboxer3 for "Reward multiplier" (<https://www.nexusmods.com/monsterhunterrise/mods/319>)
+- Vaeux for "Autosave Less Often" (<https://www.nexusmods.com/monsterhunterrise/mods/2095>)
+- dracahn for "AutoItems" (<https://www.nexusmods.com/monsterhunterrise/mods/1589>)
+- SamuelLing for "Auto Restock" (<https://www.nexusmods.com/monsterhunterrise/mods/1576>)
+- DSC173 for "AutoDango (REFramework)" (<https://www.nexusmods.com/monsterhunterrise/mods/783>)
+- raffRun for "Seconds please - Eat dango again" (<https://www.nexusmods.com/monsterhunterrise/mods/800>) and "Raff's Script Modding Starter Pack and Utilities" (<https://www.nexusmods.com/monsterhunterrise/mods/376>)
+- Bimmr for "SpiritBirds" (<https://www.nexusmods.com/monsterhunterrise/mods/886>)
+- Stracker for "Convenient Spiribirds" (<https://www.nexusmods.com/monsterhunterrise/mods/807>)
