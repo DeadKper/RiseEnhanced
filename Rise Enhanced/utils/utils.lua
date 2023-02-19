@@ -90,7 +90,8 @@ local function getDefaultReference(keys, original, initialFunc, genericFunc)
     if original[keys[1]] == nil then
         original[keys[1]] = {
             func = initialFunc,
-            args = {keys[1]}
+            args = {keys[1]},
+            ref = initialFunc(keys[1])
         }
     end
     local reference = original[keys[1]]
@@ -103,11 +104,8 @@ local function getDefaultReference(keys, original, initialFunc, genericFunc)
         end
         reference = reference[keys[i]]
     end
-    if reference.ref == nil then
-        reference.ref = reference.func(table.unpack(reference.args))
-    end
 
-    return reference.ref
+    return reference.func(table.unpack(reference.args))
 end
 
 -- returns managed singleton and corresponding :call
