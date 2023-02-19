@@ -784,7 +784,9 @@ function utils.printInfoNodes()
         indexed = localization.indexed,
         current = localization.current,
     }, "localization")
-    utils.treeText("References", references, "references")
+    utils.treeText("Custom references", references.custom, "references.custom")
+    utils.treeText("Singletons", references.singletons, "references.singletons")
+    utils.treeText("Type definitions", references.definitions, "references.definitions")
 end
 
 -- Util Initialization
