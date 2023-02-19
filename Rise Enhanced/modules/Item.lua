@@ -65,19 +65,6 @@ local consumables = {
 
 local freeMealSkill = { [0] = 0, 10, 25, 45 }
 local itemProlongerSkill = { [0] = 1, 1.1, 1.25, 1.5 }
-local dataTable = {
-    playerDataManager = {},
-    playerList = {},
-    player = {},
-    playerIndex = {},
-    dataItemList = {},
-    pouchItems = {},
-    itemProlongerLevel = 0,
-    freeMealLevel = 0,
-    polishLevel = 0,
-    inCombat = false,
-    isUpdated = false,
-}
 
 local pauseAutoItems = true
 local drawFlag = false
@@ -85,6 +72,12 @@ local combatFlag = false
 local questStartTrigger = false
 local itemUsedTime = 0
 local alwaysCd = 0.5
+
+local player, playerIndex, playerRef
+
+local itemProlonger = 1
+local freeMeal = 0
+local pouch = {}
 
 -- Main code
 
@@ -178,8 +171,12 @@ local function contains(table, value)
     return false
 end
 
-local function getPouchItemList()
-    -- get inventory --
+local function updateItemAndSkillData()
+    itemProlonger = itemProlongerSkill[utils.singleton("snow.player.PlayerManager")
+            :call("getHasPlayerSkillLvInQuestAndTrainingArea", playerIndex, 88)]
+    freeMeal = freeMealSkill[utils.singleton("snow.player.PlayerManager")
+            :call("getHasPlayerSkillLvInQuestAndTrainingArea", playerIndex, 90)]
+
     local dataManager = utils.singleton("snow.data.DataManager")
     local inventory = dataManager:get_field("_ItemPouch")
     inventory = inventory:get_field("<VirtualSortInventoryList>k__BackingField"):get_elements()
@@ -190,35 +187,14 @@ local function getPouchItemList()
         itemList[item:call("getItemId")] = item:call("getNum")
     end
 
-    return itemList
+    pouch = itemList
 end
 
 local function consume(id)
     utils.definition("snow.data.DataShortcut", "consumeItemFromPouch"):call(nil, id, 1)
 end
 
-local function updateDataTable()
-    dataTable.itemProlongerLevel = dataTable.playerDataManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", dataTable.playerIndex, 88)
-    dataTable.freeMealLevel = dataTable.playerDataManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", dataTable.playerIndex, 90)
-    dataTable.polishLevel = dataTable.playerDataManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", dataTable.playerIndex, 25)
-    dataTable.pouchItems = getPouchItemList()
-    dataTable.inCombat = utils.inBattle()
-    dataTable.isUpdated = true
-end
-
-local function makeDataTable()
-    dataTable.playerDataManager = utils.singleton("snow.player.PlayerManager")
-    dataTable.playerList = dataTable.playerDataManager:get_field("<PlayerData>k__BackingField"):get_elements()
-    dataTable.player = utils.getPlayer()
-    dataTable.playerIndex = dataTable.player:call("getPlayerIndex")
-
-    dataTable.dataItemList = dataTable.playerDataManager:get_field("_PlayerUserDataItemParameter")
-
-    updateDataTable()
-end
-
 local function useItem(item)
-    local playerRef = dataTable.playerList[dataTable.playerIndex + 1]
     local isBuff = contains(item.types, "buff")
 
     if isBuff then
@@ -229,19 +205,10 @@ local function useItem(item)
         end
     end
 
-    if not dataTable.isUpdated then
-        updateDataTable()
-    end
-
-    local player = dataTable.player
-    local pouchItems = dataTable.pouchItems
     local free = false
-    local applied = false
-
-    -- consume items
-    if not settings.get("infiniteItems") and item.id ~= 0 then
-        free = freeMealSkill[dataTable.freeMealLevel] >= math.random(100)
-        if pouchItems[item.id] == nil or pouchItems[item.id] == 0 then
+    if not settings.get("infiniteItems")then
+        free = freeMeal >= math.random(100)
+        if pouch[item.id] == nil or pouch[item.id] == 0 then
             return false, false
         end
         if not free then
@@ -249,28 +216,28 @@ local function useItem(item)
         end
     end
 
+    local applied = false
+
     -- handle stamina before buff in case dash juice doesn't increase stamina
     if contains(item.types, "stamina") then
-        local staminaMax = player:get_field("_staminaMax")
+        local staminaMax = playerRef:get_field("_staminaMax")
 
-        if player:get_field("_stamina") < staminaMax then
+        if playerRef:get_field("_stamina") < staminaMax then
             applied = true
-            player:set_field("_stamina", staminaMax)
+            playerRef:set_field("_stamina", staminaMax)
         end
     end
 
-    local itemProlongerMultiplier = itemProlongerSkill[dataTable.itemProlongerLevel]
-
     if contains(item.types, "buff") then
-        local dataList = dataTable.dataItemList
+        local dataList = utils.reference("_PlayerUserDataItemParameter")
         for _, value in pairs(item.data) do
             local name, buff, hasDuration = table.unpack(value)
 
             applied = true
             if hasDuration then
-                local duration = settings.get("itemDuration") * 60 * itemProlongerMultiplier
+                local duration = settings.get("itemDuration") * 60 * itemProlonger
                 if duration == 0 then
-                    duration = dataList:get_field(buff) * 60 * itemProlongerMultiplier
+                    duration = dataList:get_field(buff) * 60 * itemProlonger
                 end
                 playerRef:set_field(name, duration)
             else
@@ -331,6 +298,8 @@ function module.hook()
             return
         end
 
+        updateItemAndSkillData()
+
         local item, used, free, message
         local usedFlag = false
         local activateList = {}
@@ -358,8 +327,6 @@ function module.hook()
             questStartTrigger = false
         end
 
-        dataTable.isUpdated = false
-
         if #activateList == 0 or not settings.get("notification") then
             return
         end
@@ -374,9 +341,11 @@ function module.hook()
     -- event callback hook for restocking inside quest
     sdk.hook(utils.definition("snow.QuestManager", "questStart"),
         function(args)
+            if player == nil then
+                player, playerIndex, playerRef, _ = utils.getPlayerData()
+            end
             if not module.enabled("autoRestock") then return end
             utils.addTimer(3, function ()
-                makeDataTable()
                 restock()
                 questStartTrigger = true
                 pauseAutoItems = false
@@ -432,13 +401,17 @@ end
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
+    utils.setReference("_PlayerUserDataItemParameter", function ()
+        return utils.singleton("snow.player.PlayerManager"):get_field("_PlayerUserDataItemParameter")
+    end)
     if not inQuest() then return end
-
+    if player == nil then
+        player, playerIndex, playerRef, _ = utils.getPlayerData()
+    end
     -- set flags
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
-    makeDataTable()
     pauseAutoItems = false
 end
 
