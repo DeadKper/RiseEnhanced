@@ -59,7 +59,7 @@ setLanguage(true, settings.get("lang"))
 
 -- Draw functions
 local function debugWindow()
-    utils.imguiButton(data.lang.debug.button, function ()
+    utils.imguiButton(data.lang.Debug.button, function ()
         isDebugOpen = not isDebugOpen
     end)
 
@@ -69,7 +69,7 @@ local function debugWindow()
     imgui.set_next_window_size(window.debugSize, window.condition)
 
     if not imgui.begin_window(
-        data.lang.debug.button,
+        data.lang.Debug.button,
         window.showCloseButton,
         window.flags
     ) then
@@ -128,7 +128,7 @@ local function drawWindow()
         isMenuOpen = false
     end
 
-    drawTree(data.lang.config.name)
+    drawTree(data.lang.Config.name)
 
     for i = 1, #modules do
         mod = modules[i]

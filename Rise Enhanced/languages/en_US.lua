@@ -18,10 +18,6 @@ return {
     minuteText = "%s minute",
     minutesText = "%s minutes",
     rehook = "Reinitialize mod hooks in case it's not working",
-    debug = {
-        test = "Test",
-        button = "[ --- DEBUG INFO --- ]",
-    },
     weaponNames = {
         [0] = "Great Sword",
         [1] = "Swtich Axe",
@@ -40,6 +36,10 @@ return {
     },
     Template = {
         name = "Template",
+    },
+    Debug = {
+        test = "Test",
+        button = "[ --- DEBUG INFO --- ]",
     },
     Config = {
         name = "Mod configuration",
