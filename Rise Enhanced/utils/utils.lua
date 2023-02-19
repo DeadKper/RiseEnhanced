@@ -90,8 +90,7 @@ local function getDefaultReference(keys, original, initialFunc, genericFunc)
     if original[keys[1]] == nil then
         original[keys[1]] = {
             func = initialFunc,
-            args = {keys[1]},
-            ref = initialFunc(keys[1])
+            args = {keys[1]}
         }
     end
     local reference = original[keys[1]]
@@ -117,14 +116,11 @@ function utils.singleton(...)
             return sdk.get_managed_singleton(singleton)
         end,
         function (parent, key)
-            if parent.ref == nil then
-                parent.ref = parent.func(table.unpack(parent.args))
-            end
-            if parent.ref == nil then
+            local parentRef = parent.func(table.unpack(parent.args))
+            if parentRef == nil then
                 return
             end
-            parent[key].ref = parent.ref:call(key)
-            return parent[key].ref
+            return parentRef:call(key)
         end
     )
 end
@@ -138,11 +134,7 @@ function utils.definition(...)
             return sdk.find_type_definition(definition)
         end,
         function (parent, key)
-            if parent.ref == nil then
-                parent.ref = parent.func(table.unpack(parent.args))
-            end
-            parent[key].ref = parent.ref:get_method(key)
-            return parent[key].ref
+            return parent.func(table.unpack(parent.args)):get_method(key)
         end
     )
 end
@@ -166,15 +158,10 @@ function utils.reference(...)
     local keys = {...}
     local reference = references.custom
     for _, key in pairs(keys) do
-        if reference[key].ref == nil then
-            reference[key].ref = reference[key].func(
-                table.unpack(reference[key].args)
-            )
-        end
         reference = reference[key]
     end
 
-    return reference.ref
+    return reference.func(table.unpack(reference.args))
 end
 
 -- Default function to call original
