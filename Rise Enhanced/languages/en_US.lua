@@ -41,8 +41,16 @@ return {
     Template = {
         name = "Template",
     },
-    config = {
-        name = "Mod Configuration",
+    Config = {
+        name = "Mod configuration",
+        pixels = "%s px",
+        xPos = "X position",
+        yPos = "Y position",
+        width = "Width",
+        height = "Height",
+        openState = "Show window by default",
+        windowConfig = "Mod window configuration",
+        debugConfig = "Debug window configuration",
     },
     Tweaks = {
         name = "Tweaks",
