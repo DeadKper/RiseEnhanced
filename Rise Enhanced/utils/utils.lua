@@ -80,6 +80,16 @@ function utils.copy(original)
     return copy
 end
 
+function utils.contains(table, value)
+    for _, v in pairs(table) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
+
 local references = {
     singletons = {},
     definitions = {},

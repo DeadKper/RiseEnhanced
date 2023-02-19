@@ -162,15 +162,6 @@ local function restock()
     end
 end
 
-local function contains(table, value)
-    for _, v in pairs(table) do
-        if v == value then
-            return true
-        end
-    end
-    return false
-end
-
 local function updateItemAndSkillData()
     itemProlonger = itemProlongerSkill[utils.singleton("snow.player.PlayerManager")
             :call("getHasPlayerSkillLvInQuestAndTrainingArea", playerIndex, 88)]
@@ -195,7 +186,7 @@ local function consume(id)
 end
 
 local function useItem(item)
-    local isBuff = contains(item.types, "buff")
+    local isBuff = utils.contains(item.types, "buff")
 
     if isBuff then
         for _, value in pairs(item.data) do
@@ -219,7 +210,7 @@ local function useItem(item)
     local applied = false
 
     -- handle stamina before buff in case dash juice doesn't increase stamina
-    if contains(item.types, "stamina") then
+    if utils.contains(item.types, "stamina") then
         local staminaMax = playerRef:get_field("_staminaMax")
 
         if playerRef:get_field("_stamina") < staminaMax then
@@ -228,7 +219,7 @@ local function useItem(item)
         end
     end
 
-    if contains(item.types, "buff") then
+    if utils.contains(item.types, "buff") then
         local dataList = utils.reference("_PlayerUserDataItemParameter")
         for _, value in pairs(item.data) do
             local name, buff, hasDuration = table.unpack(value)
