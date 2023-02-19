@@ -108,8 +108,6 @@ local function autoDango()
     kitchen:call("order", order, settings.get("kamuraPoints") and 1 or 0, facilityLevel)
     isOrdering = false
 
-    local player = utils.getPlayer()
-
     local orderName = order:call("get_OrderName")
     local message = string.format("<COL YEL>" .. data.lang.Dango.eatMessage, orderName)
     if settings.get("ticket") then
@@ -122,7 +120,7 @@ local function autoDango()
     end
     message = message .. "</COL>"
 
-    local skillData = player:get_field("_refPlayerSkillList"):call("get_KitchenSkillData")
+    local skillData = utils.getPlayer():get_field("_refPlayerSkillList"):call("get_KitchenSkillData")
     local dataShortcut = utils.reference("snow.data.DataShortcut")
     local skillCount = 0
     for _, value in pairs(skillData:get_elements()) do
