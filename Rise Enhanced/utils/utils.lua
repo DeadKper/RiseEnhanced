@@ -70,6 +70,130 @@ end
 
 -- Useful functions
 
+-- Return copy of a table
+function utils.copy(original)
+    if type(original) ~= "table" then return original end
+    local copy = {}
+    for k, v in pairs(original) do
+        copy[k] = utils.copy(v)
+    end
+    return copy
+end
+
+local references = {
+    singletons = {},
+    definitions = {},
+    custom = {},
+}
+
+local function getDefaultReference(keys, original, initialFunc, genericFunc)
+    if original[keys[1]] == nil then
+        original[keys[1]] = {
+            func = initialFunc,
+            args = {keys[1]}
+        }
+    end
+    local reference = original[keys[1]]
+    for i = 2, #keys do
+        if reference[keys[i]] == nil then
+            reference[keys[i]] = {
+                func = genericFunc,
+                args = {reference, keys[i]}
+            }
+        end
+        reference = reference[keys[i]]
+    end
+    if reference.ref == nil then
+        reference.ref = reference.func(table.unpack(reference.args))
+    end
+
+    return reference.ref
+end
+
+-- returns managed singleton and corresponding :call
+function utils.singleton(...)
+    return getDefaultReference(
+        {...},
+        references.singletons,
+        function (singleton)
+            return sdk.get_managed_singleton(singleton)
+        end,
+        function (parent, key)
+            if parent.ref == nil then
+                parent.ref = parent.func(table.unpack(parent.args))
+            end
+            if parent.ref == nil then
+                return
+            end
+            parent[key].ref = parent.ref:call(key)
+            return parent[key].ref
+        end
+    )
+end
+
+-- returns type definition and correspondig :get_method
+function utils.definition(...)
+    return getDefaultReference(
+        {...},
+        references.definitions,
+        function (definition)
+            return sdk.find_type_definition(definition)
+        end,
+        function (parent, key)
+            if parent.ref == nil then
+                parent.ref = parent.func(table.unpack(parent.args))
+            end
+            parent[key].ref = parent.ref:get_method(key)
+            return parent[key].ref
+        end
+    )
+end
+
+-- sets a reference to get later on
+function utils.setReference(keys, getFunc, ...)
+    if type(keys) == "string" then
+        keys = {keys}
+    end
+    local reference = references.custom
+    for i = 1, #keys - 1 do
+        reference = reference[keys[i]]
+    end
+    if reference[keys[#keys]] == nil then
+        reference[keys[#keys]] = {func = getFunc, args = {...}}
+    end
+end
+
+-- gets a reference
+function utils.reference(...)
+    local keys = {...}
+    local reference = references.custom
+    for _, key in pairs(keys) do
+        if reference[key].ref == nil then
+            reference[key].ref = reference[key].func(
+                table.unpack(reference[key].args)
+            )
+        end
+        reference = reference[key]
+    end
+
+    return reference.ref
+end
+
+-- Default function to call original
+function utils.original(args)
+    return sdk.PreHookResult.CALL_ORIGINAL
+end
+
+-- Default function to skip original
+function utils.skip(args)
+    return sdk.PreHookResult.SKIP_ORIGINAL
+end
+
+-- Default retval function
+function utils.retval(retval)
+    return retval
+end
+
 -- Formats number with comas every thousands or returns _default_text when number is equal to _default_at, _default_at denifed as 0 if not given
 function  utils.formatNumber(number, _default_text, _default_at)
     if _default_text ~= nil then
@@ -104,17 +228,17 @@ end
 
 -- Return whether or not the player is in battle
 function utils.inBattle()
-    local musicManager = sdk.get_managed_singleton("snow.wwise.WwiseMusicManager")
+    local musicManager = utils.singleton("snow.wwise.WwiseMusicManager")
     if not musicManager then return false end
 
     local currentMusicType = musicManager:get_field("_FightBGMType")
     local currentBattleState = musicManager:get_field("_CurrentEnemyAction")
 
-    local musicMixManager = sdk.get_managed_singleton("snow.wwise.WwiseMixManager")
+    local musicMixManager = utils.singleton("snow.wwise.WwiseMixManager")
     if not musicMixManager then return false end
     local currentMixUsed = musicMixManager:get_field("_Current")
 
-    local questManager = sdk.get_managed_singleton("snow.QuestManager")
+    local questManager = utils.singleton("snow.QuestManager")
     if not questManager then return false end
 
     local currentQuestType = questManager:get_field("_QuestType")
@@ -134,13 +258,13 @@ end
 
 -- Returns whether the quest es online or not, only works properly inside of mission
 function utils.isQuestOnline()
-    return sdk.get_managed_singleton("snow.stage.StageManager"):get_IsQuestOnline()
+    return utils.singleton("snow.stage.StageManager"):get_IsQuestOnline()
 end
 
 -- Returns the player count inside of a quest, will return 1 in lobby
 function utils.getPlayerCount()
     if not utils.isQuestOnline() then return 1 end
-    return sdk.get_managed_singleton("snow.QuestManager"):get_field("_TotalJoinNum")
+    return utils.singleton("snow.QuestManager"):get_field("_TotalJoinNum")
 end
 
 -- Returns true if there are 2 or more players inside the quest, will return true on lobby
@@ -150,7 +274,7 @@ end
 
 -- Return the player, playerIndex, playerList[playerIndex + 1], playerList
 function utils.getPlayerData()
-    local playerDataManager = sdk.get_managed_singleton("snow.player.PlayerManager")
+    local playerDataManager = utils.singleton("snow.player.PlayerManager")
     local playerList = playerDataManager:get_field("<PlayerData>k__BackingField"):get_elements()
     local player = playerDataManager:call("findMasterPlayer")
     local playerIndex = player:call("getPlayerIndex")
@@ -159,12 +283,7 @@ end
 
 -- Returns the player
 function utils.getPlayer()
-    return sdk.get_managed_singleton("snow.player.PlayerManager"):call("findMasterPlayer")
-end
-
--- Returns the ingame player object
-function utils.getPlayerObject()
-    return utils.getPlayer():call("get_GameObject")
+    return utils.singleton("snow.player.PlayerManager", "findMasterPlayer")
 end
 
 -- Returns the current weapon
@@ -175,9 +294,9 @@ end
 -- Returns true if the weapon is sheathed
 function utils.isWeaponSheathed()
     local player = utils.getPlayer()
-    local playerAction = sdk.find_type_definition("snow.player.PlayerBase")
+    local playerAction = utils.definition("snow.player.PlayerBase")
             :get_field("<RefPlayerAction>k__BackingField"):get_data(player)
-    return sdk.find_type_definition("snow.player.PlayerAction"):get_field("_weaponFlag")
+    return utils.definition("snow.player.PlayerAction"):get_field("_weaponFlag")
             :get_data(playerAction) == 0
 end
 
@@ -187,8 +306,7 @@ function utils.chat(message, sound, ...)
     if  sound == nil or not sound or type(sound) ~= "number" then
         sound = 0
     end
-    sdk.get_managed_singleton("snow.gui.ChatManager")
-            :call("reqAddChatInfomation", string.format(message, ...), sound)
+    utils.singleton("snow.gui.ChatManager"):call("reqAddChatInfomation", string.format(message, ...), sound)
 end
 
 -- Time handler
@@ -226,16 +344,6 @@ function utils.tableSearch(table, value)
         end
     end
     return nil
-end
-
--- Return copy of a table
-function utils.copy(original)
-    if type(original) ~= "table" then return original end
-    local copy = {}
-    for k, v in pairs(original) do
-        copy[k] = utils.copy(v)
-    end
-    return copy
 end
 
 local function getFilePath(folder, _file)
@@ -476,7 +584,7 @@ local questFlowName = {
 
 -- Returns questStatus
 function utils.getQuestStatus()
-    local manager = sdk.get_managed_singleton("snow.QuestManager")
+    local manager = utils.singleton("snow.QuestManager")
     if manager == nil then return end
     return manager:get_field("_QuestStatus")
 end
@@ -489,7 +597,7 @@ function utils.getQuestStatusName()
 end
 
 function utils.getQuestEndFlow()
-    local manager = sdk.get_managed_singleton("snow.QuestManager")
+    local manager = utils.singleton("snow.QuestManager")
     if manager == nil then return end
     return manager:get_field("_EndFlow")
 end
@@ -593,7 +701,8 @@ function utils.imguiButton(label, func, ...)
     end
 end
 
-local toStringFunctions
+local toStringFunctions, printedTables
+printedTables = {}
 toStringFunctions = {
     ["nil"] = function ()
         return "nil"
@@ -617,6 +726,11 @@ toStringFunctions = {
         return "*userdata"
     end,
     ["table"] = function (variable, indentation)
+        local tableStr = tostring(variable)
+        if printedTables[tableStr] then
+            return tableStr
+        end
+        printedTables[tableStr] = true
         if indentation == nil then indentation = "" end
         local text = "{"
         local originalIndentation = indentation
@@ -632,6 +746,7 @@ toStringFunctions = {
 
 -- Makes a string out of the given value to be printed, functions and things like that will have an * at the start, _name is optional to add as the name of the printed variable
 function utils.toString(variable, _name)
+    printedTables = {}
     return (_name and _name .. " = " or "") .. toStringFunctions[type(variable)](variable)
 end
 
@@ -669,6 +784,7 @@ function utils.printInfoNodes()
         indexed = localization.indexed,
         current = localization.current,
     }, "localization")
+    utils.treeText("References", references, "references")
 end
 
 -- Util Initialization

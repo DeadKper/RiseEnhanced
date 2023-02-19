@@ -79,6 +79,13 @@ local dataTable = {
     isUpdated = false,
 }
 
+local pauseAutoItems = true
+local drawFlag = false
+local combatFlag = false
+local questStartTrigger = false
+local itemUsedTime = 0
+local alwaysCd = 0.5
+
 -- Main code
 
 local function getItemSet(weapon)
@@ -91,17 +98,14 @@ local function getItemSet(weapon)
     return loadout, false
 end
 
-local function getItemSetById(id, _dataManager)
-    if _dataManager == nil then
-        _dataManager = sdk.get_managed_singleton("snow.data.DataManager")
-    end
-    if _dataManager == nil then return end
-    local itemSet = _dataManager:call("get_ItemMySet")
+local function getItemSetById(id)
+    local itemSet = utils.singleton("snow.data.DataManager", "get_ItemMySet")
+    if itemSet == nil then return end
     return itemSet:call("getData", id)
 end
 
-local function getItemSetName(id, _dataManager)
-    local itemSet = getItemSetById(id, _dataManager)
+local function getItemSetName(id)
+    local itemSet = getItemSetById(id)
     if itemSet == nil then
         return "? ? ? ? ? ? ? ?"
     end
@@ -114,11 +118,11 @@ end
 
 local function restock()
     if not module.enabled() then return end
-    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    local dataManager = utils.singleton("snow.data.DataManager")
     if not dataManager then return end
     local itemBox = dataManager:get_field("_ItemMySet")
     local itemSetId = getItemSet(utils.getPlayerWeapon() + 1) - 1
-    local itemSet = getItemSetById(itemSetId, dataManager)
+    local itemSet = getItemSetById(itemSetId)
     ---@diagnostic disable-next-line: need-check-nil
     local itemSetName = itemSet:get_field("_Name")
 
@@ -138,8 +142,7 @@ local function restock()
     if radialSetId == nil then
         message = message .. "\n<COL RED>" .. data.lang.Item.nilRadial .. "</COL>"
     else
-        local shortcutManager = sdk.get_managed_singleton("snow.data.SystemDataManager")
-                :call("getCustomShortcutSystem")
+        local shortcutManager = utils.singleton("snow.data.SystemDataManager", "getCustomShortcutSystem")
         local radialSet = radialSetId:call("GetValueOrDefault")
         local radialList = shortcutManager:call("getPaletteSetList", 0) -- current set
         if radialList then
@@ -177,7 +180,7 @@ end
 
 local function getPouchItemList()
     -- get inventory --
-    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
+    local dataManager = utils.singleton("snow.data.DataManager")
     local inventory = dataManager:get_field("_ItemPouch")
     inventory = inventory:get_field("<VirtualSortInventoryList>k__BackingField"):get_elements()
     local inventoryList = inventory[1]:get_field("mItems"):get_elements()
@@ -191,7 +194,7 @@ local function getPouchItemList()
 end
 
 local function consume(id)
-    sdk.find_type_definition("snow.data.DataShortcut"):get_method("consumeItemFromPouch"):call(nil, id, 1)
+    utils.definition("snow.data.DataShortcut", "consumeItemFromPouch"):call(nil, id, 1)
 end
 
 local function updateDataTable()
@@ -204,7 +207,7 @@ local function updateDataTable()
 end
 
 local function makeDataTable()
-    dataTable.playerDataManager = sdk.get_managed_singleton("snow.player.PlayerManager")
+    dataTable.playerDataManager = utils.singleton("snow.player.PlayerManager")
     dataTable.playerList = dataTable.playerDataManager:get_field("<PlayerData>k__BackingField"):get_elements()
     dataTable.player = utils.getPlayer()
     dataTable.playerIndex = dataTable.player:call("getPlayerIndex")
@@ -288,142 +291,143 @@ local function inQuest()
 end
 
 -- Hooks
-local pauseAutoItems = true
-local drawFlag = false
-local combatFlag = false
-local questStartTrigger = false
-local itemUsedTime = 0
-re.on_frame(function ()
-    if pauseAutoItems or not module.enabled("autoItems") or not inQuest() then
-        return
-    end
 
-    local refreshLevel = 5
-    local activationLevel = 6
-
-    if utils.isWeaponSheathed() then
-        drawFlag = true
-    else
-        refreshLevel = 4
-        if drawFlag then
-            activationLevel = 4
-            drawFlag = false
+---@diagnostic disable-next-line: duplicate-set-field
+function module.hook()
+    re.on_frame(function ()
+        if pauseAutoItems or not module.enabled("autoItems") or not inQuest() then
+            return
         end
-    end
 
-    if not utils.inBattle() then
-        combatFlag = true
-    else
-        refreshLevel = 3
-        if combatFlag then
-            activationLevel = 3
-            combatFlag = false
+        local refreshLevel = 5
+        local activationLevel = 5
+
+        if utils.isWeaponSheathed() then
+            drawFlag = true
+        else
+            refreshLevel = 4
+            if drawFlag then
+                activationLevel = 4
+                drawFlag = false
+            end
         end
-    end
 
-    local cooldown = settings.get("buffRefreshCd")
-    if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
-        activationLevel = refreshLevel
-    end
+        if not utils.inBattle() then
+            combatFlag = true
+        else
+            refreshLevel = 3
+            if combatFlag then
+                activationLevel = 3
+                combatFlag = false
+            end
+        end
 
-    if activationLevel == 6 then
-        return
-    end
+        local cooldown = settings.get("buffRefreshCd")
+        if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
+            activationLevel = refreshLevel
+        end
 
-    local item, used, free, message
-    local usedFlag = false
-    local activateList = {}
-    for key, value in pairs(settings.get("itemList")) do
-        if value >= activationLevel or (questStartTrigger and value == 2) then
-            usedFlag = true
-            -- why lua doesn't have "continue"? so dumb
-            item = consumables[key]
-            used, free = useItem(item)
-            if used then
-                message = data.lang.Item.itemList[key]
-                if free then
-                    message = message .. " (free meal)"
+        if activationLevel == 5 and os.clock() - (itemUsedTime + math.max(alwaysCd, cooldown)) < 0 then
+            return
+        end
+
+        local item, used, free, message
+        local usedFlag = false
+        local activateList = {}
+        for key, value in pairs(settings.get("itemList")) do
+            if value >= activationLevel or (questStartTrigger and value == 2) then
+                usedFlag = true
+                -- why lua doesn't have "continue"? so dumb
+                item = consumables[key]
+                used, free = useItem(item)
+                if used then
+                    message = data.lang.Item.itemList[key]
+                    if free then
+                        message = message .. " (free meal)"
+                    end
+                    table.insert(activateList, message)
                 end
-                table.insert(activateList, message)
             end
         end
-    end
 
-    if usedFlag then
-        itemUsedTime = os.clock()
-    end
+        if usedFlag then
+            itemUsedTime = os.clock()
+        end
 
-    if questStartTrigger then
-        questStartTrigger = false
-    end
+        if questStartTrigger then
+            questStartTrigger = false
+        end
 
-    dataTable.isUpdated = false
+        dataTable.isUpdated = false
 
-    if #activateList == 0 or not settings.get("notification") then
-        return
-    end
+        if #activateList == 0 or not settings.get("notification") then
+            return
+        end
 
-    message = "<COL YEL>" .. data.lang.Item.usedItems .. "</COL>"
-    for _, value in pairs(activateList) do
-        message = message .. "\n" .. value
-    end
-    utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
-end)
+        message = "<COL YEL>" .. data.lang.Item.usedItems .. "</COL>"
+        for _, value in pairs(activateList) do
+            message = message .. "\n" .. value
+        end
+        utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
+    end)
 
--- event callback hook for restocking inside quest
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
-    function(args)
-        if not module.enabled("autoRestock") then return end
-        utils.addTimer(3, function ()
-            makeDataTable()
-            restock()
-            questStartTrigger = true
-            pauseAutoItems = false
-        end)
-    end
-)
-
--- restock on cart
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
-    function(args)
-        pauseAutoItems = true
-        if not module.enabled() then return end
-        utils.addTimer(5, function ()
-            if settings.get("autoRestock") then
+    -- event callback hook for restocking inside quest
+    sdk.hook(utils.definition("snow.QuestManager", "questStart"),
+        function(args)
+            if not module.enabled("autoRestock") then return end
+            utils.addTimer(3, function ()
+                makeDataTable()
                 restock()
-            end
-        end)
-        utils.addTimer(10, function ()
-            pauseAutoItems = false
-        end)
-    end
-)
+                questStartTrigger = true
+                pauseAutoItems = false
+            end)
+        end,
+        utils.retval
+    )
 
--- restock on quest enemy kill
-local enemyCharacterBase = sdk.find_type_definition("snow.enemy.EnemyCharacterBase")
-local isLargeMonster = enemyCharacterBase:get_method("get_isBossEnemy")
-sdk.hook(enemyCharacterBase:get_method("questEnemyDie"),
-    function (args)
-        utils.addTimer(5, function ()
-            if not settings.get("autoRestock")
-                    or not settings.get("largeMonsterRestock")
-                    or not inQuest()
-                    or not isLargeMonster(sdk.to_managed_object(args[2])) then
-                return
-            end
+    -- restock on cart
+    sdk.hook(utils.definition("snow.QuestManager", "notifyDeath"),
+        function(args)
+            pauseAutoItems = true
+            if not module.enabled() then return end
+            utils.addTimer(5, function ()
+                if settings.get("autoRestock") then
+                    restock()
+                end
+                questStartTrigger = true
+                pauseAutoItems = false
+            end)
+        end,
+        utils.retval
+    )
 
-            restock()
-        end)
-    end
-)
+    -- restock on quest enemy kill
+    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
+    sdk.hook(utils.definition("snow.enemy.EnemyCharacterBase", "questEnemyDie"),
+        function (args)
+            utils.addTimer(5, function ()
+                if not settings.get("autoRestock")
+                        or not settings.get("largeMonsterRestock")
+                        or not inQuest()
+                        or not isLargeMonster(sdk.to_managed_object(args[2])) then
+                    return
+                end
 
--- pause auto items
-sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
-    function (args)
-        pauseAutoItems = true
-        itemUsedTime = 0
-    end
-)
+                restock()
+            end)
+        end,
+        utils.retval
+    )
+
+    -- pause auto items
+    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+        function (args)
+            pauseAutoItems = true
+            itemUsedTime = 0
+        end,
+        utils.retval
+    )
+end
 
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -434,10 +438,8 @@ function module.init()
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
-    utils.addTimer(5, function ()
-        makeDataTable()
-        pauseAutoItems = false
-    end)
+    makeDataTable()
+    pauseAutoItems = false
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -445,14 +447,13 @@ function module.drawInnerUi()
     module.enabledCheck()
     settings.call("autoRestock", imgui.checkbox, data.lang.Item.autoRestock)
     settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
-    local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
-    if not dataManager then
+    if not utils.singleton("snow.data.DataManager") then
         settings.call("notification", imgui.checkbox, data.lang.notification)
         settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
         imgui.text("\n" .. data.lang.loading)
         return
     end
-    local setName = getItemSetName(settings.get("defaultSet") - 1, dataManager)
+    local setName = getItemSetName(settings.get("defaultSet") - 1)
     local defaultSet = string.format(data.lang.useDefault, setName)
 
     settings.slider("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
@@ -463,7 +464,7 @@ function module.drawInnerUi()
                 value,
                 1,
                 40,
-                getItemSetName(getItemSet(key + 1) - 1, dataManager),
+                getItemSetName(getItemSet(key + 1) - 1),
                 defaultSet
             )
         end

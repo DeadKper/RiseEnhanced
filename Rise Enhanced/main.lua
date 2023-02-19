@@ -94,6 +94,11 @@ local function drawTree(text)
     if imgui.tree_node(text) then
         _, data.enabled = settings.call("enabled", imgui.checkbox, data.lang.enabled)
         setLanguage(settings.combo("lang", data.lang.language, utils.getLanguageTable()))
+        if imgui.button(data.lang.rehook) then
+            for i = 1, #modules do -- start on 1 to ignore template module
+                modules[i].hook()
+            end
+        end
 
         if data.beta then
             debugWindow()
@@ -149,6 +154,7 @@ function module.init()
     for i = 1, #modules do -- start on 1 to ignore template module
         mod = modules[i]
         mod.init()
+        mod.hook()
     end
 end
 

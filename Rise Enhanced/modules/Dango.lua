@@ -34,19 +34,11 @@ local isOrdering = false
 local needStats = false
 local didEat = false
 local carted = false
-
-local dataShortcut = sdk.create_instance("snow.data.DataShortcut", true):add_ref()
-
 -- Main code
 
 -- get meal function
-local function getMealFunction()
-    local kitchen =
-        sdk.get_managed_singleton("snow.data.FacilityDataManager")
-    if not kitchen then return nil end
-    kitchen = kitchen:call("get_Kitchen")
-    if not kitchen then return nil end
-    return kitchen:call("get_MealFunc")
+local function getMeal()
+    return utils.singleton("snow.data.FacilityDataManager", "get_Kitchen", "get_MealFunc")
 end
 
 local function getDangoSet(weapon, forceCarted)
@@ -79,7 +71,7 @@ local function autoDango()
     end
 
     -- if can't get kitchen return
-    local kitchen = getMealFunction()
+    local kitchen = getMeal()
     if not kitchen then return false end
 
     if kitchen:get_field("_AvailableWaitTimer") > 0 then return true end
@@ -100,7 +92,7 @@ local function autoDango()
 
     local facilityLevel = kitchen:call("get_FacilityLv")
 
-    local contentsIdDataManager = sdk.get_managed_singleton("snow.data.ContentsIdDataManager")
+    local contentsIdDataManager = utils.singleton("snow.data.ContentsIdDataManager")
     local tickets = contentsIdDataManager:call("getItemData", 0x410007c)
     local ticketCount = tickets:call("getCountInBox")
 
@@ -131,6 +123,7 @@ local function autoDango()
     message = message .. "</COL>"
 
     local skillData = player:get_field("_refPlayerSkillList"):call("get_KitchenSkillData")
+    local dataShortcut = utils.reference("snow.data.DataShortcut")
     local skillCount = 0
     for _, value in pairs(skillData:get_elements()) do
         if value:get_field("_SkillId") ~= 0 then
@@ -181,163 +174,173 @@ local function getDangoSetByWeapon(kitchen, weapon, hasCarted)
     return name
 end
 
--- Hooks
--- set player hp and stamina when eating
-sdk.hook(sdk.find_type_definition("snow.player.PlayerManager"):get_method("update"),
-    function(args)
-        if needStats and didEat then
-            needStats = false
-            didEat = false
-            local playerData = utils.getPlayer():get_field("_refPlayerData")
-            local newHp = playerData:get_field("_vitalMax") + 50
-            local newStamina = playerData:get_field("_staminaMax") + 1500
-            playerData:set_field("_vitalMax", newHp)
-            playerData:set_field("_r_Vital", newHp)
-            playerData:call("set__vital", newHp + .0) -- context dependent
-            playerData:set_field("_staminaMax", newStamina)
-            playerData:set_field("_stamina", newStamina)
-        end
-    end
-)
-
--- increase chance for dango skills on ticket when option is enabled
-sdk.hook(sdk.find_type_definition("snow.data.DangoData"):get_method("get_SkillActiveRate"),
-    function(args)
-        if not module.enabled("increasedChance") then return end
-
-        local kitchen = getMealFunction()
-        if not kitchen then return false end
-
-        dango.ticket = kitchen:call("getMealTicketFlag")
-        if dango.ticket then
-            dango.saved = sdk.to_managed_object(args[2])
-            dango.chance = dango.saved:get_field("_Param"):get_field("_SkillActiveRate")
-            dango.saved:get_field("_Param"):set_field("_SkillActiveRate", 100)
-        end
-    end,
-    function(retval)
-        if not module.enabled("increasedChance") and dango.ticket then return retval end
-
-        dango.saved:get_field("_Param"):set_field("_SkillActiveRate", dango.chance)
-        return retval
-    end
-)
-
--- inform GUI of dango levels
-sdk.hook(sdk.find_type_definition("snow.gui.fsm.kitchen.GuiKitchen"):get_method("setDangoDetailWindow"),
-    function(args)
-        if not module.enabled() then return end
-
-        local gui = sdk.to_managed_object(args[2])
-        local skewerLevel = gui:get_field("SpecialSkewerDangoLv")
-        for i=0,2 do
-            local newSkewerLevel = sdk.create_instance("System.UInt32")
-            newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
-            skewerLevel[i] = newSkewerLevel
-        end
-    end,
-    function(retval)
-        return retval
-    end
-)
-
--- inform dango order constructor of dango levels
-sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("updateList"),
-    function(args)
-        if not module.enabled() then return end
-        local kitchen = getMealFunction()
-        if not kitchen then return false end
-        if settings.get("ticket") then
-            kitchen:call("setMealTicketFlag", true)
-        end
-        local skewerLevel = kitchen:get_field("SpecialSkewerDangoLv")
-        for i=0,2 do
-            local newSkewerLevel = sdk.create_instance("System.UInt32")
-            newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
-            skewerLevel[i] = newSkewerLevel
-        end
-    end,
-    function(retval)
-        if not module.enabled("showAllDango") then return retval end
-
-        local kitchen = getMealFunction()
-        if not kitchen then return false end
-        local dangoData = kitchen:get_field("<DangoDataList>k__BackingField"):call("ToArray")
-        for _, value in ipairs(dangoData) do
-            local flagDataManager = sdk.get_managed_singleton("snow.data.FlagDataManager")
-            local isDangoUnlock = flagDataManager:call("isUnlocked(snow.data.DataDef.DangoId)", value:get_field("_Param"):get_field("_Id"))
-            if isDangoUnlock then
-                value:get_field("_Param"):set_field("_DailyRate", 0)
+---@diagnostic disable-next-line: duplicate-set-field
+function module.hook()
+    -- Hooks
+    -- set player hp and stamina when eating
+    sdk.hook(utils.definition("snow.player.PlayerManager", "update"),
+        function(args)
+            if needStats and didEat then
+                needStats = false
+                didEat = false
+                local playerData = utils.getPlayer():get_field("_refPlayerData")
+                local newHp = playerData:get_field("_vitalMax") + 50
+                local newStamina = playerData:get_field("_staminaMax") + 1500
+                playerData:set_field("_vitalMax", newHp)
+                playerData:set_field("_r_Vital", newHp)
+                playerData:call("set__vital", newHp + .0) -- context dependent
+                playerData:set_field("_staminaMax", newStamina)
+                playerData:set_field("_stamina", newStamina)
             end
-        end
-        return retval
-    end
-)
+        end,
+        utils.retval
+    )
 
--- return ticket and remove timer when respective option is enabled
-sdk.hook(sdk.find_type_definition("snow.facility.kitchen.MealFunc"):get_method("order"),
-    function(args)
-    end,
-    function(retval)
-        if not module.enabled() then return retval end
+    -- increase chance for dango skills on ticket when option is enabled
+    sdk.hook(utils.definition("snow.data.DangoData", "get_SkillActiveRate"),
+        function(args)
+            if not module.enabled("increasedChance") then return end
 
-        if settings.get("disableTimer") then
-            local kitchen = getMealFunction()
-            if kitchen then
-                kitchen:set_field("_AvailableWaitTimer", 0)
+            local kitchen = getMeal()
+            if not kitchen then return false end
+
+            dango.ticket = kitchen:call("getMealTicketFlag")
+            if dango.ticket then
+                dango.saved = sdk.to_managed_object(args[2])
+                dango.chance = dango.saved:get_field("_Param"):get_field("_SkillActiveRate")
+                dango.saved:get_field("_Param"):set_field("_SkillActiveRate", 100)
             end
+        end,
+        function(retval)
+            if not module.enabled("increasedChance") and dango.ticket then return retval end
+
+            dango.saved:get_field("_Param"):set_field("_SkillActiveRate", dango.chance)
+            return retval
         end
-        if settings.get("infiniteTickets") then
-            local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
-            local itemBox = dataManager:get_field("_PlItemBox")
-            itemBox:call("tryAddGameItem(snow.data.ContentsIdSystem.ItemId, System.Int32)", 68157564, 1)
+    )
+
+    -- inform GUI of dango levels
+    sdk.hook(utils.definition("snow.gui.fsm.kitchen.GuiKitchen", "setDangoDetailWindow"),
+        function(args)
+            if not module.enabled() then return end
+
+            local gui = sdk.to_managed_object(args[2])
+            local skewerLevel = gui:get_field("SpecialSkewerDangoLv")
+            for i=0,2 do
+                local newSkewerLevel = sdk.create_instance("System.UInt32")
+                newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
+                skewerLevel[i] = newSkewerLevel
+            end
+        end,
+        utils.retval
+    )
+
+    -- inform dango order constructor of dango levels
+    sdk.hook(utils.definition("snow.facility.kitchen.MealFunc", "updateList"),
+        function(args)
+            if not module.enabled() then return end
+            local kitchen = getMeal()
+            if not kitchen then return false end
+            if settings.get("ticket") then
+                kitchen:call("setMealTicketFlag", true)
+            end
+            local skewerLevel = kitchen:get_field("SpecialSkewerDangoLv")
+            for i=0,2 do
+                local newSkewerLevel = sdk.create_instance("System.UInt32")
+                newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
+                skewerLevel[i] = newSkewerLevel
+            end
+        end,
+        function(retval)
+            if not module.enabled("showAllDango") then return retval end
+
+            local kitchen = getMeal()
+            if not kitchen then return false end
+            local dangoData = kitchen:get_field("<DangoDataList>k__BackingField"):call("ToArray")
+            for _, value in ipairs(dangoData) do
+                local flagDataManager = utils.singleton("snow.data.FlagDataManager")
+                local isDangoUnlock = flagDataManager:call("isUnlocked(snow.data.DataDef.DangoId)", value:get_field("_Param"):get_field("_Id"))
+                if isDangoUnlock then
+                    value:get_field("_Param"):set_field("_DailyRate", 0)
+                end
+            end
+            return retval
         end
-        return retval
-    end
-)
+    )
 
--- auto eat inside quest
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
-    function(args)
-        if not module.enabled("autoEat") then return end
+    -- return ticket and remove timer when respective option is enabled
+    sdk.hook(utils.definition("snow.facility.kitchen.MealFunc", "order"),
+        utils.original,
+        function(retval)
+            if not module.enabled() then return retval end
 
-        utils.addTimer(3, function ()
-            needStats = true
-            autoDango()
-        end)
-    end
-)
+            if settings.get("disableTimer") then
+                local kitchen = getMeal()
+                if kitchen then
+                    kitchen:set_field("_AvailableWaitTimer", 0)
+                end
+            end
+            if settings.get("infiniteTickets") then
+                local dataManager = utils.singleton("snow.data.DataManager")
+                local itemBox = dataManager:get_field("_PlItemBox")
+                itemBox:call("tryAddGameItem(snow.data.ContentsIdSystem.ItemId, System.Int32)", 68157564, 1)
+            end
+            return retval
+        end
+    )
 
--- bypass check for eating
-sdk.hook(
-    sdk.find_type_definition("snow.facility.MealOrderData"):get_method("canOrder"),
-    nil,
-    function(retval)
-        if not module.enabled("autoEat") or not isOrdering then return retval end
+    -- auto eat inside quest
+    sdk.hook(utils.definition("snow.QuestManager", "questStart"),
+        function(args)
+            if not module.enabled("autoEat") then return end
 
-        local bool = sdk.create_instance("System.Boolean"):add_ref()
-        bool:set_field("mValue", true)
-        return sdk.to_ptr(bool)
-    end
-)
+            utils.addTimer(3, function ()
+                needStats = true
+                autoDango()
+            end)
+        end,
+        utils.retval
+    )
 
--- auto eat on cart
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("notifyDeath"),
-    function(args)
-        if not module.enabled("autoEat") then return end
-        utils.addTimer(5, function ()
-            carted = true
-            autoDango()
-        end)
-    end
-)
+    -- bypass check for eating
+    sdk.hook(utils.definition("snow.facility.MealOrderData", "canOrder"),
+        utils.original,
+        function(retval)
+            if not module.enabled("autoEat") or not isOrdering then return retval end
 
--- clear carted state
-sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
-    function (args)
-        carted = false
-    end
-)
+            local bool = sdk.create_instance("System.Boolean"):add_ref()
+            bool:set_field("mValue", true)
+            return sdk.to_ptr(bool)
+        end
+    )
+
+    -- auto eat on cart
+    sdk.hook(utils.definition("snow.QuestManager", "notifyDeath"),
+        function(args)
+            if not module.enabled("autoEat") then return end
+            utils.addTimer(5, function ()
+                carted = true
+                autoDango()
+            end)
+        end,
+        utils.retval
+    )
+
+    -- clear carted state
+    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+        function (args)
+            carted = false
+        end,
+        utils.retval
+    )
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function module.init()
+    utils.setReference("snow.data.DataShortcut", function ()
+        return sdk.create_instance("snow.data.DataShortcut", true):add_ref()
+    end)
+end
 
 -- Draw module
 local function drawWeaponSliders(name, kitchen, property, hasCarted)
@@ -378,7 +381,7 @@ function module.drawInnerUi()
     settings.call("notification", imgui.checkbox, data.lang.notification)
     settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
 
-    local kitchen = getMealFunction()
+    local kitchen = getMeal()
     if not kitchen then
         imgui.text("\n" .. data.lang.loading)
         return

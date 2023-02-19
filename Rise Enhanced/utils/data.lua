@@ -4,8 +4,8 @@ local data = {
     file = "config",
     folder = "Rise Enhanced",
     cacheFile = "cache",
-    version = "4.0.1",
-    beta = false,
+    version = "4.0.2",
+    beta = true,
     enabled = true,
     lang = require("Rise Enhanced.languages.en_US")
 }
@@ -40,6 +40,8 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
     module.cache = cache
 
     function module.init() end
+
+    function module.hook() end
 
     function module.getName()
         return data.lang[name].name

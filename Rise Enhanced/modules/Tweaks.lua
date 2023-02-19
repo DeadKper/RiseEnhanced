@@ -26,98 +26,105 @@ local lastSave = 0
 -- Main code
 
 -- Hooks
--- set saved clock
-sdk.hook(sdk.find_type_definition("snow.SnowSaveService"):get_method("saveCharaData"),
-    function(args)
-        lastSave = os.clock()
-    end
-)
+---@diagnostic disable-next-line: duplicate-set-field
+function module.hook()
+    -- set saved clock
+    sdk.hook(utils.definition("snow.SnowSaveService", "saveCharaData"),
+        function(args)
+            lastSave = os.clock()
+        end,
+        utils.retval
+    )
 
--- set saved clock on village return
-sdk.hook(sdk.find_type_definition("snow.gui.GuiManager"):get_method("notifyReturnInVillage"),
-    function (args)
-        lastSave = os.clock()
-    end
-)
+    -- set saved clock on village return
+    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+        function (args)
+            lastSave = os.clock()
+        end,
+        utils.retval
+    )
 
--- skip autosave
-sdk.hook(sdk.find_type_definition("snow.SnowSaveService"):get_method("requestAutoSaveAll"),
-    function(args)
-        if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
-            return sdk.PreHookResult.SKIP_ORIGINAL
-        end
-    end
-)
-
--- remove hit stop
-sdk.hook(sdk.find_type_definition("snow.player.PlayerQuestBase"):get_method("updateHitStop"),
-    function(args)
-        if module.enabled("noHitStop") then
-            sdk.to_managed_object(args[2]):call("resetHitStop")
-        end
-    end
-)
-
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"),
-    nil,
-    function (retval)
-        if not module.enabled("useMultipliers") then return retval end
-        local multipliers = settings.get("multipliers")
-        local questManager = sdk.get_managed_singleton("snow.QuestManager")
-        local useSmart = settings.get("useSmartMultipliers")
-
-        if useSmart then
-            local ammount
-            local dataManager = sdk.get_managed_singleton("snow.data.DataManager")
-            local progressManager = sdk.get_managed_singleton("snow.progress.ProgressManager")
-            local threshold = settings.get({"smartMultipliers", 1})
-            if threshold == 0 or threshold > dataManager:call("getHandMoney"):get_field("_Value") then
-                local questLife = questManager:call("getQuestLife")
-                ammount = questManager:call("getRemMoney") * multipliers[1]
-                questManager:set_field("_StartRemMoney", ammount)
-                questManager:set_field("_PenaltyMoney", ammount / questLife)
-                questManager:set_field("_RemMoney", ammount)
+    -- skip autosave
+    sdk.hook(utils.definition("snow.SnowSaveService", "requestAutoSaveAll"),
+        function(args)
+            if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
+                return sdk.PreHookResult.SKIP_ORIGINAL
             end
-            threshold = settings.get({"smartMultipliers", 2})
-            if threshold == 0 or threshold > dataManager:call("getVillagePoint"):call("get_Point") then
-                ammount = questManager:call("getRemVillagePoint") * multipliers[2]
-                questManager:set_field("_RemVillagePoint", ammount)
+        end,
+        utils.retval
+    )
+
+    -- remove hit stop
+    sdk.hook(utils.definition("snow.player.PlayerQuestBase", "updateHitStop"),
+        function(args)
+            if module.enabled("noHitStop") then
+                sdk.to_managed_object(args[2]):call("resetHitStop")
             end
-            threshold = settings.get({"smartMultipliers", 3})
-            if threshold == 0 or threshold > progressManager:call("get_HunterRank") then
-                ammount = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
-                questManager:set_field("_RemRankPoint", ammount)
-            end
-            threshold = settings.get({"smartMultipliers", 4})
-            if threshold == 0 or threshold > progressManager:call("get_MasterRank") then
-                ammount = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
-                questManager:set_field("_RemMasterRankPoint", ammount)
-            end
-            threshold = settings.get({"smartMultipliers", 5})
-            if threshold == 0 or threshold > progressManager:call("get_MysteryResearchLevel") then
-                ammount =
+        end,
+        utils.retval
+    )
+
+    sdk.hook(utils.definition("snow.QuestManager", "onQuestEnd"),
+        utils.original,
+        function (retval)
+            if not module.enabled("useMultipliers") then return retval end
+            local multipliers = settings.get("multipliers")
+            local questManager = utils.singleton("snow.QuestManager")
+            local useSmart = settings.get("useSmartMultipliers")
+
+            if useSmart then
+                local ammount
+                local dataManager = utils.singleton("snow.data.DataManager")
+                local progressManager = utils.singleton("snow.progress.ProgressManager")
+                local threshold = settings.get({"smartMultipliers", 1})
+                if threshold == 0 or threshold > dataManager:call("getHandMoney"):get_field("_Value") then
+                    local questLife = questManager:call("getQuestLife")
+                    ammount = questManager:call("getRemMoney") * multipliers[1]
+                    questManager:set_field("_StartRemMoney", ammount)
+                    questManager:set_field("_PenaltyMoney", ammount / questLife)
+                    questManager:set_field("_RemMoney", ammount)
+                end
+                threshold = settings.get({"smartMultipliers", 2})
+                if threshold == 0 or threshold > dataManager:call("getVillagePoint"):call("get_Point") then
+                    ammount = questManager:call("getRemVillagePoint") * multipliers[2]
+                    questManager:set_field("_RemVillagePoint", ammount)
+                end
+                threshold = settings.get({"smartMultipliers", 3})
+                if threshold == 0 or threshold > progressManager:call("get_HunterRank") then
+                    ammount = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
+                    questManager:set_field("_RemRankPoint", ammount)
+                end
+                threshold = settings.get({"smartMultipliers", 4})
+                if threshold == 0 or threshold > progressManager:call("get_MasterRank") then
+                    ammount = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
+                    questManager:set_field("_RemMasterRankPoint", ammount)
+                end
+                threshold = settings.get({"smartMultipliers", 5})
+                if threshold == 0 or threshold > progressManager:call("get_MysteryResearchLevel") then
+                    ammount =
+                            questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
+                    questManager:set_field("_RemMysteryResearchPoint", ammount / 1.1)
+                end
+            else
+                local life = questManager:call("getQuestLife")
+                local money = questManager:call("getRemMoney") * multipliers[1]
+                local points = questManager:call("getRemVillagePoint") * multipliers[2]
+                local hr = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
+                local mr = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
+                local anomaly =
                         questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
-                questManager:set_field("_RemMysteryResearchPoint", ammount / 1.1)
+                questManager:set_field("_StartRemMoney", money)
+                questManager:set_field("_PenaltyMoney", money / life)
+                questManager:set_field("_RemMoney", money)
+                questManager:set_field("_RemVillagePoint", points)
+                questManager:set_field("_RemRankPoint", hr)
+                questManager:set_field("_RemMasterRankPoint", mr)
+                questManager:set_field("_RemMysteryResearchPoint", anomaly / 1.1)
             end
-        else
-            local life = questManager:call("getQuestLife")
-            local money = questManager:call("getRemMoney") * multipliers[1]
-            local points = questManager:call("getRemVillagePoint") * multipliers[2]
-            local hr = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
-            local mr = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
-            local anomaly =
-                    questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
-            questManager:set_field("_StartRemMoney", money)
-            questManager:set_field("_PenaltyMoney", money / life)
-            questManager:set_field("_RemMoney", money)
-            questManager:set_field("_RemVillagePoint", points)
-            questManager:set_field("_RemRankPoint", hr)
-            questManager:set_field("_RemMasterRankPoint", mr)
-            questManager:set_field("_RemMysteryResearchPoint", anomaly / 1.1)
+            return retval
         end
-        return retval
-    end
-)
+    )
+end
 
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field

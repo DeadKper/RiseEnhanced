@@ -17,6 +17,7 @@ return {
     secondsText = "%s seconds",
     minuteText = "%s minute",
     minutesText = "%s minutes",
+    rehook = "Reinitialize mod hooks in case it's not working",
     debug = {
         test = "Test",
         button = "[ --- DEBUG INFO --- ]",

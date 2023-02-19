@@ -35,7 +35,7 @@ local spawned = {}
 -- Main code
 
 local function getPlayerLocation()
-    local player = utils.getPlayerObject()
+    local player = utils.singleton("snow.player.PlayerManager", "findMasterPlayer", "get_GameObject")
     if not player then return end
     local location = player:call("get_Transform"):call("get_Position")
     if not location then return end
@@ -55,7 +55,7 @@ local function spawn(type)
     if not utils.getQuestStatusName() == "quest" then return end
 
     local location = getPlayerLocation()
-    local manager = sdk.get_managed_singleton("snow.envCreature.EnvironmentCreatureManager")
+    local manager = utils.singleton("snow.envCreature.EnvironmentCreatureManager")
     if manager == nil then return end
 
     -- create bird
@@ -84,34 +84,39 @@ local function spawnBirds()
     end
 end
 
--- Hooks
+---@diagnostic disable-next-line: duplicate-set-field
+    function module.hook()
+        -- spawn birds on quest start
+    sdk.hook(utils.definition("snow.QuestManager", "questStart"),
+        function(args)
+            if not module.enabled() then return end
 
--- spawn birds on quest start
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("questStart"),
-    function(args)
-        if not module.enabled() then return end
+            utils.addTimer(3, spawnBirds)
+        end,
+        utils.retval
+    )
 
-        utils.addTimer(3, spawnBirds)
-    end
-)
+    -- remove birds on quest end
+    sdk.hook(utils.definition("snow.QuestManager", "onQuestEnd"),
+        destroyBirds,
+        utils.retval
+    )
 
--- remove birds on quest end
-sdk.hook(sdk.find_type_definition("snow.QuestManager"):get_method("onQuestEnd"), destroyBirds)
+    -- fill stamina when picking up spiribird
+    sdk.hook(utils.definition("snow.player.PlayerQuestBase", "calcLvBuffStamina"),
+        function (args)
+            stamina.player = sdk.to_managed_object(args[2])
+            stamina.max = sdk.to_int64(args[3]) * 30.0
+        end,
+        function (retval)
+            stamina.player:call("calcStaminaMax", stamina.max, false)
+            return retval
+        end
+    )
 
--- fill stamina when picking up spiribird
-sdk.hook(sdk.find_type_definition("snow.player.PlayerQuestBase"):get_method("calcLvBuffStamina"),
-    function (args)
-        stamina.player = sdk.to_managed_object(args[2])
-        stamina.max = sdk.to_int64(args[3]) * 30.0
-    end,
-    function (retval)
-        stamina.player:call("calcStaminaMax", stamina.max, false)
-        return retval
-    end
-)
-
--- remove spiribirds on script reset
-re.on_script_reset(destroyBirds)
+    -- remove spiribirds on script reset
+    re.on_script_reset(destroyBirds)
+end
 
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
