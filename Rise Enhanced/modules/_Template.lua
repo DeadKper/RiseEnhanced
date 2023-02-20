@@ -11,9 +11,11 @@ local module, settings, cache = data.getDefaultModule(
 
 -- Main code
 
--- Hooks
+---@diagnostic disable-next-line: duplicate-set-field
+function module.hook()
 
--- Draw module
+end
+
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
 
