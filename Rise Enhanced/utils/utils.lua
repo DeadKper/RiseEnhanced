@@ -89,6 +89,15 @@ function utils.contains(table, value)
     return false
 end
 
+function utils.filter(original, keys)
+    local results = {}
+    for key, value in pairs(original) do
+        if utils.contains(keys, key) then
+            table.insert(results, value)
+        end
+    end
+    return results
+end
 
 local references = {
     singletons = {},
@@ -720,9 +729,9 @@ toStringFunctions = {
     ["userdata"] = function ()
         return "*userdata"
     end,
-    ["table"] = function (variable, indentation)
+    ["table"] = function (variable, indentation, _tableDepth)
         local tableStr = tostring(variable)
-        if printedTables[tableStr] then
+        if printedTables[tableStr] or _tableDepth == 0 then
             return tableStr
         end
         printedTables[tableStr] = true
@@ -732,7 +741,7 @@ toStringFunctions = {
         indentation = indentation .. "\t"
         for k, v in pairs(variable) do
             text = text .. "\n" .. indentation .. k .. " = "
-                .. toStringFunctions[type(v)](v, indentation) .. ","
+                .. toStringFunctions[type(v)](v, indentation, _tableDepth - 1) .. ","
         end
 
         return text .. "\n" .. originalIndentation .. "}"
@@ -740,14 +749,18 @@ toStringFunctions = {
 }
 
 -- Makes a string out of the given value to be printed, functions and things like that will have an * at the start, _name is optional to add as the name of the printed variable
-function utils.toString(variable, _name)
+function utils.toString(variable, _name, _tableDepth)
     printedTables = {}
-    return (_name and _name .. " = " or "") .. toStringFunctions[type(variable)](variable)
+    if _tableDepth == nil then
+        _tableDepth = -1
+    end
+    return (_name and _name .. " = " or "")
+            .. toStringFunctions[type(variable)](variable, nil, _tableDepth)
 end
 
 -- Prints directly an imgui.text using utils.toString
-function utils.text(variable, name)
-    imgui.text(utils.toString(variable, name))
+function utils.text(variable, _name, _tableDepth)
+    imgui.text(utils.toString(variable, _name, _tableDepth))
 end
 
 -- Print Debug Info

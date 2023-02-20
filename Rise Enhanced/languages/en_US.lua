@@ -163,5 +163,21 @@ return {
         defenseButton = "   « Defense »   ",
         rainbowButton = "                   « Prism »                     ",
         goldenButton = "                  « Golden »                    ",
-    }
+    },
+    Weakness = {
+        name = "Weakness Diplay",
+        damageTypeShort = {
+            "CUT",
+            "BLN",
+            "SHL",
+            "FRE",
+            "WTR",
+            "ICE",
+            "THD",
+            "DRG",
+        },
+        onItembox = "Only show display when itembox is open",
+        highlightExploit = "Highlight weakness/elemental exploit zones",
+        highlightHighest = "Highlight highest value zones",
+    },
 }

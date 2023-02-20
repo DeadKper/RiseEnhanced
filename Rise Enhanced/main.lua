@@ -36,6 +36,7 @@ modules[#modules+1] = require("Rise Enhanced.modules.Tweaks")
 modules[#modules+1] = require("Rise Enhanced.modules.Item")
 modules[#modules+1] = require("Rise Enhanced.modules.Dango")
 modules[#modules+1] = require("Rise Enhanced.modules.Sipiribirds")
+modules[#modules+1] = require("Rise Enhanced.modules.Weakness")
 
 -- Init variables
 local initiated = false
