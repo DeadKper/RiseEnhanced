@@ -109,7 +109,7 @@ local function getItemSetName(id)
     return setName
 end
 
-local function restock()
+local function restock() -- find a way to disable in rampage
     if not module.enabled() then return end
     local dataManager = utils.singleton("snow.data.DataManager")
     if not dataManager then return end
