@@ -10,6 +10,18 @@ local module, settings, cache = data.getDefaultModule(
     data.folder, {
         enabled = true,
         lang = "en_US",
+        window = {
+            resetOnStart = false,
+            defaultOpen = false,
+            position = { 370, 50 },
+            size = { 500, 570 },
+        },
+        debugWindow = {
+            resetOnStart = false,
+            defaultOpen = false,
+            position = { 880, 50 },
+            size = { 460, 670 },
+        },
     }
 )
 
@@ -29,27 +41,25 @@ modules[#modules+1] = require("Rise Enhanced.modules.Sipiribirds")
 local initiated = false
 local mod
 
+local isMenuOpen = false
+local autoOpen = settings.get({"window", "defaultOpen"})
+local isDebugOpen = false
+local debugAutoOpen = settings.get({"debugWindow", "defaultOpen"})
+
 local isWindowSet = false
-local windowLangSet = {}
+local isDebugWindowSet = false
+
 local window = {
-    position = { 370, 50 },
-    debugPosition = { 880, 50 },
     pivot = { 0, 0 },
-    size = { 500, 570 },
-    debugSize = { 460, 670 },
     condition =  8,
-    showCloseButton = true,
+    closeButton = true,
     flags = 0x10120,
 }
 
-local isDebugOpen = false
-local isMenuOpen = false
 
 -- Set initial language
 local function setLanguage(change, value)
     if not change then return end
-    isWindowSet = windowLangSet[value]
-    if isWindowSet == nil then windowLangSet[value] = true end
     settings.set("lang", value)
     utils.setLanguage(value)
     data.lang = utils.getLanguage()
@@ -57,20 +67,58 @@ end
 
 setLanguage(true, settings.get("lang"))
 
+local function windowConfig(property)
+    settings.call({property, "defaultOpen"}, imgui.checkbox, data.lang.Config.openState)
+    settings.call({property, "resetOnStart"}, imgui.checkbox, data.lang.Config.resetOnStart)
+    local displaySize = imgui.get_display_size()
+    settings.slider(
+        {property, "position", 1},
+        data.lang.Config.xPos,
+        0,
+        displaySize.x
+    )
+    settings.slider(
+        {property, "position", 2},
+        data.lang.Config.yPos,
+        0,
+        displaySize.y
+    )
+    settings.slider(
+        {property, "size", 1},
+        data.lang.Config.width,
+        0,
+        displaySize.x
+    )
+    settings.slider(
+        {property, "size", 2},
+        data.lang.Config.height,
+        0,
+        displaySize.y
+    )
+    module.resetButton(property, data.lang.Config.resetWindowConfig)
+end
+
 -- Draw functions
 local function debugWindow()
-    utils.imguiButton(data.lang.Debug.button, function ()
-        isDebugOpen = not isDebugOpen
-    end)
+    if not isDebugOpen then
+        if not isDebugWindowSet and debugAutoOpen then
+            isDebugOpen = true
+        end
+        return
+    end
 
-    if not isDebugOpen then return end
-
-    imgui.set_next_window_pos(window.debugPosition, window.condition, window.pivot)
-    imgui.set_next_window_size(window.debugSize, window.condition)
+    if not isDebugWindowSet then
+        isDebugWindowSet = true
+        local debug = settings.get("debugWindow")
+        if os.clock() <= 180 or debug.resetOnStart then
+            imgui.set_next_window_pos(debug.position, window.condition, window.pivot)
+            imgui.set_next_window_size(debug.size, window.condition)
+        end
+    end
 
     if not imgui.begin_window(
         data.lang.Debug.button,
-        window.showCloseButton,
+        window.closeButton,
         window.flags
     ) then
         isDebugOpen = false
@@ -90,9 +138,50 @@ local function debugWindow()
     imgui.end_window()
 end
 
-local function drawTree(text)
-    if imgui.tree_node(text) then
+local function drawWindow()
+    utils.imguiButton("[ " .. data.lang.modName .. " ]", function ()
+        isMenuOpen = not isMenuOpen
+    end)
+
+    if not isMenuOpen then
+        if not isWindowSet and autoOpen then
+            isMenuOpen = true
+        end
+        return
+    end
+
+    if not isWindowSet then
+        isWindowSet = true
+        local _window = settings.get("window")
+        if os.clock() <= 180 or _window.resetOnStart then
+            imgui.set_next_window_pos(_window.position, window.condition, window.pivot)
+            imgui.set_next_window_size(_window.size, window.condition)
+        end
+    end
+
+    if not imgui.begin_window(
+        data.lang.modName .. " v" .. data.version .. (data.beta and "-BETA" or ""),
+        window.closeButton,
+        window.flags
+    ) then
+        isMenuOpen = false
+    end
+
+    if imgui.tree_node(data.lang.Config.name) then
         _, data.enabled = settings.call("enabled", imgui.checkbox, data.lang.enabled)
+        if imgui.tree_node(data.lang.Config.windowConfig) then
+            windowConfig("window")
+            imgui.tree_pop()
+        end
+
+        if data.beta and imgui.tree_node(data.lang.Config.debugConfig) then
+            windowConfig("debugWindow")
+            if imgui.button(data.lang.Debug.button) then
+                isDebugOpen = not isDebugOpen
+            end
+            imgui.tree_pop()
+        end
+
         setLanguage(settings.combo("lang", data.lang.language, utils.getLanguageTable()))
         if imgui.button(data.lang.rehook) then
             for i = 1, #modules do -- start on 1 to ignore template module
@@ -100,35 +189,8 @@ local function drawTree(text)
             end
         end
 
-        if data.beta then
-            debugWindow()
-        end
         imgui.tree_pop()
     end
-end
-
-local function drawWindow()
-    utils.imguiButton("[ " .. data.lang.modName .. " ]", function ()
-        isMenuOpen = not isMenuOpen
-    end)
-
-    if not isMenuOpen then return end
-
-    if not isWindowSet then
-        isWindowSet = true
-        imgui.set_next_window_pos(window.position, window.condition, window.pivot)
-        imgui.set_next_window_size(window.size, window.condition)
-    end
-
-    if not imgui.begin_window(
-        data.lang.modName .. " v" .. data.version .. (data.beta and "-BETA" or ""),
-        window.showCloseButton,
-        window.flags
-    ) then
-        isMenuOpen = false
-    end
-
-    drawTree(data.lang.Config.name)
 
     for i = 1, #modules do
         mod = modules[i]
@@ -161,11 +223,7 @@ end
 module.init()
 re.on_draw_ui(
     function ()
-        if initiated then
-            drawWindow()
-        else
-            drawTree(module.getName())
-            module.init()
-        end
+        drawWindow()
+        debugWindow()
     end
 )

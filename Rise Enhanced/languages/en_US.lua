@@ -49,8 +49,11 @@ return {
         width = "Width",
         height = "Height",
         openState = "Show window by default",
-        windowConfig = "Mod window configuration",
+        resetOnStart = "Reset window position and size on script reset",
+        windowConfig = "Window configuration",
         debugConfig = "Debug window configuration",
+        resetWindow = "Reset window position and size",
+        resetWindowConfig = "Reset window configuration",
     },
     Tweaks = {
         name = "Tweaks",
