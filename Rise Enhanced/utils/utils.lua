@@ -795,8 +795,8 @@ function utils.init(cacheFolder, _cacheFile)
     -- Init Cache
     local cacheHandler = utils.getSettingsHandler({}, cacheFolder, _cacheFile)
 
-    -- reset cache if on the first 5 mins of the game opening
-    if os.clock() <= 300 and next(cacheHandler.data) ~= nil then
+    -- reset cache if on the first 4 mins of the game opening
+    if os.clock() <= 180 and next(cacheHandler.data) ~= nil then
         cacheHandler.reset()
     end
     utils.cache = cacheHandler
