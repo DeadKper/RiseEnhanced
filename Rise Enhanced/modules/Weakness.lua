@@ -7,6 +7,7 @@ local module, settings = data.getDefaultModule(
     "Weakness", {
         enabled = true,
         onItembox = true,
+        onCamp = true,
         useElembane = false,
         highlightExploitPhys = true,
         highlightExploitElem = false,
@@ -138,13 +139,16 @@ function module.hook()
         if not module.enabled() or questMonsterList == nil then return end
         local questManager = utils.singleton("snow.QuestManager")
         local questData = questManager:get_field("_ActiveQuestData")
-        if questManager:get_field("_QuestStatus") ~= 0 or questData == nil then
+        local questStatus = questManager:get_field("_QuestStatus")
+        if questData == nil or (questStatus ~= 0 and questStatus ~= 2) then
             questMonsterList = nil
             return
         end
 
-        if settings.get("onItembox")
-                and utils.singleton("snow.gui.fsm.itembox.GuiItemBoxFsmManager") == nil then
+        if not (settings.get("onItembox")
+                and utils.singleton("snow.gui.fsm.itembox.GuiItemBoxFsmManager"))
+            and not (settings.get("onCamp")
+                and utils.singleton("snow.gui.fsm.camp.GuiCampFsmManager")) then
             return
         end
 
@@ -239,9 +243,7 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
     local questManager = utils.singleton("snow.QuestManager")
-    if questManager == nil
-            or questManager:get_field("_QuestStatus") ~= 0
-            or questManager:get_field("_ActiveQuestData") == nil then
+    if questManager == nil or questManager:get_field("_ActiveQuestData") == nil then
         return
     end
     makeHZVTable()
@@ -252,6 +254,7 @@ end
 function module.drawInnerUi()
     module.enabledCheck()
     settings.call("onItembox", imgui.checkbox, data.lang.Weakness.onItembox)
+    settings.call("onCamp", imgui.checkbox, data.lang.Weakness.onCamp)
     settings.call("useElembane", imgui.checkbox, data.lang.Weakness.useElembane)
     settings.call("highlightExploitPhys", imgui.checkbox, data.lang.Weakness.highlightExploitPhys)
     settings.call("highlightExploitElem", imgui.checkbox, data.lang.Weakness.highlightExploitElem)

@@ -177,6 +177,7 @@ return {
             "DRG",
         },
         onItembox = "Only show display when itembox is open",
+        onCamp = "Show display inside quest camp",
         useElembane = "Use elembane rampage decoration for zone highlight",
         highlightExploitPhys = "Highlight weakness exploit zones",
         highlightExploitElem = "Highlight elemental exploit zones",
