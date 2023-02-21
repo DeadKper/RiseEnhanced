@@ -21,6 +21,9 @@ Current modules:
 ## Spirit Birds
 - Spawn prism or custom ammount (quest start)
 
+## Weakness Display
+- Show monsters hit zone values on a floating window for current quest
+
 ## Credits
 Huge thanks to all original mod creators which I based my work on
 
@@ -29,7 +32,7 @@ Huge thanks to all original mod creators which I based my work on
 - Vaeux for "Autosave Less Often" (<https://www.nexusmods.com/monsterhunterrise/mods/2095>)
 - dracahn for "AutoItems" (<https://www.nexusmods.com/monsterhunterrise/mods/1589>)
 - SamuelLing for "Auto Restock" (<https://www.nexusmods.com/monsterhunterrise/mods/1576>)
-- DSC173 for "AutoDango (REFramework)" (<https://www.nexusmods.com/monsterhunterrise/mods/783>)
+- DSC173 for "AutoDango (REFramework)" (<https://www.nexusmods.com/monsterhunterrise/mods/783>) and for "Monster Weakness Display (MWD)" (<https://www.nexusmods.com/monsterhunterrise/mods/1215>)
 - raffRun for "Seconds please - Eat dango again" (<https://www.nexusmods.com/monsterhunterrise/mods/800>) and "Raff's Script Modding Starter Pack and Utilities" (<https://www.nexusmods.com/monsterhunterrise/mods/376>)
 - Bimmr for "SpiritBirds" (<https://www.nexusmods.com/monsterhunterrise/mods/886>)
 - Stracker for "Convenient Spiribirds" (<https://www.nexusmods.com/monsterhunterrise/mods/807>)
