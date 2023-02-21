@@ -63,6 +63,8 @@ local consumables = {
             { { "_StaminaUpBuffSecondTimer", "_StaminaUpBuffSecond", true } }),
 }
 
+local isRampage = false
+
 local freeMealSkill = { [0] = 0, 10, 25, 45 }
 local itemProlongerSkill = { [0] = 1, 1.1, 1.25, 1.5 }
 
@@ -335,6 +337,7 @@ function module.hook()
             if player == nil then
                 player, playerIndex, playerRef, _ = utils.getPlayerData()
             end
+            isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
             if not module.enabled("autoRestock") then return end
             utils.addTimer(3, function ()
                 restock()
@@ -367,6 +370,7 @@ function module.hook()
         function (args)
             utils.addTimer(5, function ()
                 if not settings.get("autoRestock")
+                        or isRampage
                         or not settings.get("largeMonsterRestock")
                         or not inQuest()
                         or not isLargeMonster(sdk.to_managed_object(args[2])) then
@@ -400,6 +404,8 @@ function module.init()
         player, playerIndex, playerRef, _ = utils.getPlayerData()
     end
     -- set flags
+    isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
+
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
