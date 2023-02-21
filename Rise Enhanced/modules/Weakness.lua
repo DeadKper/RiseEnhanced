@@ -101,9 +101,11 @@ local function updateMonsterList()
     local targets = questManager:get_field("_QuestTargetEmTypeList")
     local targetCount = targets:call("get_Count") - 1
     if targetCount < 0 then
-        targets = questManager:get_field("_ActiveQuestData")
-                :call("getTargetEmTypeList(System.Boolean)", true)
-        targetCount = targets:call("get_Count") - 1
+        local questData = questManager:get_field("_ActiveQuestData")
+        if questData ~= nil then
+            targets = questData:call("getTargetEmTypeList(System.Boolean)", true)
+            targetCount = targets:call("get_Count") - 1
+        end
     end
     if targetCount < 0 then
         questMonsterList = nil
