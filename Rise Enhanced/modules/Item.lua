@@ -83,6 +83,30 @@ local pouch = {}
 
 -- Main code
 
+local function getStaminaBuffCage()
+    local stamina = 0;
+    local equipDataManager = utils.singleton("snow.data.EquipDataManager");
+    local contentsIdDataManager = utils.singleton("snow.data.ContentsIdDataManager");
+    local equipList = equipDataManager:get_field("<EquipDataList>k__BackingField"):get_elements();
+    local buffCage = contentsIdDataManager:get_field("_NormalData");
+    local buffCageList = buffCage:get_field("_BaseUserData"):get_field("_Param"):get_elements()
+    local getLvBuffCageData = equipList[8]:call("getLvBuffCageData");
+    local id = getLvBuffCageData:call("get_Id");
+    local name = getLvBuffCageData:call("get_Name");
+
+    for k, v in pairs(buffCageList) do
+        local buffData = buffCageList[k]
+        local buffDataId = buffData:get_field("_Id")
+        local buffLimit = buffData:get_field("_StatusBuffLimit"):get_elements()
+
+        if id == buffDataId then
+            stamina = buffLimit[2]:get_field("mValue")
+        end
+    end
+
+    return (stamina + 150) * 30;
+end
+
 local function getItemSet(weapon)
     local loadout = settings.get("weaponSet")[weapon]
 
@@ -199,7 +223,7 @@ local function useItem(item)
     end
 
     local free = false
-    if not settings.get("infiniteItems")then
+    if not settings.get("infiniteItems") then
         free = freeMeal >= math.random(100)
         if pouch[item.id] == nil or pouch[item.id] == 0 then
             return false, false
@@ -213,11 +237,13 @@ local function useItem(item)
 
     -- handle stamina before buff in case dash juice doesn't increase stamina
     if utils.contains(item.types, "stamina") then
-        local staminaMax = playerRef:get_field("_staminaMax")
+        local staminaCage = getStaminaBuffCage()
+        if playerRef:get_field("_staminaMax") < staminaCage then
+            playerRef:set_field("_staminaMax", staminaCage)
+        end
 
-        if playerRef:get_field("_stamina") < staminaMax then
-            applied = true
-            playerRef:set_field("_stamina", staminaMax)
+        if playerRef:get_field("_stamina") < staminaCage then
+            playerRef:set_field("_stamina", staminaCage)
         end
     end
 
