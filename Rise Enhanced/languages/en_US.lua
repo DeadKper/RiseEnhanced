@@ -177,7 +177,10 @@ return {
             "DRG",
         },
         onItembox = "Only show display when itembox is open",
-        highlightExploit = "Highlight weakness/elemental exploit zones",
-        highlightHighest = "Highlight highest value zones",
+        useElembane = "Use elembane rampage decoration for zone highlight",
+        highlightExploitPhys = "Highlight weakness exploit zones",
+        highlightExploitElem = "Highlight elemental exploit zones",
+        highlightHighestPhys = "Highlight highest physical zones",
+        highlightHighestElem = "Highlight highest elemental zones",
     },
 }

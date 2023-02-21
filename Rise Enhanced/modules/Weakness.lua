@@ -7,8 +7,11 @@ local module, settings = data.getDefaultModule(
     "Weakness", {
         enabled = true,
         onItembox = true,
-        highlightExploit = false,
-        highlightHighest = false,
+        useElembane = false,
+        highlightExploitPhys = true,
+        highlightExploitElem = false,
+        highlightHighestPhys = false,
+        highlightHighestElem = true,
     }
 )
 
@@ -170,21 +173,34 @@ function module.hook()
                             physical = 1000,
                             elemental = 1000,
                         }
-                        local exploit = settings.get("highlightExploit")
 
-                        if exploit then
+                        local physExploit = settings.get("highlightExploitPhys")
+                        local elemExploit = settings.get("highlightExploitElem")
+
+                        if physExploit then
                             highligth.physical = weaknessSheet.exploit.physical
-                            highligth.elemental = weaknessSheet.exploit.elemental
+                        end
+                        if elemExploit then
+                            if settings.get("useElembane") then
+                                highligth.elemental = weaknessSheet.exploit.elembane
+                            else
+                                highligth.elemental = weaknessSheet.exploit.elemental
+                            end
+
                         end
 
-                        if settings.get("highlightHighest") then
-                            if exploit then
-                                highligth.physical =
-                                        math.min(highest.physical, weaknessSheet.exploit.physical)
-                                highligth.elemental =
-                                        math.min(highest.elemental, weaknessSheet.exploit.elemental)
+                        if settings.get("highlightHighestPhys") then
+                            if physExploit then
+                                highligth.physical = math.min(highest.physical, highligth.physical)
                             else
                                 highligth.physical = highest.physical
+                            end
+                        end
+
+                        if settings.get("highlightHighestElem") then
+                            if elemExploit then
+                                highligth.elemental = math.min(highest.elemental, highligth.elemental)
+                            else
                                 highligth.elemental = highest.elemental
                             end
                         end
@@ -196,9 +212,11 @@ function module.hook()
                         for k = 1, #weaknessSheet.types do
                             imgui.table_next_column()
                             local zoneType = weaknessSheet.types[k]
-                            local highlightZone = highligth.elemental
+                            local highlightZone
                             if utils.contains(weaknessSheet.physical, zoneType) then
                                 highlightZone = highligth.physical
+                            else
+                                highlightZone = highligth.elemental
                             end
 
                             local zoneValue = part.hzv[zoneType]
@@ -234,8 +252,11 @@ end
 function module.drawInnerUi()
     module.enabledCheck()
     settings.call("onItembox", imgui.checkbox, data.lang.Weakness.onItembox)
-    settings.call("highlightExploit", imgui.checkbox, data.lang.Weakness.highlightExploit)
-    settings.call("highlightHighest", imgui.checkbox, data.lang.Weakness.highlightHighest)
+    settings.call("useElembane", imgui.checkbox, data.lang.Weakness.useElembane)
+    settings.call("highlightExploitPhys", imgui.checkbox, data.lang.Weakness.highlightExploitPhys)
+    settings.call("highlightExploitElem", imgui.checkbox, data.lang.Weakness.highlightExploitElem)
+    settings.call("highlightHighestPhys", imgui.checkbox, data.lang.Weakness.highlightHighestPhys)
+    settings.call("highlightHighestElem", imgui.checkbox, data.lang.Weakness.highlightHighestElem)
 end
 
 return module
