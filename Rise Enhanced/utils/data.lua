@@ -5,7 +5,7 @@ local data = {
     folder = "Rise Enhanced",
     cacheFile = "cache",
     version = "4.1.0",
-    beta = true,
+    beta = false,
     enabled = true,
     lang = require("Rise Enhanced.languages.en_US")
 }

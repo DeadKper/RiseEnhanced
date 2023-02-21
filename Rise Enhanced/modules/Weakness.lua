@@ -7,7 +7,7 @@ local module, settings = data.getDefaultModule(
     "Weakness", {
         enabled = true,
         onItembox = true,
-        highlightExploit = true,
+        highlightExploit = false,
         highlightHighest = false,
     }
 )
