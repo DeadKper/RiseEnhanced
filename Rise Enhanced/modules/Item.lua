@@ -92,7 +92,6 @@ local function getStaminaBuffCage()
     local buffCageList = buffCage:get_field("_BaseUserData"):get_field("_Param"):get_elements()
     local getLvBuffCageData = equipList[8]:call("getLvBuffCageData")
     local id = getLvBuffCageData:call("get_Id")
-    local name = getLvBuffCageData:call("get_Name")
 
     for k, v in pairs(buffCageList) do
         local buffData = buffCageList[k]
