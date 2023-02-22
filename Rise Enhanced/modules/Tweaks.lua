@@ -17,7 +17,7 @@ local module, settings = data.getDefaultModule(
             100,
             100,
             220,
-        }
+        },
     }
 )
 

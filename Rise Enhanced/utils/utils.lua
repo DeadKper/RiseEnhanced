@@ -278,9 +278,9 @@ end
 
 -- Return the player, playerIndex, playerList[playerIndex + 1], playerList
 function utils.getPlayerData()
-    local playerDataManager = utils.singleton("snow.player.PlayerManager")
-    local playerList = playerDataManager:get_field("<PlayerData>k__BackingField"):get_elements()
-    local player = playerDataManager:call("findMasterPlayer")
+    local playerManager = utils.singleton("snow.player.PlayerManager")
+    local playerList = playerManager:get_field("<PlayerData>k__BackingField"):get_elements()
+    local player = playerManager:call("findMasterPlayer")
     local playerIndex = player:call("getPlayerIndex")
     return player, playerIndex, playerList[playerIndex + 1], playerList
 end
@@ -304,7 +304,19 @@ function utils.isWeaponSheathed()
             :get_data(playerAction) == 0
 end
 
---
+-- Returns the level of the skill on the player or 0 is player manager is nil
+function utils.playerSkillLevel(skillId, _playerIndex)
+    local playerManager = utils.singleton("snow.player.PlayerManager")
+    if playerManager == nil then
+        return 0
+    end
+    if _playerIndex == nil then
+        _playerIndex = playerManager:call("findMasterPlayer"):call("getPlayerIndex")
+    end
+    return playerManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", _playerIndex, skillId)
+end
+
+-- Chat function
 function utils.chat(message, sound, ...)
     if type(message) ~= "string" then return end
     if  sound == nil or not sound or type(sound) ~= "number" then

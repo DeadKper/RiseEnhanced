@@ -189,10 +189,8 @@ local function restock()
 end
 
 local function updateItemAndSkillData()
-    itemProlonger = itemProlongerSkill[utils.singleton("snow.player.PlayerManager")
-            :call("getHasPlayerSkillLvInQuestAndTrainingArea", playerIndex, 88)]
-    freeMeal = freeMealSkill[utils.singleton("snow.player.PlayerManager")
-            :call("getHasPlayerSkillLvInQuestAndTrainingArea", playerIndex, 90)]
+    itemProlonger = itemProlongerSkill[utils.playerSkillLevel(88, playerIndex)]
+    freeMeal = freeMealSkill[utils.playerSkillLevel(90, playerIndex)]
 
     local dataManager = utils.singleton("snow.data.DataManager")
     local inventory = dataManager:get_field("_ItemPouch")
@@ -357,7 +355,7 @@ function module.hook()
         utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
     end)
 
-    -- event callback hook for restocking inside quest
+    -- event hook for restocking inside quest
     sdk.hook(utils.definition("snow.QuestManager", "questStart"),
         function(args)
             if player == nil then
