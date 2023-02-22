@@ -115,12 +115,15 @@ local function updateMonsterList()
         questMonsterList = nil
         return
     end
-    questMonsterList = {}
+    local monsterTable = {}
     for i = 0, targetCount do
         local target = targets:call("get_Item", i)
-        if not utils.contains(questMonsterList, target) and hitZoneValues[target] ~= nil then
-            table.insert(questMonsterList, target)
+        if not utils.contains(monsterTable, target) and hitZoneValues[target] ~= nil then
+            table.insert(monsterTable, target)
         end
+    end
+    if #monsterTable > 0 then
+        questMonsterList = monsterTable
     end
 end
 
