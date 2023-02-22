@@ -97,7 +97,7 @@ local function updateActiveQuest()
     data.quest.isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
 end
 
-local function clearQuest()
+local function clearActiveQuest()
     data.quest.active = false
     data.quest.isRampage = false
     data.quest.largeMonsterList = nil
@@ -105,9 +105,9 @@ end
 
 utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"}, updateActiveQuest)
 
-utils.hook({"snow.QuestManager", "questCancel"}, clearQuest)
+utils.hook({"snow.QuestManager", "questCancel"}, clearActiveQuest)
 
-utils.hook({"snow.QuestManager", "onQuestEnd"}, clearQuest)
+utils.hook({"snow.QuestManager", "onQuestEnd"}, clearActiveQuest)
 
 -- init data
 
