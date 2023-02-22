@@ -333,8 +333,8 @@ end
 
 local playerInput
 -- Returns the player
-function utils.getPlayer() -- buffer mod says "findMasterPlayer" might not always work
-    if not playerInput then
+function utils.getPlayer()
+    if not playerInput then -- buffer mod says "findMasterPlayer" might not always work
         local inputManager = sdk.get_managed_singleton("snow.StmInputManager")
         local inGameInputDevice = inputManager:get_field("_InGameInputDevice")
         playerInput = inGameInputDevice:get_field("_pl_input")
