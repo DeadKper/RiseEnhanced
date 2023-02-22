@@ -169,7 +169,7 @@ local function drawWindow()
     ) then
         isMenuOpen = false
     end
-    utils.text(utils.getData().loaded, "loaded")
+
     if imgui.tree_node(data.lang.Config.name) then
         _, data.enabled = settings.call("enabled", imgui.checkbox, data.lang.enabled)
         if imgui.tree_node(data.lang.Config.windowConfig) then
