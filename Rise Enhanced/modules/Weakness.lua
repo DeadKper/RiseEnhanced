@@ -252,7 +252,6 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
-    utils.text(questMonsterList[1], "monster list")
     module.enabledCheck()
     settings.call("onItembox", imgui.checkbox, data.lang.Weakness.onItembox)
     settings.call("onCamp", imgui.checkbox, data.lang.Weakness.onCamp)
