@@ -14,20 +14,19 @@ local module, settings = mod.getDefaultModule(
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
     utils.hook({"snow.data.bulletSlider.BottleSliderFunc", "consumeItem"},
-        function(args)
+        function()
             if module.enabled("unlimitedCoatings") then
                 return sdk.PreHookResult.SKIP_ORIGINAL
             end
-        end,
-        utils.retval
+        end
     )
 
     utils.hook({"snow.data.bulletSlider.BulletSliderFunc", "consumeItem"},
-        function(args)
+        function()
             if module.enabled("unlimitedAmmo") then
                 return sdk.PreHookResult.SKIP_ORIGINAL
             end
-        end, utils.retval
+        end
     )
 end
 

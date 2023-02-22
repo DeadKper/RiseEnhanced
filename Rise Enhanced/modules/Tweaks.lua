@@ -31,7 +31,7 @@ local lastSave = 0
 function module.hook()
     -- add wirebug
     utils.hook({"snow.player.PlayerManager", "update"},
-        function(args)
+        function()
             if not module.enabled() or not getWireBug then return end
             local player = utils.getPlayer()
             if not player then return end
@@ -39,34 +39,30 @@ function module.hook()
             player:set_field("<HunterWireWildNum>k__BackingField", 1)
             player:set_field("_HunterWireNumAddTime",
                     utils.getPlayerData():get_field("_WireBugPowerUpTimer") + 30*60)
-        end,
-        utils.retval
+        end
     )
 
     -- set saved clock
     utils.hook({"snow.SnowSaveService", "saveCharaData"},
-        function(args)
+        function()
             lastSave = os.clock()
-        end,
-        utils.retval
+        end
     )
 
     -- set saved clock on village return
     utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
-        function (args)
+        function ()
             lastSave = os.clock()
-        end,
-        utils.retval
+        end
     )
 
     -- skip autosave
     utils.hook({"snow.SnowSaveService", "requestAutoSaveAll"},
-        function(args)
+        function()
             if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
                 return sdk.PreHookResult.SKIP_ORIGINAL
             end
-        end,
-        utils.retval
+        end
     )
 
     -- remove hit stop
@@ -75,12 +71,11 @@ function module.hook()
             if module.enabled("noHitStop") then
                 sdk.to_managed_object(args[2]):call("resetHitStop")
             end
-        end,
-        utils.retval
+        end
     )
 
     utils.hook({"snow.QuestManager", "onQuestEnd"},
-        utils.original,
+        nil,
         function (retval)
             if not module.enabled("useMultipliers") then return retval end
             local multipliers = settings.get("multipliers")

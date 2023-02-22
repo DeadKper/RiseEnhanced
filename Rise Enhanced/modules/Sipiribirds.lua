@@ -25,11 +25,6 @@ local birdsTable = {
     gold = 31
 }
 
-local stamina = {
-    max = 0,
-    player = nil,
-}
-
 local spawned = {}
 
 -- Main code
@@ -88,28 +83,25 @@ end
 function module.hook()
         -- spawn birds on quest start
     utils.hook({"snow.QuestManager", "questStart"},
-        function(args)
+        function()
             if not module.enabled() then return end
 
             utils.addTimer(3, spawnBirds)
-        end,
-        utils.retval
+        end
     )
 
     -- remove birds on quest end
     utils.hook({"snow.QuestManager", "onQuestEnd"},
-        destroyBirds,
-        utils.retval
+        destroyBirds
     )
 
     -- fill stamina when picking up spiribird
     utils.hook({"snow.player.PlayerQuestBase", "calcLvBuffStamina"},
-        function (args)
-            stamina.player = sdk.to_managed_object(args[2])
-            stamina.max = sdk.to_int64(args[3]) * 30.0
-        end,
-        function (retval)
-            stamina.player:call("calcStaminaMax", stamina.max, false)
+        nil,
+        function (retval, args)
+            local player = sdk.to_managed_object(args[2])
+            local stamina = sdk.to_int64(args[3]) * 30.0
+            player:call("calcStaminaMax", stamina, false)
             return retval
         end
     )

@@ -17,7 +17,6 @@ local lang = {
     secondsText = "%s seconds",
     minuteText = "%s minute",
     minutesText = "%s minutes",
-    rehook = "Reinitialize mod hooks in case it's not working",
     skillText = "The skill %s has activated.",
     weaponNames = {
         [0] = "Great Sword",

@@ -177,7 +177,7 @@ function module.hook()
     -- Hooks
     -- set player hp and stamina when eating
     utils.hook({"snow.player.PlayerManager", "update"},
-        function(args)
+        function()
             if needStats and didEat then
                 needStats = false
                 didEat = false
@@ -190,8 +190,7 @@ function module.hook()
                 playerData:set_field("_staminaMax", newStamina)
                 playerData:set_field("_stamina", newStamina)
             end
-        end,
-        utils.retval
+        end
     )
 
     -- increase chance for dango skills on ticket when option is enabled
@@ -229,13 +228,12 @@ function module.hook()
                 newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
                 skewerLevel[i] = newSkewerLevel
             end
-        end,
-        utils.retval
+        end
     )
 
     -- inform dango order constructor of dango levels
     utils.hook({"snow.facility.kitchen.MealFunc", "updateList"},
-        function(args)
+        function()
             if not module.enabled() then return end
             local kitchen = getMeal()
             if not kitchen then return false end
@@ -268,7 +266,7 @@ function module.hook()
 
     -- return ticket and remove timer when respective option is enabled
     utils.hook({"snow.facility.kitchen.MealFunc", "order"},
-        utils.original,
+        nil,
         function(retval)
             if not module.enabled() then return retval end
 
@@ -289,20 +287,19 @@ function module.hook()
 
     -- auto eat inside quest
     utils.hook({"snow.QuestManager", "questStart"},
-        function(args)
+        function()
             if not module.enabled("autoEat") then return end
 
             utils.addTimer(3, function ()
                 needStats = true
                 autoDango()
             end)
-        end,
-        utils.retval
+        end
     )
 
     -- bypass check for eating
     utils.hook({"snow.facility.MealOrderData", "canOrder"},
-        utils.original,
+        nil,
         function(retval)
             if not module.enabled("autoEat") or not isOrdering then return retval end
 
@@ -314,22 +311,20 @@ function module.hook()
 
     -- auto eat on cart
     utils.hook({"snow.QuestManager", "notifyDeath"},
-        function(args)
+        function()
             if not module.enabled("autoEat") then return end
             utils.addTimer(5, function ()
                 carted = true
                 autoDango()
             end)
-        end,
-        utils.retval
+        end
     )
 
     -- clear carted state
     utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
-        function (args)
+        function ()
             carted = false
-        end,
-        utils.retval
+        end
     )
 end
 

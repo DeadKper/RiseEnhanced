@@ -76,7 +76,7 @@ local function updateMonsterList()
         end
     end
     if targetCount < 0 then
-        data.quest.monsterList = nil
+        data.quest.largeMonsterList = nil
         return
     end
     local monsterTable = {}
@@ -87,7 +87,7 @@ local function updateMonsterList()
         end
     end
     if #monsterTable > 0 then
-        data.quest.monsterList = monsterTable
+        data.quest.largeMonsterList = monsterTable
     end
 end
 
@@ -100,7 +100,7 @@ end
 local function clearQuest()
     data.quest.active = false
     data.quest.isRampage = false
-    data.quest.monsterList = nil
+    data.quest.largeMonsterList = nil
 end
 
 utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"}, updateActiveQuest)
@@ -114,6 +114,9 @@ utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"}, clearQuest)
 local function init(retval)
     data.loaded = true
     makeHZVTable()
+    if utils.singleton("snow.QuestManager"):get_field("_ActiveQuestData") then
+        updateActiveQuest()
+    end
     return retval
 end
 

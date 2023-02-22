@@ -42,7 +42,6 @@ modules[#modules+1] = require("Rise Enhanced.modules.Cheats")
 
 -- Init variables
 local initiated = false
-local mod
 
 local isMenuOpen = false
 local autoOpen = settings.get({"window", "defaultOpen"})
@@ -131,10 +130,10 @@ local function debugWindow()
     utils.printInfoNodes()
     utils.treeText(mod.lang.modName, settings.data, "settings.data")
     for i = 1, #modules do
-        mod = modules[i]
-        utils.treeText(mod.getName(), {
-            settings = mod.getSettings(),
-            enabled = mod.enabled(),
+        local _module = modules[i]
+        utils.treeText(_module.getName(), {
+            settings = _module.getSettings(),
+            enabled = _module.enabled(),
         }, "settings.data")
     end
 
@@ -186,18 +185,12 @@ local function drawWindow()
         end
 
         setLanguage(settings.combo("lang", mod.lang.language, utils.getLanguageTable()))
-        if imgui.button(mod.lang.rehook) then
-            for i = 1, #modules do -- start on 1 to ignore template module
-                modules[i].hook()
-            end
-        end
 
         imgui.tree_pop()
     end
 
     for i = 1, #modules do
-        mod = modules[i]
-        mod.drawUi()
+        modules[i].drawUi()
     end
 
     imgui.end_window()
@@ -217,9 +210,9 @@ function module.init()
     math.randomseed(os.time()) -- set seed for random method
 
     for i = 1, #modules do -- start on 1 to ignore template module
-        mod = modules[i]
-        mod.init()
-        mod.hook()
+        local _module = modules[i]
+        _module.init()
+        _module.hook()
     end
 end
 

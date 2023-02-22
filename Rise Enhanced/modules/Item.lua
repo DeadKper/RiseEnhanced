@@ -352,7 +352,7 @@ function module.hook()
 
     -- event hook for restocking inside quest
     utils.hook({"snow.QuestManager", "questStart"},
-        function(args)
+        function()
             if player == nil then
                 player = utils.getPlayer()
                 playerIndex = utils.getPlayerIndex()
@@ -365,13 +365,12 @@ function module.hook()
                 questStartTrigger = true
                 pauseAutoItems = false
             end)
-        end,
-        utils.retval
+        end
     )
 
     -- restock on cart
     utils.hook({"snow.QuestManager", "notifyDeath"},
-        function(args)
+        function()
             pauseAutoItems = true
             if not module.enabled() then return end
             utils.addTimer(5, function ()
@@ -381,8 +380,7 @@ function module.hook()
                 questStartTrigger = true
                 pauseAutoItems = false
             end)
-        end,
-        utils.retval
+        end
     )
 
     -- restock on quest enemy kill
@@ -400,17 +398,15 @@ function module.hook()
 
                 restock()
             end)
-        end,
-        utils.retval
+        end
     )
 
     -- pause auto items
     utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
-        function (args)
+        function ()
             pauseAutoItems = true
             itemUsedTime = 0
-        end,
-        utils.retval
+        end
     )
 end
 
