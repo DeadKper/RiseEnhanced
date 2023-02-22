@@ -1,14 +1,14 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 require("Rise Enhanced.utils.hooks") -- initialize data hooks only
 
 -- Init library
 
-utils.init(data.folder, data.cacheFile)
+utils.init(mod.folder, mod.cacheFile)
 
-local module, settings = data.getDefaultModule(
-    data.folder, {
+local module, settings = mod.getDefaultModule(
+    mod.folder, {
         enabled = true,
         lang = "en_US",
         window = {
@@ -65,40 +65,40 @@ local function setLanguage(change, value)
     if not change then return end
     settings.set("lang", value)
     utils.setLanguage(value)
-    data.lang = utils.getLanguage()
+    mod.lang = utils.getLanguage()
 end
 
 setLanguage(true, settings.get("lang"))
 
 local function windowConfig(property)
-    settings.call({property, "defaultOpen"}, imgui.checkbox, data.lang.Config.openState)
-    settings.call({property, "resetOnStart"}, imgui.checkbox, data.lang.Config.resetOnStart)
+    settings.call({property, "defaultOpen"}, imgui.checkbox, mod.lang.Config.openState)
+    settings.call({property, "resetOnStart"}, imgui.checkbox, mod.lang.Config.resetOnStart)
     local displaySize = imgui.get_display_size()
     settings.slider(
         {property, "position", 1},
-        data.lang.Config.xPos,
+        mod.lang.Config.xPos,
         0,
         displaySize.x
     )
     settings.slider(
         {property, "position", 2},
-        data.lang.Config.yPos,
+        mod.lang.Config.yPos,
         0,
         displaySize.y
     )
     settings.slider(
         {property, "size", 1},
-        data.lang.Config.width,
+        mod.lang.Config.width,
         0,
         displaySize.x
     )
     settings.slider(
         {property, "size", 2},
-        data.lang.Config.height,
+        mod.lang.Config.height,
         0,
         displaySize.y
     )
-    module.resetButton(property, data.lang.Config.resetWindowConfig)
+    module.resetButton(property, mod.lang.Config.resetWindowConfig)
 end
 
 -- Draw functions
@@ -120,16 +120,16 @@ local function debugWindow()
     end
 
     if not imgui.begin_window(
-        data.lang.Debug.button,
+        mod.lang.Debug.button,
         window.closeButton,
         window.flags
     ) then
         isDebugOpen = false
     end
 
-    data.print()
+    mod.print()
     utils.printInfoNodes()
-    utils.treeText(data.lang.modName, settings.data, "settings.data")
+    utils.treeText(mod.lang.modName, settings.data, "settings.data")
     for i = 1, #modules do
         mod = modules[i]
         utils.treeText(mod.getName(), {
@@ -142,7 +142,7 @@ local function debugWindow()
 end
 
 local function drawWindow()
-    utils.imguiButton("[ " .. data.lang.modName .. " ]", function ()
+    utils.imguiButton("[ " .. mod.lang.modName .. " ]", function ()
         isMenuOpen = not isMenuOpen
     end)
 
@@ -163,30 +163,30 @@ local function drawWindow()
     end
 
     if not imgui.begin_window(
-        data.lang.modName .. " v" .. data.version .. (data.beta and "-BETA" or ""),
+        mod.lang.modName .. " v" .. mod.version .. (mod.beta and "-BETA" or ""),
         window.closeButton,
         window.flags
     ) then
         isMenuOpen = false
     end
 
-    if imgui.tree_node(data.lang.Config.name) then
-        _, data.enabled = settings.call("enabled", imgui.checkbox, data.lang.enabled)
-        if imgui.tree_node(data.lang.Config.windowConfig) then
+    if imgui.tree_node(mod.lang.Config.name) then
+        _, mod.enabled = settings.call("enabled", imgui.checkbox, mod.lang.enabled)
+        if imgui.tree_node(mod.lang.Config.windowConfig) then
             windowConfig("window")
             imgui.tree_pop()
         end
 
-        if data.beta and imgui.tree_node(data.lang.Config.debugConfig) then
+        if mod.beta and imgui.tree_node(mod.lang.Config.debugConfig) then
             windowConfig("debugWindow")
-            if imgui.button(data.lang.Debug.button) then
+            if imgui.button(mod.lang.Debug.button) then
                 isDebugOpen = not isDebugOpen
             end
             imgui.tree_pop()
         end
 
-        setLanguage(settings.combo("lang", data.lang.language, utils.getLanguageTable()))
-        if imgui.button(data.lang.rehook) then
+        setLanguage(settings.combo("lang", mod.lang.language, utils.getLanguageTable()))
+        if imgui.button(mod.lang.rehook) then
             for i = 1, #modules do -- start on 1 to ignore template module
                 modules[i].hook()
             end
@@ -205,7 +205,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.getName()
-    return data.lang.modName
+    return mod.lang.modName
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field

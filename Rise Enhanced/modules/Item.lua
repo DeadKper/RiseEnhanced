@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Item", {
         enabled = true,
         autoRestock = true,
@@ -12,9 +12,9 @@ local module, settings = data.getDefaultModule(
         infiniteItems = false,
         itemDuration = 0,
         buffRefreshCd = 0,
-        itemList = utils.filledTable(#data.lang.Item.itemList, 1),
+        itemList = utils.filledTable(#mod.lang.Item.itemList, 1),
         defaultSet = 1,
-        weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
+        weaponSet = utils.filledTable(#mod.lang.weaponNames + 1, 0),
         notification = true,
         notificationSound = false
     }
@@ -147,18 +147,18 @@ local function restock()
     -- empty set
     if string.len(itemSetName) == 0 then
         utils.chat("<COL RED>%s</COL>",
-                settings.get("notificationSound") and 2412657311 or 0, data.lang.Item.emptySet)
+                settings.get("notificationSound") and 2412657311 or 0, mod.lang.Item.emptySet)
         return
     end
 
     itemBox:call("applyItemMySet", itemSetId)
 
-    local message = "<COL YEL>" .. string.format(data.lang.Item.restocked, "</COL>" .. itemSetName)
+    local message = "<COL YEL>" .. string.format(mod.lang.Item.restocked, "</COL>" .. itemSetName)
 
     ---@diagnostic disable-next-line: need-check-nil
     local radialSetId = itemSet:call("get_PaletteSetIndex")
     if radialSetId == nil then
-        message = message .. "\n<COL RED>" .. data.lang.Item.nilRadial .. "</COL>"
+        message = message .. "\n<COL RED>" .. mod.lang.Item.nilRadial .. "</COL>"
     else
         local shortcutManager = utils.singleton("snow.data.SystemDataManager", "getCustomShortcutSystem")
         local radialSet = radialSetId:call("GetValueOrDefault")
@@ -167,11 +167,11 @@ local function restock()
             local radial = radialList:call("get_Item", radialSet)
             if radial then
                 message = message .. string.format(
-                        "\n<COL YEL>" .. data.lang.Item.radialApplied .. "</COL>",
+                        "\n<COL YEL>" .. mod.lang.Item.radialApplied .. "</COL>",
                         "</COL>" .. radial:call("get_Name"))
                 shortcutManager:call("setUsingPaletteIndex", 0, radialSet)
             else
-                message = message .. data.lang.Item.emptyRadial
+                message = message .. mod.lang.Item.emptyRadial
             end
         end
     end
@@ -179,7 +179,7 @@ local function restock()
     -- not enough items
     ---@diagnostic disable-next-line: need-check-nil
     if not itemSet:call("isEnoughItem") then
-        message = message .. "\n<COL RED>" .. data.lang.Item.outOfStock .. "</COL>"
+        message = message .. "\n<COL RED>" .. mod.lang.Item.outOfStock .. "</COL>"
     end
 
     if settings.get("notification") then
@@ -322,7 +322,7 @@ function module.hook()
                 item = consumables[key]
                 used, free = useItem(item)
                 if used then
-                    message = data.lang.Item.itemList[key]
+                    message = mod.lang.Item.itemList[key]
                     if free then
                         message = message .. " (free meal)"
                     end
@@ -343,7 +343,7 @@ function module.hook()
             return
         end
 
-        message = "<COL YEL>" .. data.lang.Item.usedItems .. "</COL>"
+        message = "<COL YEL>" .. mod.lang.Item.usedItems .. "</COL>"
         for _, value in pairs(activateList) do
             message = message .. "\n" .. value
         end
@@ -438,20 +438,20 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("autoRestock", imgui.checkbox, data.lang.Item.autoRestock)
-    settings.call("largeMonsterRestock", imgui.checkbox, data.lang.Item.largeMonsterRestock)
+    settings.call("autoRestock", imgui.checkbox, mod.lang.Item.autoRestock)
+    settings.call("largeMonsterRestock", imgui.checkbox, mod.lang.Item.largeMonsterRestock)
     if not utils.singleton("snow.data.DataManager") then
-        settings.call("notification", imgui.checkbox, data.lang.notification)
-        settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
-        imgui.text("\n" .. data.lang.loading)
+        settings.call("notification", imgui.checkbox, mod.lang.notification)
+        settings.call("notificationSound", imgui.checkbox, mod.lang.sounds)
+        imgui.text("\n" .. mod.lang.loading)
         return
     end
     local setName = getItemSetName(settings.get("defaultSet") - 1)
-    local defaultSet = string.format(data.lang.useDefault, setName)
+    local defaultSet = string.format(mod.lang.useDefault, setName)
 
-    settings.slider("defaultSet", data.lang.Item.useDefaultItemSet, 1, 40, setName)
-    if imgui.tree_node(data.lang.Item.perWeapon) then
-        for key, value in pairs(data.lang.weaponNames) do
+    settings.slider("defaultSet", mod.lang.Item.useDefaultItemSet, 1, 40, setName)
+    if imgui.tree_node(mod.lang.Item.perWeapon) then
+        for key, value in pairs(mod.lang.weaponNames) do
             settings.slider(
                 {"weaponSet", key + 1},
                 value,
@@ -464,48 +464,48 @@ function module.drawInnerUi()
         module.resetButton("weaponSet")
         imgui.tree_pop()
     end
-    settings.call("autoItems", imgui.checkbox, data.lang.Item.autoItems)
-    settings.call("infiniteItems", imgui.checkbox, data.lang.Item.infiniteItems)
+    settings.call("autoItems", imgui.checkbox, mod.lang.Item.autoItems)
+    settings.call("infiniteItems", imgui.checkbox, mod.lang.Item.infiniteItems)
     settings.slider("itemDuration",
-        data.lang.Item.itemDuration,
+        mod.lang.Item.itemDuration,
         0,
         600,
         utils.durationText(
             settings.get("itemDuration"),
-            data.lang.secondText,
-            data.lang.secondsText,
-            data.lang.disabled
+            mod.lang.secondText,
+            mod.lang.secondsText,
+            mod.lang.disabled
         ),
         10
     )
     settings.slider("buffRefreshCd",
-        data.lang.Item.buffRefreshCd,
+        mod.lang.Item.buffRefreshCd,
         0,
         10,
         utils.durationText(
             settings.get("buffRefreshCd"),
-            data.lang.secondText,
-            data.lang.secondsText,
-            data.lang.disabled
+            mod.lang.secondText,
+            mod.lang.secondsText,
+            mod.lang.disabled
         ),
         0.5
     )
-    if imgui.tree_node(data.lang.Item.itemConfig) then
-        for key, value in pairs(data.lang.Item.itemList) do
+    if imgui.tree_node(mod.lang.Item.itemConfig) then
+        for key, value in pairs(mod.lang.Item.itemList) do
             local current = settings.get("itemList")[key]
             settings.slider(
                 {"itemList", key},
                 value,
                 1,
                 5,
-                data.lang.Item.triggerList[current]
+                mod.lang.Item.triggerList[current]
             )
         end
         module.resetButton("itemList")
         imgui.tree_pop()
     end
-    settings.call("notification", imgui.checkbox, data.lang.notification)
-    settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
+    settings.call("notification", imgui.checkbox, mod.lang.notification)
+    settings.call("notificationSound", imgui.checkbox, mod.lang.sounds)
 end
 
 return module

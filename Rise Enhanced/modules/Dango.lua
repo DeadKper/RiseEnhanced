@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Dango", {
         enabled = true,
         increasedChance = true,
@@ -17,8 +17,8 @@ local module, settings = data.getDefaultModule(
         disableTimer = true,
         defaultSet = 1,
         defaultCartSet = 0,
-        weaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
-        cartWeaponSet = utils.filledTable(#data.lang.weaponNames + 1, 0),
+        weaponSet = utils.filledTable(#mod.lang.weaponNames + 1, 0),
+        cartWeaponSet = utils.filledTable(#mod.lang.weaponNames + 1, 0),
         notification = true,
         notificationSound = false
     }
@@ -86,7 +86,7 @@ local function autoDango()
 
     if order:call("get__DangoId"):call("get_Item", 0) == 65 then
         utils.chat("<COL RED>%s</COL>",
-                settings.get("notificationSound") and 2412657311 or 0, data.lang.Dango.emptySet)
+                settings.get("notificationSound") and 2412657311 or 0, mod.lang.Dango.emptySet)
         return false
     end
 
@@ -109,13 +109,13 @@ local function autoDango()
     isOrdering = false
 
     local orderName = order:call("get_OrderName")
-    local message = string.format("<COL YEL>" .. data.lang.Dango.eatMessage, orderName)
+    local message = string.format("<COL YEL>" .. mod.lang.Dango.eatMessage, orderName)
     if settings.get("ticket") then
         if ticketCount > 0 then
-            message = message .. " (" .. string.format(data.lang.Dango.ticketRemaining, ticketCount) .. ")"
+            message = message .. " (" .. string.format(mod.lang.Dango.ticketRemaining, ticketCount) .. ")"
         else
             message = message .. "</COL><COL RED> (" ..
-                    data.lang.Dango.outOufTickets .. ")</COL><COL YEL>"
+                    mod.lang.Dango.outOufTickets .. ")</COL><COL YEL>"
         end
     end
     message = message .. "</COL>"
@@ -136,14 +136,14 @@ local function autoDango()
 
     if skillCount == 0 then
         utils.chat("<COL RED>%s</COL>",
-                settings.get("notificationSound") and 2412657311 or 0, data.lang.Dango.eatingFailed)
+                settings.get("notificationSound") and 2412657311 or 0, mod.lang.Dango.eatingFailed)
         return false
     end
 
     didEat = true
 
     if settings.get("skewers") then
-        message = message .. "\n<COL YEL>(" .. data.lang.Dango.hoppingSkewers .. ")</COL>"
+        message = message .. "\n<COL YEL>(" .. mod.lang.Dango.hoppingSkewers .. ")</COL>"
     end
 
     if settings.get("notification") then
@@ -167,7 +167,7 @@ local function getDangoSetByWeapon(kitchen, weapon, hasCarted)
     local id, default = getDangoSet(weapon, hasCarted)
     local name = getDangoSetName(kitchen, id - 1)
     if default then
-        return string.format(data.lang.useDefault, name)
+        return string.format(mod.lang.useDefault, name)
     end
     return name
 end
@@ -343,7 +343,7 @@ end
 -- Draw module
 local function drawWeaponSliders(name, kitchen, property, hasCarted)
     if imgui.tree_node(name) then
-        for key, value in pairs(data.lang.weaponNames) do
+        for key, value in pairs(mod.lang.weaponNames) do
             settings.slider(
                 {property, key + 1},
                 value,
@@ -360,45 +360,45 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("ticket", imgui.checkbox, data.lang.Dango.useTicket)
-    settings.call("increasedChance", imgui.checkbox, data.lang.Dango.increasedChance)
-    settings.call("skewers", imgui.checkbox, data.lang.Dango.useHoppingSkewers)
-    settings.call("kamuraPoints", imgui.checkbox, data.lang.Dango.usePoints)
-    settings.call("infiniteTickets", imgui.checkbox, data.lang.Dango.infiniteTickets)
-    settings.call("showAllDango", imgui.checkbox, data.lang.Dango.showAllDango)
-    imgui.text(data.lang.restartNote)
-    if imgui.tree_node(data.lang.Dango.hoppingSkewersLevels) then
-        for i, text in pairs(data.lang.Dango.usableDangos) do
+    settings.call("ticket", imgui.checkbox, mod.lang.Dango.useTicket)
+    settings.call("increasedChance", imgui.checkbox, mod.lang.Dango.increasedChance)
+    settings.call("skewers", imgui.checkbox, mod.lang.Dango.useHoppingSkewers)
+    settings.call("kamuraPoints", imgui.checkbox, mod.lang.Dango.usePoints)
+    settings.call("infiniteTickets", imgui.checkbox, mod.lang.Dango.infiniteTickets)
+    settings.call("showAllDango", imgui.checkbox, mod.lang.Dango.showAllDango)
+    imgui.text(mod.lang.restartNote)
+    if imgui.tree_node(mod.lang.Dango.hoppingSkewersLevels) then
+        for i, text in pairs(mod.lang.Dango.usableDangos) do
             settings.slider({ "skewerLevels", i }, text, 1, 4)
         end
         module.resetButton("skewerLevels")
         imgui.tree_pop()
     end
-    settings.call("autoEat", imgui.checkbox, data.lang.Dango.autoEat)
-    settings.call("disableTimer", imgui.checkbox, data.lang.Dango.disableTimer)
-    settings.call("notification", imgui.checkbox, data.lang.notification)
-    settings.call("notificationSound", imgui.checkbox, data.lang.sounds)
+    settings.call("autoEat", imgui.checkbox, mod.lang.Dango.autoEat)
+    settings.call("disableTimer", imgui.checkbox, mod.lang.Dango.disableTimer)
+    settings.call("notification", imgui.checkbox, mod.lang.notification)
+    settings.call("notificationSound", imgui.checkbox, mod.lang.sounds)
 
     local kitchen = getMeal()
     if not kitchen then
-        imgui.text("\n" .. data.lang.loading)
+        imgui.text("\n" .. mod.lang.loading)
         return
     end
 
     local questStatus = utils.getQuestStatus()
     if (questStatus == 0 or questStatus == 2) and kitchen:get_field("_AvailableWaitTimer") > 0 then
-        if imgui.button(data.lang.Dango.resetEatTimer) then
+        if imgui.button(mod.lang.Dango.resetEatTimer) then
             kitchen:set_field("_AvailableWaitTimer", 0)
         end
     end
 
     local setName = getDangoSetName(kitchen, settings.get("defaultSet") - 1)
-    local defaultSet = string.format(data.lang.useDefault, setName)
+    local defaultSet = string.format(mod.lang.useDefault, setName)
 
-    settings.slider("defaultSet", data.lang.Dango.defaultSet, 1, 32, setName)
-    settings.slider("defaultCartSet", data.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
-    drawWeaponSliders(data.lang.Dango.perWeapon, kitchen, "weaponSet", false)
-    drawWeaponSliders(data.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
+    settings.slider("defaultSet", mod.lang.Dango.defaultSet, 1, 32, setName)
+    settings.slider("defaultCartSet", mod.lang.Dango.defaultCartSet, 1, 32, getDangoSetName(kitchen, settings.get("defaultCartSet") - 1), defaultSet)
+    drawWeaponSliders(mod.lang.Dango.perWeapon, kitchen, "weaponSet", false)
+    drawWeaponSliders(mod.lang.Dango.perWeaponCart, kitchen, "cartWeaponSet", true)
 end
 
 return module

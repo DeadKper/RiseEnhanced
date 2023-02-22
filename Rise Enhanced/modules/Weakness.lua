@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Weakness", {
         enabled = true,
         onItembox = true,
@@ -155,15 +155,15 @@ function module.hook()
             return
         end
 
-        if imgui.begin_window(data.lang.Weakness.name, true, 4096 + 64) then
+        if imgui.begin_window(mod.lang.Weakness.name, true, 4096 + 64) then
             for i = 1, #questMonsterList do
                 local target = hitZoneValues[questMonsterList[i]]
 
                 if imgui.begin_table("Hitzones", 10, tableFlag, 25) then
 
                     imgui.table_setup_column(target.name, columnFlag, 125)
-                    for j = 1, #data.lang.Weakness.damageTypeShort do
-                        imgui.table_setup_column(data.lang.Weakness.damageTypeShort[j], columnFlag, 25)
+                    for j = 1, #mod.lang.Weakness.damageTypeShort do
+                        imgui.table_setup_column(mod.lang.Weakness.damageTypeShort[j], columnFlag, 25)
                     end
                     imgui.table_headers_row()
 
@@ -256,13 +256,13 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("onItembox", imgui.checkbox, data.lang.Weakness.onItembox)
-    settings.call("onCamp", imgui.checkbox, data.lang.Weakness.onCamp)
-    settings.call("useElembane", imgui.checkbox, data.lang.Weakness.useElembane)
-    settings.call("highlightExploitPhys", imgui.checkbox, data.lang.Weakness.highlightExploitPhys)
-    settings.call("highlightExploitElem", imgui.checkbox, data.lang.Weakness.highlightExploitElem)
-    settings.call("highlightHighestPhys", imgui.checkbox, data.lang.Weakness.highlightHighestPhys)
-    settings.call("highlightHighestElem", imgui.checkbox, data.lang.Weakness.highlightHighestElem)
+    settings.call("onItembox", imgui.checkbox, mod.lang.Weakness.onItembox)
+    settings.call("onCamp", imgui.checkbox, mod.lang.Weakness.onCamp)
+    settings.call("useElembane", imgui.checkbox, mod.lang.Weakness.useElembane)
+    settings.call("highlightExploitPhys", imgui.checkbox, mod.lang.Weakness.highlightExploitPhys)
+    settings.call("highlightExploitElem", imgui.checkbox, mod.lang.Weakness.highlightExploitElem)
+    settings.call("highlightHighestPhys", imgui.checkbox, mod.lang.Weakness.highlightHighestPhys)
+    settings.call("highlightHighestElem", imgui.checkbox, mod.lang.Weakness.highlightHighestElem)
 end
 
 return module

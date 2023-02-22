@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings, cache = data.getDefaultModule(
+local module, settings, cache = mod.getDefaultModule(
     "Template", {
         enabled = true,
     }

@@ -1,6 +1,6 @@
 local utils = require("Rise Enhanced.utils.utils")
 
-local data = {
+local mod = {
     file = "config",
     folder = "Rise Enhanced",
     cacheFile = "cache",
@@ -10,11 +10,11 @@ local data = {
     lang = require("Rise Enhanced.languages.en_US")
 }
 
-function data.getDefaultModule(name, _defaults, _file, _folder)
+function mod.getDefaultModule(name, _defaults, _file, _folder)
     if _folder == nil then
-        _folder = data.folder
+        _folder = mod.folder
     else
-        _folder = data.folder .. "/" .. _folder
+        _folder = mod.folder .. "/" .. _folder
     end
 
     if _file == nil then
@@ -44,7 +44,7 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
     function module.hook() end
 
     function module.getName()
-        return data.lang[name].name
+        return mod.lang[name].name
     end
 
     function module.getSettings()
@@ -55,13 +55,13 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
         settings.call(
             _value ~= nil and _value or "enabled",
             imgui.checkbox,
-            _label ~= nil and _label or data.lang.enabled
+            _label ~= nil and _label or mod.lang.enabled
         )
     end
 
     function module.resetButton(_value, _label)
         utils.imguiButton(
-            _label ~= nil and _label or data.lang.reset,
+            _label ~= nil and _label or mod.lang.reset,
             settings.reset,
             _value
         )
@@ -88,7 +88,7 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
     -- check other properties to determine wheter the option is enabled or not
     function module.enabled(...)
         local table = {...}
-        local globalEnable = data.enabled and settings.get("enabled")
+        local globalEnable = mod.enabled and settings.get("enabled")
         if #table == 0 then
             return globalEnable
         end
@@ -102,10 +102,10 @@ function data.getDefaultModule(name, _defaults, _file, _folder)
     return module, settings, cache
 end
 
-function data.print()
-    local copy = utils.copy(data)
+function mod.print()
+    local copy = utils.copy(mod)
     copy.lang = nil
     utils.treeText("Data", copy, "data")
 end
 
-return data
+return mod

@@ -1,16 +1,16 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Tweaks", {
         enabled = true,
         noHitStop = true,
         saveDelay = 5,
         useMultipliers = true,
         useSmartMultipliers = true,
-        multipliers = utils.filledTable(#data.lang.Tweaks.multipliers, 5),
+        multipliers = utils.filledTable(#mod.lang.Tweaks.multipliers, 5),
         smartMultipliers = {
             500000,
             5000,
@@ -152,68 +152,68 @@ end
 function module.drawInnerUi()
     module.enabledCheck()
 
-    settings.call("noHitStop", imgui.checkbox, data.lang.Tweaks.noHitStop)
+    settings.call("noHitStop", imgui.checkbox, mod.lang.Tweaks.noHitStop)
     settings.slider("saveDelay",
-        data.lang.Tweaks.saveDelay,
+        mod.lang.Tweaks.saveDelay,
         0,
         30,
         utils.durationText(
             settings.get("saveDelay"),
-            data.lang.minuteText,
-            data.lang.minutesText,
-            data.lang.disabled
+            mod.lang.minuteText,
+            mod.lang.minutesText,
+            mod.lang.disabled
         )
     )
-    settings.call("useMultipliers", imgui.checkbox, data.lang.Tweaks.useMultipliers)
-    settings.call("useSmartMultipliers", imgui.checkbox, data.lang.Tweaks.useSmartMultipliers)
-    if imgui.tree_node(data.lang.Tweaks.configureMultipliers) then
-        for i, text in pairs(data.lang.Tweaks.multipliers) do
+    settings.call("useMultipliers", imgui.checkbox, mod.lang.Tweaks.useMultipliers)
+    settings.call("useSmartMultipliers", imgui.checkbox, mod.lang.Tweaks.useSmartMultipliers)
+    if imgui.tree_node(mod.lang.Tweaks.configureMultipliers) then
+        for i, text in pairs(mod.lang.Tweaks.multipliers) do
             settings.slider({ "multipliers", i }, text, 0, 5, nil, 0.1)
         end
         imgui.tree_pop()
     end
-    if imgui.tree_node(data.lang.Tweaks.configureSmartThresh) then
+    if imgui.tree_node(mod.lang.Tweaks.configureSmartThresh) then
         local table = {"smartMultipliers", 1}
         settings.slider(
                 table,
-                data.lang.Tweaks.multipliers[1],
+                mod.lang.Tweaks.multipliers[1],
                 0,
                 settings.getDefault(table),
-                utils.formatNumber(settings.get(table), data.lang.always),
+                utils.formatNumber(settings.get(table), mod.lang.always),
                 10000
         )
         table = {"smartMultipliers", 2}
         settings.slider(
                 table,
-                data.lang.Tweaks.multipliers[2],
+                mod.lang.Tweaks.multipliers[2],
                 0,
                 settings.getDefault(table),
-                utils.formatNumber(settings.get(table), data.lang.always),
+                utils.formatNumber(settings.get(table), mod.lang.always),
                 100
         )
         table = {"smartMultipliers", 3}
         settings.slider(
                 table,
-                data.lang.Tweaks.multipliers[3],
+                mod.lang.Tweaks.multipliers[3],
                 0,
                 settings.getDefault(table),
-                utils.formatNumber(settings.get(table), data.lang.always)
+                utils.formatNumber(settings.get(table), mod.lang.always)
         )
         table = {"smartMultipliers", 4}
         settings.slider(
                 table,
-                data.lang.Tweaks.multipliers[4],
+                mod.lang.Tweaks.multipliers[4],
                 0,
                 settings.getDefault(table),
-                utils.formatNumber(settings.get(table), data.lang.always)
+                utils.formatNumber(settings.get(table), mod.lang.always)
         )
         table = {"smartMultipliers", 5}
         settings.slider(
                 table,
-                data.lang.Tweaks.multipliers[5],
+                mod.lang.Tweaks.multipliers[5],
                 0,
                 settings.getDefault(table),
-                utils.formatNumber(settings.get(table), data.lang.always),
+                utils.formatNumber(settings.get(table), mod.lang.always),
                 20
         )
         imgui.tree_pop()

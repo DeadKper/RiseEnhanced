@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Cheats", {
         enabled = false,
         unlimitedCoatings = true,
@@ -34,8 +34,8 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("unlimitedCoatings", imgui.checkbox, data.lang.Cheats.unlimitedCoatings)
-    settings.call("unlimitedAmmo", imgui.checkbox, data.lang.Cheats.unlimitedAmmo)
+    settings.call("unlimitedCoatings", imgui.checkbox, mod.lang.Cheats.unlimitedCoatings)
+    settings.call("unlimitedAmmo", imgui.checkbox, mod.lang.Cheats.unlimitedAmmo)
 end
 
 return module

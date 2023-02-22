@@ -1,9 +1,9 @@
 -- Import libraries
-local data = require("Rise Enhanced.utils.data")
+local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
 
 -- Init module
-local module, settings = data.getDefaultModule(
+local module, settings = mod.getDefaultModule(
     "Spiribirds", {
         enabled = true,
         prism = true,
@@ -122,23 +122,23 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("prism", imgui.checkbox, data.lang.Spiribirds.spawnPrism)
-    settings.slider({ "birds", "hp"  }, data.lang.Spiribirds.health,  0, 10)
-    settings.slider({ "birds", "spd" }, data.lang.Spiribirds.stamina, 0, 10)
-    settings.slider({ "birds", "atk" }, data.lang.Spiribirds.attack,  0, 10)
-    settings.slider({ "birds", "def" }, data.lang.Spiribirds.defense, 0, 10)
+    settings.call("prism", imgui.checkbox, mod.lang.Spiribirds.spawnPrism)
+    settings.slider({ "birds", "hp"  }, mod.lang.Spiribirds.health,  0, 10)
+    settings.slider({ "birds", "spd" }, mod.lang.Spiribirds.stamina, 0, 10)
+    settings.slider({ "birds", "atk" }, mod.lang.Spiribirds.attack,  0, 10)
+    settings.slider({ "birds", "def" }, mod.lang.Spiribirds.defense, 0, 10)
     module.resetButton("birds")
 
     if utils.getQuestStatusName() ~= "quest" then return end
     if imgui.tree_node("Manual spawn") then
-        utils.imguiButton(data.lang.Spiribirds.healthButton,  spawn, "hp" )
+        utils.imguiButton(mod.lang.Spiribirds.healthButton,  spawn, "hp" )
         imgui.same_line()
-        utils.imguiButton(data.lang.Spiribirds.staminaButton, spawn, "spd")
-        utils.imguiButton(data.lang.Spiribirds.attackButton,  spawn, "atk")
+        utils.imguiButton(mod.lang.Spiribirds.staminaButton, spawn, "spd")
+        utils.imguiButton(mod.lang.Spiribirds.attackButton,  spawn, "atk")
         imgui.same_line()
-        utils.imguiButton(data.lang.Spiribirds.defenseButton, spawn, "def")
-        utils.imguiButton(data.lang.Spiribirds.rainbowButton, spawn, "prism")
-        utils.imguiButton(data.lang.Spiribirds.goldenButton,  spawn, "gold")
+        utils.imguiButton(mod.lang.Spiribirds.defenseButton, spawn, "def")
+        utils.imguiButton(mod.lang.Spiribirds.rainbowButton, spawn, "prism")
+        utils.imguiButton(mod.lang.Spiribirds.goldenButton,  spawn, "gold")
         imgui.tree_pop()
     end
 end
