@@ -166,7 +166,7 @@ return {
         goldenButton = "                  « Golden »                    ",
     },
     Weakness = {
-        name = "Weakness Diplay",
+        name = "Weakness Display",
         damageTypeShort = {
             "CUT",
             "BLN",
