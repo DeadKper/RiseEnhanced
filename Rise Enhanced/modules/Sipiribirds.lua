@@ -85,7 +85,7 @@ local function spawnBirds()
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
-    function module.hook()
+function module.hook()
         -- spawn birds on quest start
     sdk.hook(utils.definition("snow.QuestManager", "questStart"),
         function(args)
