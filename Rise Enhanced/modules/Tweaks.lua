@@ -21,6 +21,7 @@ local module, settings = data.getDefaultModule(
     }
 )
 
+local getWireBug = false
 local lastSave = 0
 
 -- Main code
@@ -28,6 +29,20 @@ local lastSave = 0
 -- Hooks
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
+    -- add wirebug
+    sdk.hook(utils.definition("snow.player.PlayerManager", "update"),
+        function(args)
+            if not module.enabled() or not getWireBug then return end
+            local player = utils.getPlayer()
+            if not player then return end
+
+            player:set_field("<HunterWireWildNum>k__BackingField", 1)
+            player:set_field("_HunterWireNumAddTime",
+                    utils.getPlayerData():get_field("_WireBugPowerUpTimer") + 30*60)
+        end,
+        utils.retval
+    )
+
     -- set saved clock
     sdk.hook(utils.definition("snow.SnowSaveService", "saveCharaData"),
         function(args)
