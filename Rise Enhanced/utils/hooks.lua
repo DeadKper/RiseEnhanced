@@ -2,6 +2,9 @@ local utils = require("Rise Enhanced.utils.utils")
 
 local data = utils.getData()
 
+data.enemy = {}
+data.quest = {}
+
 data.damage = {
     types = {
         "sever",
@@ -13,8 +16,6 @@ data.damage = {
         "thunder",
         "dragon",
     },
-    enemy = {},
-    quest = {},
 }
 
 local function makeHZVTable()
