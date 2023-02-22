@@ -376,7 +376,7 @@ function utils.isWeaponSheathed()
             :get_data(playerAction) == 0
 end
 
--- Returns the level of the skill on the player or 0 is player manager is nil
+-- Returns the level of the skill on the player or 0 if player manager is nil
 function utils.playerSkillLevel(skillId, _playerIndex)
     local playerManager = utils.singleton("snow.player.PlayerManager")
     if playerManager == nil then
