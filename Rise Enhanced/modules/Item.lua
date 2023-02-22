@@ -402,7 +402,7 @@ function module.hook()
     )
 
     -- pause auto items
-    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
+    utils.hook({"snow.QuestManager", "onQuestEnd"},
         function ()
             pauseAutoItems = true
             itemUsedTime = 0

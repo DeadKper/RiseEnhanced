@@ -321,7 +321,7 @@ function module.hook()
     )
 
     -- clear carted state
-    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
+    utils.hook({"snow.QuestManager", "onQuestEnd"},
         function ()
             carted = false
         end

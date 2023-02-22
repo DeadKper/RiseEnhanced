@@ -107,7 +107,7 @@ utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifie
 
 utils.hook({"snow.QuestManager", "questCancel"}, clearQuest)
 
-utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"}, clearQuest)
+utils.hook({"snow.QuestManager", "onQuestEnd"}, clearQuest)
 
 -- init data
 
