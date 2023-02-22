@@ -351,7 +351,7 @@ function module.hook()
     end)
 
     -- event hook for restocking inside quest
-    sdk.hook(utils.definition("snow.QuestManager", "questStart"),
+    utils.hook({"snow.QuestManager", "questStart"},
         function(args)
             if player == nil then
                 player = utils.getPlayer()
@@ -370,7 +370,7 @@ function module.hook()
     )
 
     -- restock on cart
-    sdk.hook(utils.definition("snow.QuestManager", "notifyDeath"),
+    utils.hook({"snow.QuestManager", "notifyDeath"},
         function(args)
             pauseAutoItems = true
             if not module.enabled() then return end
@@ -387,7 +387,7 @@ function module.hook()
 
     -- restock on quest enemy kill
     local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
-    sdk.hook(utils.definition("snow.enemy.EnemyCharacterBase", "questEnemyDie"),
+    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"},
         function (args)
             utils.addTimer(5, function ()
                 if not settings.get("autoRestock")
@@ -405,7 +405,7 @@ function module.hook()
     )
 
     -- pause auto items
-    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
         function (args)
             pauseAutoItems = true
             itemUsedTime = 0

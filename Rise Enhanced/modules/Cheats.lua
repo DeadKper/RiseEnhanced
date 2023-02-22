@@ -13,7 +13,7 @@ local module, settings = data.getDefaultModule(
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
-    sdk.hook(utils.definition("snow.data.bulletSlider.BottleSliderFunc", "consumeItem"),
+    utils.hook({"snow.data.bulletSlider.BottleSliderFunc", "consumeItem"},
         function(args)
             if module.enabled("unlimitedCoatings") then
                 return sdk.PreHookResult.SKIP_ORIGINAL
@@ -22,7 +22,7 @@ function module.hook()
         utils.retval
     )
 
-    sdk.hook(utils.definition("snow.data.bulletSlider.BulletSliderFunc", "consumeItem"),
+    utils.hook({"snow.data.bulletSlider.BulletSliderFunc", "consumeItem"},
         function(args)
             if module.enabled("unlimitedAmmo") then
                 return sdk.PreHookResult.SKIP_ORIGINAL

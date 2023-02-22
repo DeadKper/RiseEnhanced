@@ -30,7 +30,7 @@ local lastSave = 0
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
     -- add wirebug
-    sdk.hook(utils.definition("snow.player.PlayerManager", "update"),
+    utils.hook({"snow.player.PlayerManager", "update"},
         function(args)
             if not module.enabled() or not getWireBug then return end
             local player = utils.getPlayer()
@@ -44,7 +44,7 @@ function module.hook()
     )
 
     -- set saved clock
-    sdk.hook(utils.definition("snow.SnowSaveService", "saveCharaData"),
+    utils.hook({"snow.SnowSaveService", "saveCharaData"},
         function(args)
             lastSave = os.clock()
         end,
@@ -52,7 +52,7 @@ function module.hook()
     )
 
     -- set saved clock on village return
-    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
         function (args)
             lastSave = os.clock()
         end,
@@ -60,7 +60,7 @@ function module.hook()
     )
 
     -- skip autosave
-    sdk.hook(utils.definition("snow.SnowSaveService", "requestAutoSaveAll"),
+    utils.hook({"snow.SnowSaveService", "requestAutoSaveAll"},
         function(args)
             if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
                 return sdk.PreHookResult.SKIP_ORIGINAL
@@ -70,7 +70,7 @@ function module.hook()
     )
 
     -- remove hit stop
-    sdk.hook(utils.definition("snow.player.PlayerQuestBase", "updateHitStop"),
+    utils.hook({"snow.player.PlayerQuestBase", "updateHitStop"},
         function(args)
             if module.enabled("noHitStop") then
                 sdk.to_managed_object(args[2]):call("resetHitStop")
@@ -79,7 +79,7 @@ function module.hook()
         utils.retval
     )
 
-    sdk.hook(utils.definition("snow.QuestManager", "onQuestEnd"),
+    utils.hook({"snow.QuestManager", "onQuestEnd"},
         utils.original,
         function (retval)
             if not module.enabled("useMultipliers") then return retval end

@@ -126,7 +126,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
-    sdk.hook(utils.definition("snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"),
+    utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"},
         utils.original,
         function (retval)
             makeHZVTable()

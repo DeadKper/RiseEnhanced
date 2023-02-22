@@ -176,7 +176,7 @@ end
 function module.hook()
     -- Hooks
     -- set player hp and stamina when eating
-    sdk.hook(utils.definition("snow.player.PlayerManager", "update"),
+    utils.hook({"snow.player.PlayerManager", "update"},
         function(args)
             if needStats and didEat then
                 needStats = false
@@ -195,7 +195,7 @@ function module.hook()
     )
 
     -- increase chance for dango skills on ticket when option is enabled
-    sdk.hook(utils.definition("snow.data.DangoData", "get_SkillActiveRate"),
+    utils.hook({"snow.data.DangoData", "get_SkillActiveRate"},
         function(args)
             if not module.enabled("increasedChance") then return end
 
@@ -218,7 +218,7 @@ function module.hook()
     )
 
     -- inform GUI of dango levels
-    sdk.hook(utils.definition("snow.gui.fsm.kitchen.GuiKitchen", "setDangoDetailWindow"),
+    utils.hook({"snow.gui.fsm.kitchen.GuiKitchen", "setDangoDetailWindow"},
         function(args)
             if not module.enabled() then return end
 
@@ -234,7 +234,7 @@ function module.hook()
     )
 
     -- inform dango order constructor of dango levels
-    sdk.hook(utils.definition("snow.facility.kitchen.MealFunc", "updateList"),
+    utils.hook({"snow.facility.kitchen.MealFunc", "updateList"},
         function(args)
             if not module.enabled() then return end
             local kitchen = getMeal()
@@ -267,7 +267,7 @@ function module.hook()
     )
 
     -- return ticket and remove timer when respective option is enabled
-    sdk.hook(utils.definition("snow.facility.kitchen.MealFunc", "order"),
+    utils.hook({"snow.facility.kitchen.MealFunc", "order"},
         utils.original,
         function(retval)
             if not module.enabled() then return retval end
@@ -288,7 +288,7 @@ function module.hook()
     )
 
     -- auto eat inside quest
-    sdk.hook(utils.definition("snow.QuestManager", "questStart"),
+    utils.hook({"snow.QuestManager", "questStart"},
         function(args)
             if not module.enabled("autoEat") then return end
 
@@ -301,7 +301,7 @@ function module.hook()
     )
 
     -- bypass check for eating
-    sdk.hook(utils.definition("snow.facility.MealOrderData", "canOrder"),
+    utils.hook({"snow.facility.MealOrderData", "canOrder"},
         utils.original,
         function(retval)
             if not module.enabled("autoEat") or not isOrdering then return retval end
@@ -313,7 +313,7 @@ function module.hook()
     )
 
     -- auto eat on cart
-    sdk.hook(utils.definition("snow.QuestManager", "notifyDeath"),
+    utils.hook({"snow.QuestManager", "notifyDeath"},
         function(args)
             if not module.enabled("autoEat") then return end
             utils.addTimer(5, function ()
@@ -325,7 +325,7 @@ function module.hook()
     )
 
     -- clear carted state
-    sdk.hook(utils.definition("snow.gui.GuiManager", "notifyReturnInVillage"),
+    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
         function (args)
             carted = false
         end,
