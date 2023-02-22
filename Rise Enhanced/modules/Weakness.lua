@@ -73,7 +73,6 @@ local function makeHZVTable()
         local partDataList = monster:get_field("_PartTableData")
         local monsterTable = {
             name = getMonsterName(nil, monsterId),
-            -- type = monsterId,
             parts = {}
         }
 
@@ -86,8 +85,6 @@ local function makeHZVTable()
             local meatType = part:get_field("_EmPart")
             local partList = {
                 name = getPartName(nil, partGUID, 1),
-                -- type = partType,
-                -- meat = meatType,
                 hzv = {}
             }
             for k = 1, #weaknessSheet.types do
