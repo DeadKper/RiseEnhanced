@@ -24,6 +24,9 @@ Current modules:
 ## Weakness Display
 - Show monsters hit zone values on a floating window for current quest
 
+## Cheats
+- Unlimited coatings and ammo
+
 ## Credits
 Huge thanks to all original mod creators which I based my work on
 
