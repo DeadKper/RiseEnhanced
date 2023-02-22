@@ -19,7 +19,6 @@ data.damage = {
 }
 
 local function makeHZVTable()
-    data.loaded = false
     if data.enemy.hzv ~= nil then
         return
     end
@@ -104,17 +103,22 @@ local function clearQuest()
     data.quest.monsterList = nil
 end
 
-utils.hook({"snow.NowLoading", "profileEndLoad"}, makeHZVTable)
-
 utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"}, updateActiveQuest)
 
 utils.hook({"snow.QuestManager", "questCancel"}, clearQuest)
 
 utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"}, clearQuest)
 
--- init variables
+-- init data
 
-local questManager = utils.singleton("snow.QuestManager")
-if questManager ~= nil then
+local function init(retval)
+    data.loaded = true
     makeHZVTable()
+    return retval
 end
+
+if utils.getPlayer() ~= nil then init() end -- init when already loaded (for script reset)
+
+utils.hook({"snow.data.DataManager", "onLoad(snow.SaveDataBase)"}, nil, init)
+
+utils.hook({"snow.VillageState", "onEnterTitleFromVillage"}, function () data.loaded = false end)
