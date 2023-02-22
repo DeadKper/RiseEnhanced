@@ -18,6 +18,7 @@ return {
     minuteText = "%s minute",
     minutesText = "%s minutes",
     rehook = "Reinitialize mod hooks in case it's not working",
+    skillText = "The skill %s has activated.",
     weaponNames = {
         [0] = "Great Sword",
         [1] = "Swtich Axe",
