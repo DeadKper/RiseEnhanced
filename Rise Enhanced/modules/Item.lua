@@ -1,6 +1,7 @@
 -- Import libraries
 local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
+local data = utils.getData()
 
 -- Init module
 local module, settings = mod.getDefaultModule(
@@ -62,8 +63,6 @@ local consumables = {
     makeItemData(68157913, 102, { "buff", "stamina" },
             { { "_StaminaUpBuffSecondTimer", "_StaminaUpBuffSecond", true } }),
 }
-
-local isRampage = false
 
 local freeMealSkill = { [0] = 0, 10, 25, 45 }
 local itemProlongerSkill = { [0] = 1, 1.1, 1.25, 1.5 }
@@ -358,7 +357,6 @@ function module.hook()
                 playerIndex = utils.getPlayerIndex()
                 playerRef = utils.getPlayerData()
             end
-            isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
             if not module.enabled("autoRestock") then return end
             utils.addTimer(3, function ()
                 restock()
@@ -389,7 +387,7 @@ function module.hook()
         function (args)
             utils.addTimer(5, function ()
                 if not settings.get("autoRestock")
-                        or isRampage
+                        or data.quest.isRampage
                         or not settings.get("largeMonsterRestock")
                         or not utils.playingQuest()
                         or not isLargeMonster(sdk.to_managed_object(args[2])) then
@@ -423,8 +421,6 @@ function module.init()
         playerRef = utils.getPlayerData()
     end
     -- set flags
-    isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
-
     drawFlag = utils.isWeaponSheathed()
     combatFlag = not utils.inBattle()
 
