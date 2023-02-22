@@ -1,11 +1,14 @@
 -- Import libraries
 local mod = require("Rise Enhanced.utils.mod")
 local utils = require("Rise Enhanced.utils.utils")
+local data = utils.getData()
 
 -- Init module
 local module, settings = mod.getDefaultModule(
     "Tweaks", {
         enabled = true,
+        wirebugStart = true,
+        wirebugRefresh = true,
         noHitStop = true,
         saveDelay = 5,
         useMultipliers = true,
@@ -21,12 +24,14 @@ local module, settings = mod.getDefaultModule(
     }
 )
 
+local baseWireBugTime = 90
+local whispererBoost = 1.3
+local extraWireBugTime = 30
 local getWireBug = false
 local lastSave = 0
 
 -- Main code
 
--- Hooks
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
     -- add wirebug
@@ -35,10 +40,17 @@ function module.hook()
             if not module.enabled() or not getWireBug then return end
             local player = utils.getPlayer()
             if not player then return end
+            getWireBug = false
+
+            local timeMult = 1
+            if utils.playerSkillLevel(104) > 0 then
+                timeMult = whispererBoost
+            end
+
+            local time = (utils.reference("_WireBugPowerUpTime") + extraWireBugTime) * 60 * timeMult
 
             player:set_field("<HunterWireWildNum>k__BackingField", 1)
-            player:set_field("_HunterWireNumAddTime",
-                    utils.getPlayerData():get_field("_WireBugPowerUpTimer") + 30*60)
+            player:set_field("_HunterWireNumAddTime", time)
         end
     )
 
@@ -71,6 +83,44 @@ function module.hook()
             if module.enabled("noHitStop") then
                 sdk.to_managed_object(args[2]):call("resetHitStop")
             end
+        end
+    )
+
+    utils.hook({"snow.QuestManager", "questStart"},
+        function()
+            if not module.enabled() then return end
+
+            utils.addTimer(3, function ()
+                if not module.enabled("wirebugStart") then return end
+                getWireBug = true
+            end)
+        end
+    )
+
+    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
+    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"},
+        function (args)
+            utils.addTimer(5, function ()
+                if not module.enabled("wirebugRefresh")
+                        or data.quest.isRampage
+                        or not settings.get("largeMonsterRestock")
+                        or not utils.playingQuest()
+                        or not isLargeMonster(sdk.to_managed_object(args[2])) then
+                    return
+                end
+
+                getWireBug = true
+            end)
+        end
+    )
+
+    utils.hook({"snow.QuestManager", "notifyDeath"},
+        function()
+            if not module.enabled() then return end
+            utils.addTimer(5, function ()
+                if not module.enabled("wirebugStart") then return end
+                getWireBug = true
+            end)
         end
     )
 
@@ -140,13 +190,17 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
     lastSave = os.clock()
+    utils.setReference("_WireBugPowerUpTime", function ()
+        return baseWireBugTime
+    end)
 end
 
 -- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-
+    settings.call("wirebugStart", imgui.checkbox, mod.lang.Tweaks.wirebugStart)
+    settings.call("wirebugRefresh", imgui.checkbox, mod.lang.Tweaks.wirebugRefresh)
     settings.call("noHitStop", imgui.checkbox, mod.lang.Tweaks.noHitStop)
     settings.slider("saveDelay",
         mod.lang.Tweaks.saveDelay,
