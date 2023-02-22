@@ -185,4 +185,9 @@ return {
         highlightHighestPhys = "Highlight highest physical zones",
         highlightHighestElem = "Highlight highest elemental zones",
     },
+    Cheats = {
+        name = "Cheats",
+        unlimitedAmmo = "Unlimited HBG/LBG ammo",
+        unlimitedCoatings = "Unlimited bow coatings",
+    },
 }
