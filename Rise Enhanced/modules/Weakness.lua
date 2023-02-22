@@ -141,9 +141,12 @@ function module.hook()
     re.on_frame(function ()
         if not module.enabled() or questMonsterList == nil then return end
         local questManager = utils.singleton("snow.QuestManager")
-        local questData = questManager:get_field("_ActiveQuestData")
         local questStatus = questManager:get_field("_QuestStatus")
-        if questData == nil or (questStatus ~= 0 and questStatus ~= 2) then
+        if questStatus ~= 0 or questStatus ~= 2 then
+            return
+        end
+        local questData = questManager:get_field("_ActiveQuestData")
+        if questData == nil then
             questMonsterList = nil
             return
         end
