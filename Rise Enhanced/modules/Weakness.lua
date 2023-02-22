@@ -147,8 +147,8 @@ function module.hook()
 
         if not (settings.get("onItembox")
                 and utils.singleton("snow.gui.fsm.itembox.GuiItemBoxFsmManager"))
-            and not (settings.get("onCamp")
-                and utils.singleton("snow.gui.fsm.camp.GuiCampFsmManager")) then
+            and (not (settings.get("onCamp")
+                and utils.singleton("snow.gui.fsm.camp.GuiCampFsmManager"))) then
             return
         end
 
