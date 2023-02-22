@@ -84,15 +84,15 @@ local pouch = {}
 -- Main code
 
 local function getStaminaBuffCage()
-    local stamina = 0;
-    local equipDataManager = utils.singleton("snow.data.EquipDataManager");
-    local contentsIdDataManager = utils.singleton("snow.data.ContentsIdDataManager");
-    local equipList = equipDataManager:get_field("<EquipDataList>k__BackingField"):get_elements();
-    local buffCage = contentsIdDataManager:get_field("_NormalData");
+    local stamina = 0
+    local equipDataManager = utils.singleton("snow.data.EquipDataManager")
+    local contentsIdDataManager = utils.singleton("snow.data.ContentsIdDataManager")
+    local equipList = equipDataManager:get_field("<EquipDataList>k__BackingField"):get_elements()
+    local buffCage = contentsIdDataManager:get_field("_NormalData")
     local buffCageList = buffCage:get_field("_BaseUserData"):get_field("_Param"):get_elements()
-    local getLvBuffCageData = equipList[8]:call("getLvBuffCageData");
-    local id = getLvBuffCageData:call("get_Id");
-    local name = getLvBuffCageData:call("get_Name");
+    local getLvBuffCageData = equipList[8]:call("getLvBuffCageData")
+    local id = getLvBuffCageData:call("get_Id")
+    local name = getLvBuffCageData:call("get_Name")
 
     for k, v in pairs(buffCageList) do
         local buffData = buffCageList[k]
@@ -104,7 +104,7 @@ local function getStaminaBuffCage()
         end
     end
 
-    return (stamina + 150) * 30;
+    return (stamina + 150) * 30
 end
 
 local function getItemSet(weapon)
