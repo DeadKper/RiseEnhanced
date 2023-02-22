@@ -34,8 +34,8 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()
-    settings.call("unlimitedAmmo", imgui.checkbox, data.lang.Cheats.unlimitedAmmo)
     settings.call("unlimitedCoatings", imgui.checkbox, data.lang.Cheats.unlimitedCoatings)
+    settings.call("unlimitedAmmo", imgui.checkbox, data.lang.Cheats.unlimitedAmmo)
 end
 
 return module
