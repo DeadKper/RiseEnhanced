@@ -118,7 +118,7 @@ local function updateMonsterList()
     questMonsterList = {}
     for i = 0, targetCount do
         local target = targets:call("get_Item", i)
-        if not utils.contains(questMonsterList, target) then
+        if not utils.contains(questMonsterList, target) and hitZoneValues[target] ~= nil then
             table.insert(questMonsterList, target)
         end
     end
@@ -252,6 +252,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
+    utils.text(questMonsterList[1], "monster list")
     module.enabledCheck()
     settings.call("onItembox", imgui.checkbox, data.lang.Weakness.onItembox)
     settings.call("onCamp", imgui.checkbox, data.lang.Weakness.onCamp)
