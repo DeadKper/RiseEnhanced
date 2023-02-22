@@ -80,6 +80,7 @@ function utils.copy(original)
     return copy
 end
 
+-- Returns whether the given value is in the table or not
 function utils.contains(table, value)
     for _, v in pairs(table) do
         if v == value then
@@ -89,6 +90,7 @@ function utils.contains(table, value)
     return false
 end
 
+-- Will return a table containing all values from the keys given
 function utils.filter(original, keys)
     local results = {}
     for key, value in pairs(original) do
@@ -198,6 +200,56 @@ function utils.retval(retval)
     return retval
 end
 
+local hooked = {}
+-- Hook functions to sdk, will send args from pre to the post function (after retval)
+function utils.hook(definition, preFunction, postFunction)
+    if type(definition) == "string" then
+        definition = utils.definition(definition)
+    elseif type(definition) == "table" then
+        definition = utils.definition(table.unpack(definition))
+    end
+
+    if preFunction == nil then
+        preFunction = utils.original
+    end
+    if postFunction == nil then
+        postFunction = utils.retval
+    end
+    if not hooked[definition] then
+        hooked[definition] = {
+            args = nil,
+            pre = {},
+            post = {},
+        }
+        sdk.hook(definition, -- I was told I shouldn't stack hooks x'd
+            function (args)
+                hooked[definition].args = args
+                local result = sdk.PreHookResult.CALL_ORIGINAL
+                for i = 1, #hooked[definition].pre do
+                    result = hooked[definition].pre[i](args) or result
+                end
+                return result
+            end,
+            function (retval)
+                local result = retval
+                for i = 1, #hooked[definition].post do
+                    result = hooked[definition].post[i](retval, hooked[definition].args) or result
+                end
+                return result
+            end
+        )
+    end
+    table.insert(hooked[definition].pre, preFunction)
+    table.insert(hooked[definition].post, postFunction)
+end
+
+local data = {}
+
+-- Get data table, useful to communicate between different modules
+function utils.getData()
+    return data
+end
+
 -- Formats number with comas every thousands or returns _default_text when number is equal to _default_at, _default_at denifed as 0 if not given
 function  utils.formatNumber(number, _default_text, _default_at)
     if _default_text ~= nil then
@@ -235,7 +287,6 @@ function utils.inBattle()
     local musicManager = utils.singleton("snow.wwise.WwiseMusicManager")
     if not musicManager then return false end
 
-    local currentMusicType = musicManager:get_field("_FightBGMType")
     local currentBattleState = musicManager:get_field("_CurrentEnemyAction")
 
     local musicMixManager = utils.singleton("snow.wwise.WwiseMixManager")
@@ -260,6 +311,10 @@ function utils.inBattle()
     return inBattle and not isQuestComplete
 end
 
+function utils.playingQuest()
+    return utils.getQuestStatus() == 2 and utils.getQuestEndFlow() == 0
+end
+
 -- Returns whether the quest es online or not, only works properly inside of mission
 function utils.isQuestOnline()
     return utils.singleton("snow.stage.StageManager"):get_IsQuestOnline()
@@ -276,23 +331,40 @@ function utils.isMultiplayerQuest()
     return utils.getPlayerCount() > 1
 end
 
--- Return the player, playerIndex, playerList[playerIndex + 1], playerList
-function utils.getPlayerData()
-    local playerManager = utils.singleton("snow.player.PlayerManager")
-    local playerList = playerManager:get_field("<PlayerData>k__BackingField"):get_elements()
-    local player = playerManager:call("findMasterPlayer")
-    local playerIndex = player:call("getPlayerIndex")
-    return player, playerIndex, playerList[playerIndex + 1], playerList
+local playerInput
+-- Returns the player
+function utils.getPlayer() -- buffer mod says "findMasterPlayer" might not always work
+    if not playerInput then
+        local inputManager = sdk.get_managed_singleton("snow.StmInputManager")
+        local inGameInputDevice = inputManager:get_field("_InGameInputDevice")
+        playerInput = inGameInputDevice:get_field("_pl_input")
+    end
+    return playerInput:get_field("RefPlayer")
 end
 
--- Returns the player
-function utils.getPlayer()
-    return utils.singleton("snow.player.PlayerManager", "findMasterPlayer")
+function utils.getPlayerIndex()
+    local player = utils.getPlayer()
+    if not player then return player end
+    return player:call("getPlayerIndex")
+end
+
+function utils.getPlayerData()
+    local player = utils.getPlayer()
+    if not player then return player end
+    return player:get_field("_refPlayerData")
+end
+
+function utils.getPlayerList()
+    local playerManager = utils.singleton("snow.player.PlayerManager")
+    if not playerManager then return playerManager end
+    return playerManager:get_field("<PlayerData>k__BackingField"):get_elements()
 end
 
 -- Returns the current weapon
 function utils.getPlayerWeapon()
-    return utils.getPlayer():get_field("_playerWeaponType")
+    local player = utils.getPlayer()
+    if not player then return player end
+    return player:get_field("_playerWeaponType")
 end
 
 -- Returns true if the weapon is sheathed
@@ -311,7 +383,7 @@ function utils.playerSkillLevel(skillId, _playerIndex)
         return 0
     end
     if _playerIndex == nil then
-        _playerIndex = playerManager:call("findMasterPlayer"):call("getPlayerIndex")
+        _playerIndex = utils.getPlayerIndex()
     end
     return playerManager:call("getHasPlayerSkillLvInQuestAndTrainingArea", _playerIndex, skillId)
 end

@@ -1,12 +1,13 @@
 -- Import libraries
 local data = require("Rise Enhanced.utils.data")
 local utils = require("Rise Enhanced.utils.utils")
+require("Rise Enhanced.utils.hooks") -- initialize data hooks only
 
 -- Init library
 
 utils.init(data.folder, data.cacheFile)
 
-local module, settings, cache = data.getDefaultModule(
+local module, settings = data.getDefaultModule(
     data.folder, {
         enabled = true,
         lang = "en_US",
@@ -168,7 +169,7 @@ local function drawWindow()
     ) then
         isMenuOpen = false
     end
-
+    utils.text(utils.getData().loaded, "loaded")
     if imgui.tree_node(data.lang.Config.name) then
         _, data.enabled = settings.call("enabled", imgui.checkbox, data.lang.enabled)
         if imgui.tree_node(data.lang.Config.windowConfig) then

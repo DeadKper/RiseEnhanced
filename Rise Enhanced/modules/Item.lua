@@ -96,9 +96,9 @@ local function getStaminaBuffCage()
     for k, v in pairs(buffCageList) do
         local buffData = buffCageList[k]
         local buffDataId = buffData:get_field("_Id")
-        local buffLimit = buffData:get_field("_StatusBuffLimit"):get_elements()
 
         if id == buffDataId then
+            local buffLimit = buffData:get_field("_StatusBuffLimit"):get_elements()
             stamina = buffLimit[2]:get_field("mValue")
         end
     end
@@ -269,16 +269,12 @@ local function useItem(item)
     return applied, free
 end
 
-local function inQuest()
-    return utils.getQuestStatus() == 2 and utils.getQuestEndFlow() == 0
-end
-
 -- Hooks
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
     re.on_frame(function ()
-        if pauseAutoItems or not module.enabled("autoItems") or not inQuest() then
+        if pauseAutoItems or not module.enabled("autoItems") or not utils.playingQuest() then
             return
         end
 
@@ -358,7 +354,9 @@ function module.hook()
     sdk.hook(utils.definition("snow.QuestManager", "questStart"),
         function(args)
             if player == nil then
-                player, playerIndex, playerRef, _ = utils.getPlayerData()
+                player = utils.getPlayer()
+                playerIndex = utils.getPlayerIndex()
+                playerRef = utils.getPlayerData()
             end
             isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
             if not module.enabled("autoRestock") then return end
@@ -395,7 +393,7 @@ function module.hook()
                 if not settings.get("autoRestock")
                         or isRampage
                         or not settings.get("largeMonsterRestock")
-                        or not inQuest()
+                        or not utils.playingQuest()
                         or not isLargeMonster(sdk.to_managed_object(args[2])) then
                     return
                 end
@@ -422,9 +420,11 @@ function module.init()
     utils.setReference("_PlayerUserDataItemParameter", function ()
         return utils.singleton("snow.player.PlayerManager"):get_field("_PlayerUserDataItemParameter")
     end)
-    if not inQuest() then return end
+    if not utils.playingQuest() then return end
     if player == nil then
-        player, playerIndex, playerRef, _ = utils.getPlayerData()
+        player = utils.getPlayer()
+        playerIndex = utils.getPlayerIndex()
+        playerRef = utils.getPlayerData()
     end
     -- set flags
     isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
