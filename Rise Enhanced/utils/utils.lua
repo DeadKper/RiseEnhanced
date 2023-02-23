@@ -250,7 +250,7 @@ function utils.hook(definition, preFunction, postFunction, exclusive)
             table.insert(hooked[definition].post, postFunction)
         end
     else
-        error("tried to reassign exclusive hook")
+        error("tried to reassign exclusive hook", 2)
     end
 end
 
