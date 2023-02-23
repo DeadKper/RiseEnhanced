@@ -33,169 +33,140 @@ local lastSave = 0
 -- Main code
 
 ---@diagnostic disable-next-line: duplicate-set-field
-function module.hook()
-    -- add wirebug
-    utils.hook({"snow.player.PlayerManager", "update"},
-        function()
-            if not module.enabled() or not getWireBug then return end
-            local player = utils.getPlayer()
-            if not player then return end
-            getWireBug = false
-
-            local timeMult = 1
-            if utils.playerSkillLevel(104) > 0 then
-                timeMult = whispererBoost
-            end
-
-            local time = (utils.reference("_WireBugPowerUpTime") + extraWireBugTime) * 60 * timeMult
-
-            player:set_field("<HunterWireWildNum>k__BackingField", 1)
-            player:set_field("_HunterWireNumAddTime", time)
-        end
-    )
-
-    -- set saved clock
-    utils.hook({"snow.SnowSaveService", "saveCharaData"},
-        function()
-            lastSave = os.clock()
-        end
-    )
-
-    -- set saved clock on village return
-    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"},
-        function ()
-            lastSave = os.clock()
-        end
-    )
-
-    -- skip autosave
-    utils.hook({"snow.SnowSaveService", "requestAutoSaveAll"},
-        function()
-            if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
-                return sdk.PreHookResult.SKIP_ORIGINAL
-            end
-        end
-    )
-
-    -- remove hit stop
-    utils.hook({"snow.player.PlayerQuestBase", "updateHitStop"},
-        function(args)
-            if module.enabled("noHitStop") then
-                sdk.to_managed_object(args[2]):call("resetHitStop")
-            end
-        end
-    )
-
-    utils.hook({"snow.QuestManager", "questStart"},
-        function()
-            if not module.enabled() then return end
-
-            utils.addTimer(3, function ()
-                if not module.enabled("wirebugStart") then return end
-                getWireBug = true
-            end)
-        end
-    )
-
-    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
-    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"},
-        function (args)
-            utils.addTimer(5, function ()
-                if not module.enabled("wirebugRefresh")
-                        or data.quest.isRampage
-                        or not settings.get("largeMonsterRestock")
-                        or not utils.playingQuest()
-                        or not isLargeMonster(sdk.to_managed_object(args[2])) then
-                    return
-                end
-
-                getWireBug = true
-            end)
-        end
-    )
-
-    utils.hook({"snow.QuestManager", "notifyDeath"},
-        function()
-            if not module.enabled() then return end
-            utils.addTimer(5, function ()
-                if not module.enabled("wirebugStart") then return end
-                getWireBug = true
-            end)
-        end
-    )
-
-    utils.hook({"snow.QuestManager", "onQuestEnd"},
-        nil,
-        function (retval)
-            if not module.enabled("useMultipliers") then return retval end
-            local multipliers = settings.get("multipliers")
-            local questManager = utils.singleton("snow.QuestManager")
-            local useSmart = settings.get("useSmartMultipliers")
-
-            if useSmart then
-                local ammount
-                local dataManager = utils.singleton("snow.data.DataManager")
-                local progressManager = utils.singleton("snow.progress.ProgressManager")
-                local threshold = settings.get({"smartMultipliers", 1})
-                if threshold == 0 or threshold > dataManager:call("getHandMoney"):get_field("_Value") then
-                    local questLife = questManager:call("getQuestLife")
-                    ammount = questManager:call("getRemMoney") * multipliers[1]
-                    questManager:set_field("_StartRemMoney", ammount)
-                    questManager:set_field("_PenaltyMoney", ammount / questLife)
-                    questManager:set_field("_RemMoney", ammount)
-                end
-                threshold = settings.get({"smartMultipliers", 2})
-                if threshold == 0 or threshold > dataManager:call("getVillagePoint"):call("get_Point") then
-                    ammount = questManager:call("getRemVillagePoint") * multipliers[2]
-                    questManager:set_field("_RemVillagePoint", ammount)
-                end
-                threshold = settings.get({"smartMultipliers", 3})
-                if threshold == 0 or threshold > progressManager:call("get_HunterRank") then
-                    ammount = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
-                    questManager:set_field("_RemRankPoint", ammount)
-                end
-                threshold = settings.get({"smartMultipliers", 4})
-                if threshold == 0 or threshold > progressManager:call("get_MasterRank") then
-                    ammount = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
-                    questManager:set_field("_RemMasterRankPoint", ammount)
-                end
-                threshold = settings.get({"smartMultipliers", 5})
-                if threshold == 0 or threshold > progressManager:call("get_MysteryResearchLevel") then
-                    ammount =
-                            questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
-                    questManager:set_field("_RemMysteryResearchPoint", ammount / 1.1)
-                end
-            else
-                local life = questManager:call("getQuestLife")
-                local money = questManager:call("getRemMoney") * multipliers[1]
-                local points = questManager:call("getRemVillagePoint") * multipliers[2]
-                local hr = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
-                local mr = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
-                local anomaly =
-                        questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
-                questManager:set_field("_StartRemMoney", money)
-                questManager:set_field("_PenaltyMoney", money / life)
-                questManager:set_field("_RemMoney", money)
-                questManager:set_field("_RemVillagePoint", points)
-                questManager:set_field("_RemRankPoint", hr)
-                questManager:set_field("_RemMasterRankPoint", mr)
-                questManager:set_field("_RemMysteryResearchPoint", anomaly / 1.1)
-            end
-            return retval
-        end
-    )
-end
-
--- Draw module
----@diagnostic disable-next-line: duplicate-set-field
 function module.init()
     lastSave = os.clock()
+
     utils.setReference("_WireBugPowerUpTime", function ()
         return baseWireBugTime
     end)
+
+    -- add wirebug
+    utils.hook({"snow.player.PlayerManager", "update"}, function()
+        if not module.enabled() or not getWireBug then return end
+        local player = utils.getPlayer()
+        if not player then return end
+        getWireBug = false
+
+        local timeMult = 1
+        if utils.playerSkillLevel(104) > 0 then
+            timeMult = whispererBoost
+        end
+
+        local time = (utils.reference("_WireBugPowerUpTime") + extraWireBugTime) * 60 * timeMult
+
+        player:set_field("<HunterWireWildNum>k__BackingField", 1)
+        player:set_field("_HunterWireNumAddTime", time)
+    end)
+
+    -- set saved clock
+    utils.hook({"snow.SnowSaveService", "saveCharaData"}, function()
+        lastSave = os.clock()
+    end)
+
+    -- set saved clock on village return
+    utils.hook({"snow.gui.GuiManager", "notifyReturnInVillage"}, function ()
+        lastSave = os.clock()
+    end)
+
+    -- skip autosave
+    utils.hook({"snow.SnowSaveService", "requestAutoSaveAll"}, function()
+        if module.enabled() and os.clock() < lastSave + settings.get("saveDelay") * 60 then
+            return sdk.PreHookResult.SKIP_ORIGINAL
+        end
+    end)
+
+    -- remove hit stop
+    utils.hook({"snow.player.PlayerQuestBase", "updateHitStop"}, function(args)
+        if module.enabled("noHitStop") then
+            sdk.to_managed_object(args[2]):call("resetHitStop")
+        end
+    end)
+
+    utils.hookTimer({"snow.QuestManager", "questStart"}, function()
+        if not module.enabled("wirebugStart") then return end
+        getWireBug = true
+    end, 3)
+
+    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
+    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"}, function (args)
+        utils.timer(function ()
+            if not module.enabled("wirebugRefresh")
+                    or data.quest.isRampage
+                    or not settings.get("largeMonsterRestock")
+                    or not utils.playingQuest()
+                    or not isLargeMonster(sdk.to_managed_object(args[2])) then
+                return
+            end
+
+            getWireBug = true
+        end, 5)
+    end)
+
+    utils.hookTimer({"snow.QuestManager", "notifyDeath"}, function()
+        if not module.enabled("wirebugStart") then return end
+
+        getWireBug = true
+    end, 5)
+
+    utils.hook({"snow.QuestManager", "onQuestEnd"}, nil, function (retval)
+        if not module.enabled("useMultipliers") then return retval end
+        local multipliers = settings.get("multipliers")
+        local questManager = utils.singleton("snow.QuestManager")
+        local useSmart = settings.get("useSmartMultipliers")
+
+        if useSmart then
+            local ammount
+            local dataManager = utils.singleton("snow.data.DataManager")
+            local progressManager = utils.singleton("snow.progress.ProgressManager")
+            local threshold = settings.get({"smartMultipliers", 1})
+            if threshold == 0 or threshold > dataManager:call("getHandMoney"):get_field("_Value") then
+                local questLife = questManager:call("getQuestLife")
+                ammount = questManager:call("getRemMoney") * multipliers[1]
+                questManager:set_field("_StartRemMoney", ammount)
+                questManager:set_field("_PenaltyMoney", ammount / questLife)
+                questManager:set_field("_RemMoney", ammount)
+            end
+            threshold = settings.get({"smartMultipliers", 2})
+            if threshold == 0 or threshold > dataManager:call("getVillagePoint"):call("get_Point") then
+                ammount = questManager:call("getRemVillagePoint") * multipliers[2]
+                questManager:set_field("_RemVillagePoint", ammount)
+            end
+            threshold = settings.get({"smartMultipliers", 3})
+            if threshold == 0 or threshold > progressManager:call("get_HunterRank") then
+                ammount = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
+                questManager:set_field("_RemRankPoint", ammount)
+            end
+            threshold = settings.get({"smartMultipliers", 4})
+            if threshold == 0 or threshold > progressManager:call("get_MasterRank") then
+                ammount = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
+                questManager:set_field("_RemMasterRankPoint", ammount)
+            end
+            threshold = settings.get({"smartMultipliers", 5})
+            if threshold == 0 or threshold > progressManager:call("get_MysteryResearchLevel") then
+                ammount =
+                        questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
+                questManager:set_field("_RemMysteryResearchPoint", ammount / 1.1)
+            end
+        else
+            local life = questManager:call("getQuestLife")
+            local money = questManager:call("getRemMoney") * multipliers[1]
+            local points = questManager:call("getRemVillagePoint") * multipliers[2]
+            local hr = questManager:call("getRemRankPointAfterCalculation") * multipliers[3]
+            local mr = questManager:call("getRemMasterRankPointAfterCalculation") * multipliers[4]
+            local anomaly =
+                    questManager:call("getRemMysteryResearchPointAfterCalculation") * multipliers[5]
+            questManager:set_field("_StartRemMoney", money)
+            questManager:set_field("_PenaltyMoney", money / life)
+            questManager:set_field("_RemMoney", money)
+            questManager:set_field("_RemVillagePoint", points)
+            questManager:set_field("_RemRankPoint", hr)
+            questManager:set_field("_RemMasterRankPoint", mr)
+            questManager:set_field("_RemMysteryResearchPoint", anomaly / 1.1)
+        end
+        return retval
+    end)
 end
 
--- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.drawInnerUi()
     module.enabledCheck()

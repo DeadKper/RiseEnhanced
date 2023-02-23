@@ -175,23 +175,30 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.hook()
     -- Hooks
-    -- set player hp and stamina when eating
-    utils.hook({"snow.player.PlayerManager", "update"},
-        function()
-            if needStats and didEat then
-                needStats = false
-                didEat = false
-                local playerData = utils.getPlayer():get_field("_refPlayerData")
-                local newHp = playerData:get_field("_vitalMax") + 50
-                local newStamina = playerData:get_field("_staminaMax") + 1500
-                playerData:set_field("_vitalMax", newHp)
-                playerData:set_field("_r_Vital", newHp)
-                playerData:call("set__vital", newHp + .0) -- context dependent
-                playerData:set_field("_staminaMax", newStamina)
-                playerData:set_field("_stamina", newStamina)
-            end
+
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function module.init()
+    utils.setReference("snow.data.DataShortcut", function ()
+        return sdk.create_instance("snow.data.DataShortcut", true):add_ref()
+    end)
+
+        -- set player hp and stamina when eating
+    utils.hook({"snow.player.PlayerManager", "update"}, function()
+        if needStats and didEat then
+            needStats = false
+            didEat = false
+            local playerData = utils.getPlayer():get_field("_refPlayerData")
+            local newHp = playerData:get_field("_vitalMax") + 50
+            local newStamina = playerData:get_field("_staminaMax") + 1500
+            playerData:set_field("_vitalMax", newHp)
+            playerData:set_field("_r_Vital", newHp)
+            playerData:call("set__vital", newHp + .0) -- context dependent
+            playerData:set_field("_staminaMax", newStamina)
+            playerData:set_field("_stamina", newStamina)
         end
-    )
+    end)
 
     -- increase chance for dango skills on ticket when option is enabled
     utils.hook({"snow.data.DangoData", "get_SkillActiveRate"},
@@ -207,8 +214,7 @@ function module.hook()
                 dango.chance = dango.saved:get_field("_Param"):get_field("_SkillActiveRate")
                 dango.saved:get_field("_Param"):set_field("_SkillActiveRate", 100)
             end
-        end,
-        function(retval)
+        end, function(retval)
             if not module.enabled("increasedChance") and dango.ticket then return retval end
 
             dango.saved:get_field("_Param"):set_field("_SkillActiveRate", dango.chance)
@@ -217,19 +223,17 @@ function module.hook()
     )
 
     -- inform GUI of dango levels
-    utils.hook({"snow.gui.fsm.kitchen.GuiKitchen", "setDangoDetailWindow"},
-        function(args)
-            if not module.enabled() then return end
+    utils.hook({"snow.gui.fsm.kitchen.GuiKitchen", "setDangoDetailWindow"}, function(args)
+        if not module.enabled() then return end
 
-            local gui = sdk.to_managed_object(args[2])
-            local skewerLevel = gui:get_field("SpecialSkewerDangoLv")
-            for i=0,2 do
-                local newSkewerLevel = sdk.create_instance("System.UInt32")
-                newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
-                skewerLevel[i] = newSkewerLevel
-            end
+        local gui = sdk.to_managed_object(args[2])
+        local skewerLevel = gui:get_field("SpecialSkewerDangoLv")
+        for i=0,2 do
+            local newSkewerLevel = sdk.create_instance("System.UInt32")
+            newSkewerLevel:set_field("mValue", settings.get("skewerLevels")[i+1])
+            skewerLevel[i] = newSkewerLevel
         end
-    )
+    end)
 
     -- inform dango order constructor of dango levels
     utils.hook({"snow.facility.kitchen.MealFunc", "updateList"},
@@ -265,74 +269,50 @@ function module.hook()
     )
 
     -- return ticket and remove timer when respective option is enabled
-    utils.hook({"snow.facility.kitchen.MealFunc", "order"},
-        nil,
-        function(retval)
-            if not module.enabled() then return retval end
+    utils.hook({"snow.facility.kitchen.MealFunc", "order"}, nil, function(retval)
+        if not module.enabled() then return retval end
 
-            if settings.get("disableTimer") then
-                local kitchen = getMeal()
-                if kitchen then
-                    kitchen:set_field("_AvailableWaitTimer", 0)
-                end
+        if settings.get("disableTimer") then
+            local kitchen = getMeal()
+            if kitchen then
+                kitchen:set_field("_AvailableWaitTimer", 0)
             end
-            if settings.get("infiniteTickets") then
-                local dataManager = utils.singleton("snow.data.DataManager")
-                local itemBox = dataManager:get_field("_PlItemBox")
-                itemBox:call("tryAddGameItem(snow.data.ContentsIdSystem.ItemId, System.Int32)", 68157564, 1)
-            end
-            return retval
         end
-    )
-
-    -- auto eat inside quest
-    utils.hook({"snow.QuestManager", "questStart"},
-        function()
-            if not module.enabled("autoEat") then return end
-
-            utils.addTimer(3, function ()
-                needStats = true
-                autoDango()
-            end)
+        if settings.get("infiniteTickets") then
+            local dataManager = utils.singleton("snow.data.DataManager")
+            local itemBox = dataManager:get_field("_PlItemBox")
+            itemBox:call("tryAddGameItem(snow.data.ContentsIdSystem.ItemId, System.Int32)", 68157564, 1)
         end
-    )
+        return retval
+    end)
 
     -- bypass check for eating
-    utils.hook({"snow.facility.MealOrderData", "canOrder"},
-        nil,
-        function(retval)
-            if not module.enabled("autoEat") or not isOrdering then return retval end
+    utils.hook({"snow.facility.MealOrderData", "canOrder"}, nil, function(retval)
+        if not module.enabled("autoEat") or not isOrdering then return retval end
 
-            local bool = sdk.create_instance("System.Boolean"):add_ref()
-            bool:set_field("mValue", true)
-            return sdk.to_ptr(bool)
-        end
-    )
-
-    -- auto eat on cart
-    utils.hook({"snow.QuestManager", "notifyDeath"},
-        function()
-            if not module.enabled("autoEat") then return end
-            utils.addTimer(5, function ()
-                carted = true
-                autoDango()
-            end)
-        end
-    )
+        local bool = sdk.create_instance("System.Boolean"):add_ref()
+        bool:set_field("mValue", true)
+        return sdk.to_ptr(bool)
+    end)
 
     -- clear carted state
-    utils.hook({"snow.QuestManager", "onQuestEnd"},
-        function ()
-            carted = false
-        end
-    )
-end
-
----@diagnostic disable-next-line: duplicate-set-field
-function module.init()
-    utils.setReference("snow.data.DataShortcut", function ()
-        return sdk.create_instance("snow.data.DataShortcut", true):add_ref()
+    utils.hook({"snow.QuestManager", "onQuestEnd"}, function ()
+        carted = false
     end)
+
+    -- auto eat on cart
+    utils.hookTimer({"snow.QuestManager", "notifyDeath"}, function()
+        if not module.enabled("autoEat") then return end
+        carted = true
+        autoDango()
+    end, 5)
+
+    -- auto eat inside quest
+    utils.hookTimer({"snow.QuestManager", "questStart"}, function ()
+        if not module.enabled("autoEat") then return end
+        needStats = true
+        autoDango()
+    end, 3)
 end
 
 -- Draw module

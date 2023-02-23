@@ -209,12 +209,6 @@ function utils.hook(definition, preFunction, postFunction)
         definition = utils.definition(table.unpack(definition))
     end
 
-    if preFunction == nil then
-        preFunction = utils.original
-    end
-    if postFunction == nil then
-        postFunction = utils.retval
-    end
     if not hooked[definition] then
         hooked[definition] = {
             args = nil,
@@ -239,8 +233,32 @@ function utils.hook(definition, preFunction, postFunction)
             end
         )
     end
-    table.insert(hooked[definition].pre, preFunction)
-    table.insert(hooked[definition].post, postFunction)
+
+    if preFunction ~= nil then
+        table.insert(hooked[definition].pre, preFunction)
+    end
+    if postFunction ~= nil then
+        table.insert(hooked[definition].post, postFunction)
+    end
+end
+
+local function decodeProperty(keys, dataTable)
+    local property, key, value
+    if type(keys) ~= "table" then keys = { keys } end
+    if dataTable == nil then dataTable = {} end
+    value = dataTable
+    local nilLastValue = false
+    for _, v in pairs(keys) do
+        property = value
+        key = v
+        if property[key] == nil then
+            property[key] = {}
+            nilLastValue = true
+        end
+        value = property[key]
+    end
+    if nilLastValue then property[key] = nil end
+    return property[key], property, key
 end
 
 local data = {}
@@ -248,6 +266,18 @@ local data = {}
 -- Get data table, useful to communicate between different modules
 function utils.getData()
     return data
+end
+
+-- Get value from data table
+function utils.get(keys)
+    local value, _, _ = decodeProperty(keys, data)
+    return value
+end
+
+-- Set value to data table
+function utils.set(keys, value)
+    local _, property, key = decodeProperty(keys, data)
+    property[key] = value
 end
 
 -- Formats number with comas every thousands or returns _default_text when number is equal to _default_at, _default_at denifed as 0 if not given
@@ -315,6 +345,10 @@ function utils.playingQuest()
     return utils.getQuestStatus() == 2 and utils.getQuestEndFlow() == 0
 end
 
+function utils.inLobby()
+    return utils.getQuestStatus() == 0 and utils.singleton("snow.player.PlayerManager") ~= nil
+end
+
 -- Returns whether the quest es online or not, only works properly inside of mission
 function utils.isQuestOnline()
     return utils.singleton("snow.stage.StageManager"):get_IsQuestOnline()
@@ -336,6 +370,9 @@ local playerInput
 function utils.getPlayer()
     if not playerInput then -- buffer mod says "findMasterPlayer" might not always work
         local inputManager = sdk.get_managed_singleton("snow.StmInputManager")
+        if not inputManager then -- get player is used to check if game is loaded
+            return playerInput
+        end
         local inGameInputDevice = inputManager:get_field("_InGameInputDevice")
         playerInput = inGameInputDevice:get_field("_pl_input")
     end
@@ -397,30 +434,117 @@ function utils.chat(message, sound, ...)
     utils.singleton("snow.gui.ChatManager"):call("reqAddChatInfomation", string.format(message, ...), sound)
 end
 
--- Time handler
+-- Timed events handler
 
-local timers = {}
+local timed = {
+    always = {},
+    cooldown = {},
+    condition = {},
+    loops = {},
+    timers = {},
+}
 
 -- Allows a function to be used with a delay in seconds
-function utils.addTimer(delay, func)
-    table.insert(timers, {
+function utils.timer(func, delay)
+    table.insert(timed.timers, {
+        action = func,
         delay = os.clock() + delay,
-        action = func
     })
 end
 
-local time
-local function tickTimers()
-    time = os.clock()
-    for i, timer in pairs(timers) do
-        if timer.delay - time <= 0 then
-            timer.action()
-            timers[i] = nil
-        end
+-- Allows a function to be called repeatedly, will be removed from the table when the condition function returns false
+function utils.loop(func, _sleep, _condition)
+    if _sleep == nil and _condition == nil then
+        table.insert(timed.always, {
+            action = func,
+        })
+    elseif _condition == nil then
+        table.insert(timed.cooldown, {
+            sleep = _sleep,
+            time = os.clock() - _sleep,
+            action = func,
+        })
+    elseif _sleep == nil then
+        table.insert(timed.condition, {
+            condition = _condition,
+            action = func,
+        })
+    else
+        table.insert(timed.loops, {
+            sleep = _sleep,
+            condition = _condition,
+            time = os.clock() - _sleep,
+            action = func,
+        })
     end
 end
 
-re.on_frame(tickTimers)
+local function hookLoop(definition, func, sleep, condition, run)
+    if run and condition() then
+        utils.loop(func, sleep, condition)
+    end
+    utils.hook(definition, nil, function ()
+        utils.loop(func, sleep, condition)
+    end)
+end
+
+-- Allows a loop to be autohooked on post method of a definition, will also run loop automatically
+function utils.hookLoop(definition, func, _sleep, _condition, _delay, _run)
+    if _run == nil then
+        _run = true
+    end
+    if _delay ~= nil and _delay > 0 then
+        utils.hookLoop(function ()
+            hookLoop(definition, func, _sleep, _condition, _run)
+        end, _delay)
+    else
+        hookLoop(definition, func, _sleep, _condition, _run)
+    end
+end
+
+-- Allows a timer to be autohooked on post method of a definition
+function utils.hookTimer(definition, func, delay)
+    utils.hook(definition, nil, function ()
+        utils.timer(func, delay)
+    end)
+end
+
+local frameTime
+re.on_frame(function ()
+    frameTime = os.clock()
+    for _, current in pairs(timed.always) do
+        current.action()
+    end
+    for _, current in pairs(timed.cooldown) do
+        if frameTime - (current.time + current.sleep) >= 0 then
+            current.action()
+            current.time = frameTime
+        end
+    end
+    for i, current in pairs(timed.condition) do
+        if current.condition() then
+            current.action()
+        else
+            timed.condition[i] = nil
+        end
+    end
+    for i, current in pairs(timed.loops) do
+        if frameTime - (current.time + current.sleep) >= 0 then
+            if current.condition() then
+                current.action()
+                current.time = frameTime
+            else
+                timed.loops[i] = nil
+            end
+        end
+    end
+    for i, current in pairs(timed.timers) do
+        if current.delay - frameTime <= 0 then
+            current.action()
+            timed.timers[i] = nil
+        end
+    end
+end)
 
 -- Settings handler
 
@@ -486,41 +610,41 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         json.dump_file(_file, _table)
     end
 
-    local function decodeProperty(propertyTable, table)
-        local property, key, value
-        if type(propertyTable) ~= "table" then propertyTable = { propertyTable } end
-        if table == nil then table = settings.data end
-        value = table
-        local nilLastValue = false
-        for _, v in pairs(propertyTable) do
-            property = value
-            key = v
-            if property[key] == nil then
-                property[key] = {}
-                nilLastValue = true
-            end
-            value = property[key]
-        end
-        if nilLastValue then property[key] = nil end
-        return property, key
-    end
+    -- local function decodeProperty(propertyTable, table)
+    --     local property, key, value
+    --     if type(propertyTable) ~= "table" then propertyTable = { propertyTable } end
+    --     if table == nil then table = settings.data end
+    --     value = table
+    --     local nilLastValue = false
+    --     for _, v in pairs(propertyTable) do
+    --         property = value
+    --         key = v
+    --         if property[key] == nil then
+    --             property[key] = {}
+    --             nilLastValue = true
+    --         end
+    --         value = property[key]
+    --     end
+    --     if nilLastValue then property[key] = nil end
+    --     return property, key
+    -- end
 
     -- Return the value given by the propertyTable, ex: settings.get({"skewerLvl", "top"}) will return settings.data.skewerLvl.top or settings.get("enabled") will return settings.data.enable
     function settings.get(propertyTable)
-        local property, key = decodeProperty(propertyTable)
-        return property[key]
+        local value, _, _ = decodeProperty(propertyTable, settings.data)
+        return value
     end
 
     -- Return a copy of the default value given by the propertyTable
     function settings.getDefault(propertyTable)
-        local property, key = decodeProperty(propertyTable, settings.default)
+        local _, property, key = decodeProperty(propertyTable, settings.default)
         return utils.copy(property[key])
     end
 
     -- Sets value given by the propertyTable, _changed is optional and assumed as true, ex: settings.set({"skewerLvl", "top"}, 4) will set as settings.data.skewerLvl.top = 4, can also use settings.set("enabled", true) to set settings.data.enabled = true
     function settings.set(propertyTable, value, _changed)
         if _changed ~= nil and not _changed then return end
-        local property, key = decodeProperty(propertyTable)
+        local _, property, key = decodeProperty(propertyTable, settings.data)
         property[key] = utils.copy(value)
         save()
     end
@@ -531,9 +655,9 @@ function utils.getSettingsHandler(defaults, folder, _filename)
             settings.data = utils.copy(settings.default)
             save()
         else
-            local property, key = decodeProperty(propertyTable)
+            local _, property, key = decodeProperty(propertyTable, settings.data)
             if property == nil or key == nil then return end
-            local defaultProperty, defaultKey = decodeProperty(propertyTable, settings.default)
+            local _, defaultProperty, defaultKey = decodeProperty(propertyTable, settings.default)
             if defaultProperty == nil or defaultKey == nil then return end
             property[key] = utils.copy(defaultProperty[defaultKey])
             save()
@@ -543,7 +667,7 @@ function utils.getSettingsHandler(defaults, folder, _filename)
     -- Call a given function, will autosave on change. func can be any function that returns "changed, value", ex: settings.imgui(.., imgui.checkbox, ..)
     function settings.call(propertyTable, func, ...)
         if type(func) ~= "function" then return end
-        local property, key = decodeProperty(propertyTable)
+        local _, property, key = decodeProperty(propertyTable, settings.data)
         local args = {...}
         table.insert(args, 2, property[key])
         local changed, newValue = func(table.unpack(args))
@@ -564,9 +688,8 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         if type(_func) ~= "function" then
             error("settings.combo was called with an invalid func")
         end
-        local property, key = decodeProperty(propertyTable)
+        local value, property, key = decodeProperty(propertyTable, settings.data)
         local unindexed = false
-        local value = property[key]
         if type(value) ~= "number" then
             unindexed = true
             value = utils.tableSearch(table, value)
@@ -604,8 +727,7 @@ function utils.getSettingsHandler(defaults, folder, _filename)
         if type(_func) ~= "function" then
             error("settings.slider was called with an invalid func")
         end
-        local property, key = decodeProperty(propertyTable)
-        local value = property[key]
+        local value, property, key = decodeProperty(propertyTable, settings.data)
         local inSteps = false
         local arguments, float
         if _arg == nil then
@@ -824,7 +946,7 @@ toStringFunctions = {
         local originalIndentation = indentation
         indentation = indentation .. "\t"
         for k, v in pairs(variable) do
-            text = text .. "\n" .. indentation .. k .. " = "
+            text = text .. "\n" .. indentation .. tostring(k) .. " = "
                 .. toStringFunctions[type(v)](v, indentation, _tableDepth - 1) .. ","
         end
 
@@ -879,6 +1001,8 @@ function utils.printInfoNodes()
     utils.treeText("Custom references", references.custom, "references.custom")
     utils.treeText("Singletons", references.singletons, "references.singletons")
     utils.treeText("Type definitions", references.definitions, "references.definitions")
+    utils.treeText("Timed events", timed, "timed")
+    utils.treeText("Hooks", hooked, "hooked")
 end
 
 -- Util Initialization

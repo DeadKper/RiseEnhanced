@@ -5,7 +5,7 @@ local mod = {
     folder = "Rise Enhanced",
     cacheFile = "cache",
     version = "4.1.0",
-    beta = false,
+    beta = true,
     enabled = true,
     lang = require("Rise Enhanced.languages.en_US")
 }

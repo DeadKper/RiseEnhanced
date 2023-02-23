@@ -203,20 +203,25 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
-    if initiated then return end
-    if not settings.get("enabled") then return end
+    for i = 1, #modules do -- start on 1 to ignore template module
+        local _module = modules[i]
+        _module.init()
+    end
+end
+
+if not initiated then
     initiated = true
 
     math.randomseed(os.time()) -- set seed for random method
 
-    for i = 1, #modules do -- start on 1 to ignore template module
-        local _module = modules[i]
-        _module.init()
-        _module.hook()
+    if utils.getData().loaded then
+        module.init()
+    else
+        utils.hook({"snow.data.DataManager", "onLoad(snow.SaveDataBase)"}, nil, module.init)
     end
 end
 
-module.init()
+
 re.on_draw_ui(
     function ()
         drawWindow()

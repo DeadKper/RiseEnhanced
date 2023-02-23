@@ -80,31 +80,24 @@ local function spawnBirds()
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
-function module.hook()
+function module.init()
         -- spawn birds on quest start
-    utils.hook({"snow.QuestManager", "questStart"},
-        function()
-            if not module.enabled() then return end
+    utils.hookTimer({"snow.QuestManager", "questStart"}, function()
+        if not module.enabled() then return end
 
-            utils.addTimer(3, spawnBirds)
-        end
-    )
+        spawnBirds()
+    end, 3)
 
     -- remove birds on quest end
-    utils.hook({"snow.QuestManager", "onQuestEnd"},
-        destroyBirds
-    )
+    utils.hook({"snow.QuestManager", "onQuestEnd"}, destroyBirds)
 
     -- fill stamina when picking up spiribird
-    utils.hook({"snow.player.PlayerQuestBase", "calcLvBuffStamina"},
-        nil,
-        function (retval, args)
-            local player = sdk.to_managed_object(args[2])
-            local stamina = sdk.to_int64(args[3]) * 30.0
-            player:call("calcStaminaMax", stamina, false)
-            return retval
-        end
-    )
+    utils.hook({"snow.player.PlayerQuestBase", "calcLvBuffStamina"}, nil, function (retval, args)
+        local player = sdk.to_managed_object(args[2])
+        local stamina = sdk.to_int64(args[3]) * 30.0
+        player:call("calcStaminaMax", stamina, false)
+        return retval
+    end)
 
     -- remove spiribirds on script reset
     re.on_script_reset(destroyBirds)

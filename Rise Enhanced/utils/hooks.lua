@@ -3,7 +3,11 @@ local utils = require("Rise Enhanced.utils.utils")
 local data = utils.getData()
 
 data.enemy = {}
-data.quest = {}
+data.quest = {
+    active = false,
+    isRampage = false,
+    largeMonsterList = {},
+}
 
 data.damage = {
     types = {
@@ -76,34 +80,32 @@ local function updateMonsterList()
         end
     end
     if targetCount < 0 then
-        data.quest.largeMonsterList = nil
         return
     end
-    local monsterTable = {}
     for i = 0, targetCount do
         local target = targets:call("get_Item", i)
-        if not utils.contains(monsterTable, target) and data.enemy.hzv[target] ~= nil then
-            table.insert(monsterTable, target)
+        if not utils.contains(data.quest.largeMonsterList, target)
+                and data.enemy.hzv[target] ~= nil then
+            table.insert(data.quest.largeMonsterList, target)
         end
-    end
-    if #monsterTable > 0 then
-        data.quest.largeMonsterList = monsterTable
     end
 end
 
 local function updateActiveQuest()
-    updateMonsterList()
     data.quest.active = true
     data.quest.isRampage = utils.singleton("snow.QuestManager", "getHyakuryuCategory") ~= 2
+    updateMonsterList()
 end
 
 local function clearActiveQuest()
     data.quest.active = false
     data.quest.isRampage = false
-    data.quest.largeMonsterList = nil
+    for k in pairs(data.quest.largeMonsterList) do
+        data.quest.largeMonsterList[k] = nil
+    end
 end
 
-utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"}, updateActiveQuest)
+utils.hook({"snow.QuestManager", "questActivate(snow.LobbyManager.QuestIdentifier)"}, nil, updateActiveQuest)
 
 utils.hook({"snow.QuestManager", "questCancel"}, clearActiveQuest)
 
@@ -120,7 +122,8 @@ local function init(retval)
     return retval
 end
 
-if utils.getPlayer() ~= nil then init() end -- init when already loaded (for script reset)
+-- init when already loaded (for script reset)
+if utils.singleton("snow.player.PlayerManager") ~= nil then init() end
 
 utils.hook({"snow.data.DataManager", "onLoad(snow.SaveDataBase)"}, nil, init)
 

@@ -268,163 +268,152 @@ local function useItem(item)
     return applied, free
 end
 
--- Hooks
+local function autoItemsLoop()
+    if pauseAutoItems or not module.enabled("autoItems") then
+        return
+    end
 
----@diagnostic disable-next-line: duplicate-set-field
-function module.hook()
-    re.on_frame(function ()
-        if pauseAutoItems or not module.enabled("autoItems") or not utils.playingQuest() then
-            return
+    local refreshLevel = 5
+    local activationLevel = 5
+
+    if utils.isWeaponSheathed() then
+        drawFlag = true
+    else
+        refreshLevel = 4
+        if drawFlag then
+            activationLevel = 4
+            drawFlag = false
         end
+    end
 
-        local refreshLevel = 5
-        local activationLevel = 5
-
-        if utils.isWeaponSheathed() then
-            drawFlag = true
-        else
-            refreshLevel = 4
-            if drawFlag then
-                activationLevel = 4
-                drawFlag = false
-            end
+    if not utils.inBattle() then
+        combatFlag = true
+    else
+        refreshLevel = 3
+        if combatFlag then
+            activationLevel = 3
+            combatFlag = false
         end
+    end
 
-        if not utils.inBattle() then
-            combatFlag = true
-        else
-            refreshLevel = 3
-            if combatFlag then
-                activationLevel = 3
-                combatFlag = false
-            end
-        end
+    local cooldown = settings.get("buffRefreshCd")
+    if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
+        activationLevel = refreshLevel
+    end
 
-        local cooldown = settings.get("buffRefreshCd")
-        if cooldown > 0 and os.clock() - (itemUsedTime + cooldown) >= 0 then
-            activationLevel = refreshLevel
-        end
+    if activationLevel == 5 and os.clock() - (itemUsedTime + math.max(alwaysCd, cooldown)) < 0 then
+        return
+    end
 
-        if activationLevel == 5 and os.clock() - (itemUsedTime + math.max(alwaysCd, cooldown)) < 0 then
-            return
-        end
+    updateItemAndSkillData()
 
-        updateItemAndSkillData()
-
-        local item, used, free, message
-        local usedFlag = false
-        local activateList = {}
-        for key, value in pairs(settings.get("itemList")) do
-            if value >= activationLevel or (questStartTrigger and value == 2) then
-                usedFlag = true
-                -- why lua doesn't have "continue"? so dumb
-                item = consumables[key]
-                used, free = useItem(item)
-                if used then
-                    message = mod.lang.Item.itemList[key]
-                    if free then
-                        message = message .. " (free meal)"
-                    end
-                    table.insert(activateList, message)
+    local item, used, free, message
+    local usedFlag = false
+    local activateList = {}
+    for key, value in pairs(settings.get("itemList")) do
+        if value >= activationLevel or (questStartTrigger and value == 2) then
+            usedFlag = true
+            -- why lua doesn't have "continue"? so dumb
+            item = consumables[key]
+            used, free = useItem(item)
+            if used then
+                message = mod.lang.Item.itemList[key]
+                if free then
+                    message = message .. " (free meal)"
                 end
+                table.insert(activateList, message)
             end
         end
+    end
 
-        if usedFlag then
-            itemUsedTime = os.clock()
-        end
+    if usedFlag then
+        itemUsedTime = os.clock()
+    end
 
-        if questStartTrigger then
-            questStartTrigger = false
-        end
+    if questStartTrigger then
+        questStartTrigger = false
+    end
 
-        if #activateList == 0 or not settings.get("notification") then
-            return
-        end
+    if #activateList == 0 or not settings.get("notification") then
+        return
+    end
 
-        message = "<COL YEL>" .. mod.lang.Item.usedItems .. "</COL>"
-        for _, value in pairs(activateList) do
-            message = message .. "\n" .. value
-        end
-        utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
-    end)
-
-    -- event hook for restocking inside quest
-    utils.hook({"snow.QuestManager", "questStart"},
-        function()
-            if player == nil then
-                player = utils.getPlayer()
-                playerIndex = utils.getPlayerIndex()
-                playerRef = utils.getPlayerData()
-            end
-            if not module.enabled("autoRestock") then return end
-            utils.addTimer(3, function ()
-                restock()
-                questStartTrigger = true
-                pauseAutoItems = false
-            end)
-        end
-    )
-
-    -- restock on cart
-    utils.hook({"snow.QuestManager", "notifyDeath"},
-        function()
-            pauseAutoItems = true
-            if not module.enabled() then return end
-            utils.addTimer(5, function ()
-                if settings.get("autoRestock") then
-                    restock()
-                end
-                questStartTrigger = true
-                pauseAutoItems = false
-            end)
-        end
-    )
-
-    -- restock on quest enemy kill
-    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
-    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"},
-        function (args)
-            utils.addTimer(5, function ()
-                if not settings.get("autoRestock")
-                        or data.quest.isRampage
-                        or not settings.get("largeMonsterRestock")
-                        or not utils.playingQuest()
-                        or not isLargeMonster(sdk.to_managed_object(args[2])) then
-                    return
-                end
-
-                restock()
-            end)
-        end
-    )
-
-    -- pause auto items
-    utils.hook({"snow.QuestManager", "onQuestEnd"},
-        function ()
-            pauseAutoItems = true
-            itemUsedTime = 0
-        end
-    )
+    message = "<COL YEL>" .. mod.lang.Item.usedItems .. "</COL>"
+    for _, value in pairs(activateList) do
+        message = message .. "\n" .. value
+    end
+    utils.chat(message, settings.get("notificationSound") and 2289944406 or false)
 end
 
--- Draw module
 ---@diagnostic disable-next-line: duplicate-set-field
 function module.init()
     utils.setReference("_PlayerUserDataItemParameter", function ()
         return utils.singleton("snow.player.PlayerManager"):get_field("_PlayerUserDataItemParameter")
     end)
-    if not utils.playingQuest() then return end
-    if player == nil then
-        player = utils.getPlayer()
-        playerIndex = utils.getPlayerIndex()
-        playerRef = utils.getPlayerData()
-    end
-    -- set flags
-    drawFlag = utils.isWeaponSheathed()
-    combatFlag = not utils.inBattle()
+    if utils.playingQuest() then
+        if player == nil then
+            player = utils.getPlayer()
+            playerIndex = utils.getPlayerIndex()
+            playerRef = utils.getPlayerData()
+        end
+        -- set flags
+        drawFlag = utils.isWeaponSheathed()
+        combatFlag = not utils.inBattle()
 
-    pauseAutoItems = false
+        pauseAutoItems = false
+    end
+
+    utils.hookLoop({"snow.QuestManager", "questStart"}, autoItemsLoop, nil, utils.playingQuest)
+
+    -- event hook for restocking inside quest
+    utils.hook({"snow.QuestManager", "questStart"}, function()
+        if player == nil then
+            player = utils.getPlayer()
+            playerIndex = utils.getPlayerIndex()
+            playerRef = utils.getPlayerData()
+        end
+        if not module.enabled("autoRestock") then return end
+        utils.timer(function ()
+            restock()
+            questStartTrigger = true
+            pauseAutoItems = false
+        end, 3)
+    end)
+
+    -- restock on cart
+    utils.hook({"snow.QuestManager", "notifyDeath"}, function()
+        pauseAutoItems = true
+        if not module.enabled() then return end
+        utils.timer(function ()
+            if settings.get("autoRestock") then
+                restock()
+            end
+            questStartTrigger = true
+            pauseAutoItems = false
+        end, 5)
+    end)
+
+    -- restock on quest enemy kill
+    local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
+    utils.hook({"snow.enemy.EnemyCharacterBase", "questEnemyDie"}, function (args)
+        utils.timer(function ()
+            if not settings.get("autoRestock")
+                    or data.quest.isRampage
+                    or not settings.get("largeMonsterRestock")
+                    or not utils.playingQuest()
+                    or not isLargeMonster(sdk.to_managed_object(args[2])) then
+                return
+            end
+
+            restock()
+        end, 5)
+    end)
+
+    -- pause auto items
+    utils.hook({"snow.QuestManager", "onQuestEnd"}, function ()
+        pauseAutoItems = true
+        itemUsedTime = 0
+    end)
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
