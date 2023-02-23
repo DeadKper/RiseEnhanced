@@ -201,8 +201,10 @@ function utils.retval(retval)
 end
 
 local hooked = {}
--- Hook functions to sdk, will send args from pre to the post function (after retval)
-function utils.hook(definition, preFunction, postFunction)
+-- Hook functions to sdk, will send args from pre to the post function (after retval).
+-- If exclusive is true it will do a normal sdk.hook with pre and post functions but will
+-- prevent any more hooks to be used for that definition
+function utils.hook(definition, preFunction, postFunction, exclusive)
     if type(definition) == "string" then
         definition = utils.definition(definition)
     elseif type(definition) == "table" then
@@ -210,35 +212,45 @@ function utils.hook(definition, preFunction, postFunction)
     end
 
     if not hooked[definition] then
-        hooked[definition] = {
-            args = nil,
-            pre = {},
-            post = {},
-        }
-        sdk.hook(definition, -- I was told I shouldn't stack hooks x'd
-            function (args)
-                hooked[definition].args = args
-                local result = sdk.PreHookResult.CALL_ORIGINAL
-                for i = 1, #hooked[definition].pre do
-                    result = hooked[definition].pre[i](args) or result
+        if not exclusive then
+            hooked[definition] = {
+                args = nil,
+                pre = {},
+                post = {},
+            }
+            sdk.hook(definition, -- I was told I shouldn't stack hooks x'd
+                function (args)
+                    hooked[definition].args = args
+                    local result = sdk.PreHookResult.CALL_ORIGINAL
+                    for i = 1, #hooked[definition].pre do
+                        result = hooked[definition].pre[i](args) or result
+                    end
+                    return result
+                end,
+                function (retval)
+                    local result = retval
+                    for i = 1, #hooked[definition].post do
+                        result = hooked[definition].post[i](retval, hooked[definition].args) or result
+                    end
+                    return result
                 end
-                return result
-            end,
-            function (retval)
-                local result = retval
-                for i = 1, #hooked[definition].post do
-                    result = hooked[definition].post[i](retval, hooked[definition].args) or result
-                end
-                return result
-            end
-        )
+            )
+        else
+            hooked[definition] = true
+            sdk.hook(definition, preFunction, postFunction)
+            return
+        end
     end
 
-    if preFunction ~= nil then
-        table.insert(hooked[definition].pre, preFunction)
-    end
-    if postFunction ~= nil then
-        table.insert(hooked[definition].post, postFunction)
+    if type(hooked[definition]) == "table" then
+        if preFunction ~= nil then
+            table.insert(hooked[definition].pre, preFunction)
+        end
+        if postFunction ~= nil then
+            table.insert(hooked[definition].post, postFunction)
+        end
+    else
+        error("tried to reassign exclusive hook")
     end
 end
 
