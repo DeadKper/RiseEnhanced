@@ -201,10 +201,15 @@ function utils.retval(retval)
 end
 
 local hooked = {}
+local once = {}
 -- Hook functions to sdk, will send args from pre to the post function (after retval).
 -- If exclusive is true it will do a normal sdk.hook with pre and post functions but will
 -- prevent any more hooks to be used for that definition
-function utils.hook(definition, preFunction, postFunction, exclusive)
+function utils.hook(definition, preFunction, postFunction, _once, _exclusive)
+    if _once and _exclusive then
+        error("a hook cannot be exclusive and one time", 2)
+    end
+
     if type(definition) == "string" then
         definition = utils.definition(definition)
     elseif type(definition) == "table" then
@@ -212,7 +217,7 @@ function utils.hook(definition, preFunction, postFunction, exclusive)
     end
 
     if not hooked[definition] then
-        if not exclusive then
+        if not _exclusive then
             hooked[definition] = {
                 args = nil,
                 pre = {},
@@ -222,6 +227,10 @@ function utils.hook(definition, preFunction, postFunction, exclusive)
                 function (args)
                     hooked[definition].args = args
                     local result = sdk.PreHookResult.CALL_ORIGINAL
+                    for key, func in pairs(once.pre[definition]) do
+                        result = func(args) or result
+                        result[key] = nil
+                    end
                     for i = 1, #hooked[definition].pre do
                         result = hooked[definition].pre[i](args) or result
                     end
@@ -229,6 +238,10 @@ function utils.hook(definition, preFunction, postFunction, exclusive)
                 end,
                 function (retval)
                     local result = retval
+                    for key, func in pairs(once.post[definition]) do
+                        result = func(retval, hooked[definition].args) or result
+                        result[key] = nil
+                    end
                     for i = 1, #hooked[definition].post do
                         result = hooked[definition].post[i](retval, hooked[definition].args) or result
                     end
@@ -242,12 +255,17 @@ function utils.hook(definition, preFunction, postFunction, exclusive)
         end
     end
 
+    local baseTable = hooked
+    if _once then
+        baseTable = once
+    end
+
     if type(hooked[definition]) == "table" then
         if preFunction ~= nil then
-            table.insert(hooked[definition].pre, preFunction)
+            table.insert(baseTable[definition].pre, preFunction)
         end
         if postFunction ~= nil then
-            table.insert(hooked[definition].post, postFunction)
+            table.insert(baseTable[definition].post, postFunction)
         end
     else
         error("tried to reassign exclusive hook", 2)
@@ -506,7 +524,7 @@ function utils.hookLoop(definition, func, _sleep, _condition, _delay, _run)
         _run = true
     end
     if _delay ~= nil and _delay > 0 then
-        utils.hookLoop(function ()
+        utils.timer(function ()
             hookLoop(definition, func, _sleep, _condition, _run)
         end, _delay)
     else
