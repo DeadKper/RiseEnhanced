@@ -143,7 +143,7 @@ local function autoDango()
         needStats = false
         -- set player hp and stamina when eating
         utils.hook({"snow.player.PlayerManager", "update"}, function()
-            local playerData = utils.getPlayer():get_field("_refPlayerData")
+            local playerData = utils.getPlayerData()
             local newHp = playerData:get_field("_vitalMax") + 50
             local newStamina = playerData:get_field("_staminaMax") + 1500
             playerData:set_field("_vitalMax", newHp)
