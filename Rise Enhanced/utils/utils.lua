@@ -512,10 +512,11 @@ end
 local function hookLoop(definition, func, sleep, condition, run)
     if run and condition() then
         utils.loop(func, sleep, condition)
+    else
+        utils.hook(definition, nil, function ()
+            utils.loop(func, sleep, condition)
+        end)
     end
-    utils.hook(definition, nil, function ()
-        utils.loop(func, sleep, condition)
-    end)
 end
 
 -- Allows a loop to be autohooked on post method of a definition, will also run loop automatically
