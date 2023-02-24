@@ -223,13 +223,18 @@ function utils.hook(definition, preFunction, postFunction, _once, _exclusive)
                 pre = {},
                 post = {},
             }
+            once[definition] = {
+                args = nil,
+                pre = {},
+                post = {},
+            }
             sdk.hook(definition, -- I was told I shouldn't stack hooks x'd
                 function (args)
                     hooked[definition].args = args
                     local result = sdk.PreHookResult.CALL_ORIGINAL
-                    for key, func in pairs(once.pre[definition]) do
+                    for key, func in pairs(once[definition].pre) do
                         result = func(args) or result
-                        result[key] = nil
+                        once[definition].pre[key] = nil
                     end
                     for i = 1, #hooked[definition].pre do
                         result = hooked[definition].pre[i](args) or result
@@ -238,9 +243,9 @@ function utils.hook(definition, preFunction, postFunction, _once, _exclusive)
                 end,
                 function (retval)
                     local result = retval
-                    for key, func in pairs(once.post[definition]) do
+                    for key, func in pairs(once[definition].post) do
                         result = func(retval, hooked[definition].args) or result
-                        result[key] = nil
+                        once[definition].post[key] = nil
                     end
                     for i = 1, #hooked[definition].post do
                         result = hooked[definition].post[i](retval, hooked[definition].args) or result
@@ -260,7 +265,7 @@ function utils.hook(definition, preFunction, postFunction, _once, _exclusive)
         baseTable = once
     end
 
-    if type(hooked[definition]) == "table" then
+    if type(baseTable[definition]) == "table" then
         if preFunction ~= nil then
             table.insert(baseTable[definition].pre, preFunction)
         end
