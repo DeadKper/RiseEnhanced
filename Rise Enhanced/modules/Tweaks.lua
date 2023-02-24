@@ -27,25 +27,12 @@ local module, settings = mod.getDefaultModule(
 local baseWireBugTime = 90
 local whispererBoost = 1.3
 local extraWireBugTime = 30
-local getWireBug = false
 local lastSave = 0
 
--- Main code
-
----@diagnostic disable-next-line: duplicate-set-field
-function module.init()
-    lastSave = os.clock()
-
-    utils.setReference("_WireBugPowerUpTime", function ()
-        return baseWireBugTime
-    end)
-
-    -- add wirebug
+local function addWireBug()
     utils.hook({"snow.player.PlayerManager", "update"}, function()
-        if not module.enabled() or not getWireBug then return end
         local player = utils.getPlayer()
         if not player then return end
-        getWireBug = false
 
         local timeMult = 1
         if utils.playerSkillLevel(104) > 0 then
@@ -56,6 +43,15 @@ function module.init()
 
         player:set_field("<HunterWireWildNum>k__BackingField", 1)
         player:set_field("_HunterWireNumAddTime", time)
+    end, nil, true)
+end
+
+---@diagnostic disable-next-line: duplicate-set-field
+function module.init()
+    lastSave = os.clock()
+
+    utils.setReference("_WireBugPowerUpTime", function ()
+        return baseWireBugTime
     end)
 
     -- set saved clock
@@ -84,7 +80,7 @@ function module.init()
 
     utils.hookTimer({"snow.QuestManager", "questStart"}, function()
         if not module.enabled("wirebugStart") then return end
-        getWireBug = true
+        addWireBug()
     end, 3)
 
     local isLargeMonster = utils.definition("snow.enemy.EnemyCharacterBase", "get_isBossEnemy")
@@ -98,14 +94,14 @@ function module.init()
                 return
             end
 
-            getWireBug = true
+            addWireBug()
         end, 5)
     end)
 
     utils.hookTimer({"snow.QuestManager", "notifyDeath"}, function()
         if not module.enabled("wirebugStart") then return end
 
-        getWireBug = true
+        addWireBug()
     end, 5)
 
     utils.hook({"snow.QuestManager", "onQuestEnd"}, nil, function (retval)

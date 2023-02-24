@@ -32,7 +32,6 @@ local dango = {
 
 local isOrdering = false
 local needStats = false
-local didEat = false
 local carted = false
 -- Main code
 
@@ -140,7 +139,20 @@ local function autoDango()
         return false
     end
 
-    didEat = true
+    if needStats then
+        needStats = false
+        -- set player hp and stamina when eating
+        utils.hook({"snow.player.PlayerManager", "update"}, function()
+            local playerData = utils.getPlayer():get_field("_refPlayerData")
+            local newHp = playerData:get_field("_vitalMax") + 50
+            local newStamina = playerData:get_field("_staminaMax") + 1500
+            playerData:set_field("_vitalMax", newHp)
+            playerData:set_field("_r_Vital", newHp)
+            playerData:call("set__vital", newHp + .0) -- context dependent
+            playerData:set_field("_staminaMax", newStamina)
+            playerData:set_field("_stamina", newStamina)
+        end, nil, true)
+    end
 
     if settings.get("skewers") then
         message = message .. "\n<COL YEL>(" .. mod.lang.Dango.hoppingSkewers .. ")</COL>"
@@ -182,22 +194,6 @@ end
 function module.init()
     utils.setReference("snow.data.DataShortcut", function ()
         return sdk.create_instance("snow.data.DataShortcut", true):add_ref()
-    end)
-
-        -- set player hp and stamina when eating
-    utils.hook({"snow.player.PlayerManager", "update"}, function()
-        if needStats and didEat then
-            needStats = false
-            didEat = false
-            local playerData = utils.getPlayer():get_field("_refPlayerData")
-            local newHp = playerData:get_field("_vitalMax") + 50
-            local newStamina = playerData:get_field("_staminaMax") + 1500
-            playerData:set_field("_vitalMax", newHp)
-            playerData:set_field("_r_Vital", newHp)
-            playerData:call("set__vital", newHp + .0) -- context dependent
-            playerData:set_field("_staminaMax", newStamina)
-            playerData:set_field("_stamina", newStamina)
-        end
     end)
 
     -- increase chance for dango skills on ticket when option is enabled
